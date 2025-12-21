@@ -12,7 +12,7 @@
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
-    .wrap{ max-width:1100px; margin:0 auto; padding:18px; }
+    .wrap{ max-width:1200px; margin:0 auto; padding:18px; }
     .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .title{ font-weight:950; font-size:16px; }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); }
@@ -24,7 +24,6 @@
       border-radius:12px; border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03); color:var(--text); font-weight:850; outline:none;
     }
-    input:focus, select:focus{ border-color: rgba(37,99,235,.5); box-shadow:0 0 0 4px rgba(37,99,235,.12); }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
     .btn{
       border:0; border-radius:12px; padding:10px 14px; cursor:pointer;
@@ -43,18 +42,17 @@
     .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
     .tag.frozen{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
     .tag.deleted{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
+    .tag.paid{ border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.14); }
+    .tag.check{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.14); }
     .small{ font-size:12px; color:var(--muted); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
-    a{ color:#cfe0ff; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div class="title">Админка обменника</div>
-      <div class="small">
-        Worker: <span id="w"></span> · <a href="./index.html">на сайт</a>
-      </div>
+      <div class="small">Worker: <span id="w"></span> · <a href="./index.html" style="color:#cfe0ff;">на сайт</a></div>
     </div>
 
     <div class="grid">
@@ -88,7 +86,7 @@
 
     <div class="card" style="margin-top:12px;">
       <div style="font-weight:950;">Заявки в стакан покупки</div>
-      <div class="small">Метод: SBP = СБП, CARD = Карта. Реквизиты показываются только на Crossflag оплате.</div>
+      <div class="small">Реквизиты показываются только на Crossflag оплате.</div>
 
       <div class="row" style="margin-top:10px;">
         <div style="flex:1; min-width:160px;">
@@ -134,6 +132,7 @@
             <th>Курс</th>
             <th>Crossflag реквизиты</th>
             <th>Статус</th>
+            <th>Данные проверки</th>
             <th>Действия</th>
           </tr>
         </thead>
@@ -163,8 +162,8 @@
 
   const tbody = document.getElementById("tbody");
 
-  function getToken() { return localStorage.getItem("admin_token") || ""; }
-  function setToken(t) { localStorage.setItem("admin_token", t); }
+  function getToken(){ return localStorage.getItem("admin_token") || ""; }
+  function setToken(t){ localStorage.setItem("admin_token", t); }
 
   tokenInput.value = getToken();
 
@@ -173,7 +172,6 @@
     authStatus.textContent = "Токен сохранён локально.";
     authStatus.className = "status ok";
   };
-
   document.getElementById("clearToken").onclick = () => {
     localStorage.removeItem("admin_token");
     tokenInput.value = "";
@@ -182,10 +180,7 @@
   };
 
   async function api(path, opts = {}) {
-    const headers = Object.assign(
-      { "Content-Type": "application/json" },
-      opts.headers || {}
-    );
+    const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
     const t = getToken();
     if (t) headers["X-Admin-Token"] = t;
 
@@ -197,8 +192,8 @@
     return j;
   }
 
-  async function loadConfig() {
-    try {
+  async function loadConfig(){
+    try{
       cfgStatus.textContent = "Загружаю…";
       cfgStatus.className = "status";
       const j = await api("/api/admin/config", { method: "GET" });
@@ -206,45 +201,59 @@
       sellPercent.value = j.config.sellPercent;
       cfgStatus.textContent = "Загружено.";
       cfgStatus.className = "status ok";
-    } catch (e) {
+    } catch(e){
       cfgStatus.textContent = "Ошибка: " + e.message;
       cfgStatus.className = "status bad";
     }
   }
 
-  async function saveConfig() {
-    try {
+  async function saveConfig(){
+    try{
       cfgStatus.textContent = "Сохраняю…";
       cfgStatus.className = "status";
-      const body = { buyPercent: buyPercent.value, sellPercent: sellPercent.value };
-      await api("/api/admin/config", { method: "POST", body: JSON.stringify(body) });
+      await api("/api/admin/config", { method:"POST", body: JSON.stringify({ buyPercent: buyPercent.value, sellPercent: sellPercent.value }) });
       cfgStatus.textContent = "Сохранено.";
       cfgStatus.className = "status ok";
-    } catch (e) {
+    } catch(e){
       cfgStatus.textContent = "Ошибка: " + e.message;
       cfgStatus.className = "status bad";
     }
   }
 
-  function fmtRub(n) { return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function safe(s){ return (s || "").toString().replace(/[<>&]/g, (c)=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function safe(s){ return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
 
-  async function loadOffers() {
-    try {
+  function renderStatus(o){
+    if (o.deleted) return `<span class="tag deleted">Удалена</span>`;
+    if (o.onCheck) return `<span class="tag check">На проверке</span>`;
+    if (o.paid) return `<span class="tag paid">Оплачено</span>`;
+    if (o.frozen) return `<span class="tag frozen">Заморожена</span>`;
+    return `<span class="tag">Активна</span>`;
+  }
+
+  function renderCheckInfo(o){
+    if (!o.checkInfo) return `<span class="small">—</span>`;
+    const ci = o.checkInfo;
+    return `
+      <div class="small">
+        Банк: <b>${safe(ci.bankFrom || "—")}</b><br/>
+        Тип: <b>${safe(ci.proofType || "—")}</b><br/>
+        ${ci.alphaLink ? `Ссылка: <span class="mono">${safe(ci.alphaLink)}</span><br/>` : ""}
+        PDF1: <b>${ci.hasPdf1 ? "да" : "нет"}</b> · PDF2: <b>${ci.hasPdf2 ? "да" : "нет"}</b><br/>
+        Время: <span class="mono">${safe(new Date(ci.submittedAt || Date.now()).toLocaleString("ru-RU"))}</span>
+      </div>
+    `;
+  }
+
+  async function loadOffers(){
+    try{
       offerStatus.textContent = "Загружаю заявки…";
       offerStatus.className = "status";
-      const j = await api("/api/admin/offers", { method: "GET" });
+      const j = await api("/api/admin/offers", { method:"GET" });
 
       tbody.innerHTML = "";
-
-      for (const o of j.offers) {
+      for (const o of j.offers){
         const tr = document.createElement("tr");
-
-        const statusTags = [];
-        if (o.deleted) statusTags.push(`<span class="tag deleted">Удалена</span>`);
-        if (o.frozen) statusTags.push(`<span class="tag frozen">Заморожена</span>`);
-        if (!o.deleted && !o.frozen) statusTags.push(`<span class="tag">Активна</span>`);
-
         tr.innerHTML = `
           <td><span class="mono">${safe(o.id)}</span></td>
           <td>${fmtRub(o.amountRub)}</td>
@@ -254,7 +263,8 @@
             Банк: <b>${safe(o.payBank || "—")}</b><br/>
             Рекв.: <span class="mono">${safe(o.payRequisite || "—")}</span>
           </td>
-          <td>${statusTags.join(" ")}</td>
+          <td>${renderStatus(o)}</td>
+          <td>${renderCheckInfo(o)}</td>
           <td></td>
         `;
 
@@ -264,10 +274,7 @@
         freezeBtn.className = "btn warn";
         freezeBtn.textContent = o.frozen ? "Разморозить" : "Заморозить";
         freezeBtn.onclick = async () => {
-          await api(`/api/admin/offers/${o.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ frozen: !o.frozen }),
-          });
+          await api(`/api/admin/offers/${o.id}`, { method:"PATCH", body: JSON.stringify({ frozen: !o.frozen }) });
           await loadOffers();
         };
 
@@ -277,38 +284,37 @@
         delBtn.textContent = "Удалить";
         delBtn.onclick = async () => {
           if (!confirm("Удалить заявку?")) return;
-          await api(`/api/admin/offers/${o.id}`, { method: "DELETE" });
+          await api(`/api/admin/offers/${o.id}`, { method:"DELETE" });
           await loadOffers();
         };
 
         td.appendChild(freezeBtn);
         td.appendChild(delBtn);
-
         tbody.appendChild(tr);
       }
 
       offerStatus.textContent = "Готово.";
       offerStatus.className = "status ok";
-    } catch (e) {
+    } catch(e){
       offerStatus.textContent = "Ошибка: " + e.message;
       offerStatus.className = "status bad";
     }
   }
 
-  async function addOffer() {
-    try {
+  async function addOffer(){
+    try{
       offerStatus.textContent = "Добавляю…";
       offerStatus.className = "status";
-
-      const body = {
-        amountRub: amountRub.value,
-        method: method.value,
-        rate: rate.value,
-        payBank: payBank.value,
-        payRequisite: payRequisite.value,
-      };
-
-      await api("/api/admin/offers", { method: "POST", body: JSON.stringify(body) });
+      await api("/api/admin/offers", {
+        method:"POST",
+        body: JSON.stringify({
+          amountRub: amountRub.value,
+          method: method.value,
+          rate: rate.value,
+          payBank: payBank.value,
+          payRequisite: payRequisite.value,
+        })
+      });
 
       amountRub.value = "";
       rate.value = "";
@@ -318,7 +324,7 @@
       await loadOffers();
       offerStatus.textContent = "Добавлено.";
       offerStatus.className = "status ok";
-    } catch (e) {
+    } catch(e){
       offerStatus.textContent = "Ошибка: " + e.message;
       offerStatus.className = "status bad";
     }
@@ -326,10 +332,7 @@
 
   document.getElementById("saveConfig").onclick = saveConfig;
   document.getElementById("addOffer").onclick = addOffer;
-  document.getElementById("refresh").onclick = async () => {
-    await loadConfig();
-    await loadOffers();
-  };
+  document.getElementById("refresh").onclick = async () => { await loadConfig(); await loadOffers(); };
 
   loadConfig();
   loadOffers();

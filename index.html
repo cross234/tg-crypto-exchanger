@@ -3,117 +3,351 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crypto Exchange (Demo)</title>
+  <title>Rapira-style обменник (шаг 1)</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #0b0f19; color: #e8eefc; }
-    .wrap { max-width: 520px; margin: 0 auto; padding: 20px; }
-    .card { background: #121a2b; border: 1px solid #26324d; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    h1 { font-size: 18px; margin: 0 0 8px; }
-    .muted { color: #aab7d8; font-size: 13px; }
-    .row { display: flex; gap: 12px; margin-top: 14px; }
-    .btn {
-      flex: 1;
-      padding: 14px 12px;
-      border-radius: 14px;
-      border: 1px solid #2a3a62;
-      background: #1a2550;
-      color: #e8eefc;
-      font-weight: 700;
-      font-size: 16px;
-      cursor: pointer;
+    :root{
+      --bg:#f3f5f9;
+      --card:#ffffff;
+      --border:#e7ebf3;
+      --text:#0f172a;
+      --muted:#64748b;
+      --blue:#2563eb;
+      --blue-weak:#e8f0ff;
+      --green:#16a34a;
+      --green-weak:#eaf8ef;
+      --shadow:0 10px 25px rgba(15,23,42,.08);
+      --radius:14px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .btn:active { transform: translateY(1px); }
-    .btn.secondary { background: #1b3a2c; border-color: #2f6a4c; }
-    .ratebox { display: grid; gap: 10px; margin-top: 14px; }
-    .rate {
-      display: flex; justify-content: space-between; align-items: baseline;
-      padding: 12px; border-radius: 12px; background: #0f1526; border: 1px solid #223055;
-      font-size: 14px;
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .topbar{
+      background:#fff;
+      border-bottom:1px solid var(--border);
     }
-    .rate strong { font-size: 16px; }
-    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #0d2a53; border: 1px solid #1d4b86; font-size: 12px; }
-    .error { color: #ffb4b4; }
+    .topbar .wrap{
+      max-width:980px; margin:0 auto;
+      padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800; letter-spacing:.2px;
+    }
+    .logo{
+      width:28px; height:28px; border-radius:8px;
+      background:linear-gradient(135deg, #2b6eff, #1d4ed8);
+      display:inline-block;
+    }
+    .rightbtn{
+      background:var(--blue);
+      color:#fff;
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .container{ max-width:980px; margin:18px auto; padding:0 16px; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .hero{
+      padding:18px 18px 8px 18px;
+    }
+    .hero h1{ font-size:18px; margin:0 0 6px; }
+    .hero p{ margin:0; color:var(--muted); font-size:13px; }
+
+    .tabs{
+      display:flex;
+      gap:18px;
+      padding:0 18px;
+      border-bottom:1px solid var(--border);
+    }
+    .tab{
+      padding:14px 0;
+      font-weight:800;
+      color:var(--muted);
+      cursor:pointer;
+      position:relative;
+      user-select:none;
+    }
+    .tab.active{
+      color:var(--text);
+    }
+    .tab.active::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:-1px;
+      height:3px;
+      border-radius:3px 3px 0 0;
+      background:var(--green);
+    }
+
+    .form{
+      padding:14px 18px 18px 18px;
+      display:grid;
+      gap:12px;
+    }
+
+    /* как на Rapira: одна строка полей */
+    .row{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr auto;
+      gap:10px;
+      align-items:end;
+    }
+    @media (max-width: 860px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .field label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    .input, .select{
+      width:100%;
+      box-sizing:border-box;
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      font-weight:700;
+      color:var(--text);
+      outline:none;
+    }
+    .input:focus, .select:focus{
+      border-color:#b9cdfc;
+      box-shadow:0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .actionbtn{
+      padding:12px 18px;
+      border-radius:12px;
+      border:1px solid transparent;
+      font-weight:900;
+      cursor:pointer;
+      background:var(--green);
+      color:#fff;
+      height:42px;
+      align-self:end;
+      min-width:120px;
+    }
+    .actionbtn.sell{
+      background:#0ea5e9;
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 18px 18px 18px;
+      border-top:1px solid var(--border);
+      background:#fff;
+    }
+    .rates{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:8px 10px;
+      background:#fff;
+      font-size:13px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pill b{ font-size:14px; }
+    .pill .tag{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .status{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .status.error{
+      color:#b91c1c;
+      font-weight:800;
+    }
+    .status.ok{
+      color:#15803d;
+      font-weight:800;
+    }
+
+    .smallhint{
+      padding:12px 18px 18px 18px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    code.inline{
+      background:#f1f5ff;
+      border:1px solid #dbe7ff;
+      padding:2px 6px;
+      border-radius:8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color:#1e40af;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand"><span class="logo"></span> rapira-style</div>
+      <button class="rightbtn" type="button">Вход / Регистрация</button>
+    </div>
+  </div>
+
+  <div class="container">
     <div class="card">
-      <h1>Мини-обменник (шаг 1)</h1>
-      <div class="muted">
-        Курс берём с Rapira через Cloudflare Worker.
+      <div class="hero">
+        <h1>Обмен (шаг 1)</h1>
+        <p>Берём курс с Rapira через Cloudflare Worker и показываем Ask/Bid.</p>
       </div>
 
-      <div class="ratebox">
-        <div class="rate">
-          <span>Пара</span>
-          <span class="pill" id="pair">USDT/RUB</span>
-        </div>
-        <div class="rate">
-          <span>Купить (Ask)</span>
-          <strong id="ask">—</strong>
-        </div>
-        <div class="rate">
-          <span>Продать (Bid)</span>
-          <strong id="bid">—</strong>
-        </div>
-        <div class="muted" id="status">Обновляю…</div>
+      <div class="tabs">
+        <div class="tab active" id="tabBuy">Купить</div>
+        <div class="tab" id="tabSell">Продать</div>
       </div>
 
-      <div class="row">
-        <button class="btn" id="buyBtn">Купить</button>
-        <button class="btn secondary" id="sellBtn">Продать</button>
+      <div class="form">
+        <div class="row">
+          <div class="field">
+            <label>Сумма</label>
+            <input class="input" id="amount" inputmode="decimal" placeholder="0" />
+          </div>
+
+          <div class="field">
+            <label>Отдаю</label>
+            <select class="select" id="give">
+              <option value="RUB" selected>RUB</option>
+              <option value="USDT">USDT</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Получаю</label>
+            <select class="select" id="get">
+              <option value="USDT" selected>USDT</option>
+              <option value="RUB">RUB</option>
+            </select>
+          </div>
+
+          <button class="actionbtn" id="actionBtn" type="button">Купить</button>
+        </div>
+
+        <div class="smallhint">
+          Пара для курса сейчас: <code class="inline" id="pairText">USDT/RUB</code>
+          · Worker: <code class="inline" id="workerText">—</code>
+        </div>
       </div>
 
-      <div class="muted" style="margin-top:10px;">
-        Сейчас кнопки ведут на заглушки buy.html и sell.html — сделаем их следующим шагом.
+      <div class="meta">
+        <div class="rates">
+          <div class="pill"><span class="tag">Купить (Ask)</span> <b id="ask">—</b></div>
+          <div class="pill"><span class="tag">Продать (Bid)</span> <b id="bid">—</b></div>
+        </div>
+        <div class="status" id="status">Обновляю…</div>
       </div>
     </div>
   </div>
 
   <script>
-    // 1) ВСТАВЬ сюда URL своего воркера (без слеша на конце)
-    const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+    // ====== 1) ВСТАВЬ сюда URL своего воркера (без слеша на конце) ======
+    const WORKER_BASE = "https://rapira-rates-proxy.abc123.workers.dev";
 
-    // 2) Какая пара нужна на главной
+    // Какая пара на главной (Rapira market rates)
     const SYMBOL = "USDT/RUB";
 
     const askEl = document.getElementById("ask");
     const bidEl = document.getElementById("bid");
     const statusEl = document.getElementById("status");
+    const workerText = document.getElementById("workerText");
+    const pairText = document.getElementById("pairText");
 
-    document.getElementById("buyBtn").addEventListener("click", () => {
-      window.location.href = "./buy.html";
-    });
+    const tabBuy = document.getElementById("tabBuy");
+    const tabSell = document.getElementById("tabSell");
+    const actionBtn = document.getElementById("actionBtn");
 
-    document.getElementById("sellBtn").addEventListener("click", () => {
-      window.location.href = "./sell.html";
-    });
+    pairText.textContent = SYMBOL;
+    workerText.textContent = WORKER_BASE;
+
+    let mode = "buy"; // buy | sell
+
+    function setMode(next) {
+      mode = next;
+      tabBuy.classList.toggle("active", mode === "buy");
+      tabSell.classList.toggle("active", mode === "sell");
+      actionBtn.textContent = mode === "buy" ? "Купить" : "Продать";
+      actionBtn.classList.toggle("sell", mode === "sell");
+    }
+
+    tabBuy.addEventListener("click", () => setMode("buy"));
+    tabSell.addEventListener("click", () => setMode("sell"));
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.classList.remove("error", "ok");
+      if (kind) statusEl.classList.add(kind);
+    }
 
     async function loadRate() {
+      // Явная подсказка вместо “Failed to fetch”
+      if (WORKER_BASE.includes("YOUR-WORKER")) {
+        setStatus("Ошибка: вставь свой Worker URL в WORKER_BASE (в index.html)", "error");
+        return;
+      }
+
+      const url = `${WORKER_BASE}/rates?symbol=${encodeURIComponent(SYMBOL)}`;
+
       try {
-        statusEl.textContent = "Обновляю…";
-        statusEl.classList.remove("error");
-
-        const url = `${WORKER_BASE}/rates?symbol=${encodeURIComponent(SYMBOL)}`;
+        setStatus("Обновляю…");
         const r = await fetch(url, { method: "GET" });
-        const j = await r.json();
 
-        if (!j.ok) throw new Error(j.error || "Unknown error");
+        // Если Worker вернул HTML/ошибку — покажем статус
+        const text = await r.text();
+        let j;
+        try { j = JSON.parse(text); }
+        catch {
+          throw new Error(`Worker вернул не JSON (HTTP ${r.status}). Проверь URL: ${url}`);
+        }
 
-        askEl.textContent = Number(j.ask).toLocaleString("ru-RU");
-        bidEl.textContent = Number(j.bid).toLocaleString("ru-RU");
+        if (!r.ok || !j.ok) {
+          throw new Error(j.error || `HTTP ${r.status}`);
+        }
 
-        const t = new Date(j.ts);
-        statusEl.textContent = "Обновлено: " + t.toLocaleString("ru-RU");
+        const ask = Number(j.ask);
+        const bid = Number(j.bid);
+
+        askEl.textContent = Number.isFinite(ask) ? ask.toLocaleString("ru-RU") : "—";
+        bidEl.textContent = Number.isFinite(bid) ? bid.toLocaleString("ru-RU") : "—";
+
+        const t = new Date(j.ts || Date.now());
+        setStatus("Обновлено: " + t.toLocaleString("ru-RU"), "ok");
       } catch (e) {
-        statusEl.textContent = "Ошибка: " + e.message;
-        statusEl.classList.add("error");
+        // Тут будут реальные причины: CORS, DNS, 404 и т.д.
+        setStatus("Ошибка: " + e.message, "error");
       }
     }
 
     loadRate();
-    // обновление раз в 10 секунд (под наш кэш воркера)
     setInterval(loadRate, 10000);
   </script>
 </body>

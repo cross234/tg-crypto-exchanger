@@ -20,10 +20,7 @@
     body{ margin:0; background:var(--bg); color:var(--text); }
     .wrap{ max-width:720px; margin:0 auto; padding:18px; }
 
-    .top{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin-bottom:12px;
-    }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .title{ font-size:16px; font-weight:950; }
     .back{
       color:#cfe0ff; text-decoration:none; font-weight:800;
@@ -59,16 +56,9 @@
     .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
     .value{ font-size:15px; font-weight:950; }
 
-    .hint{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-    }
+    .hint{ color:var(--muted); font-size:12px; line-height:1.4; }
 
-    .payMethods{
-      display:grid;
-      gap:10px;
-    }
+    .payMethods{ display:grid; gap:10px; }
     .method{
       display:flex;
       align-items:flex-start;
@@ -100,16 +90,9 @@
       background: var(--buy);
       min-width:160px;
     }
-    .btn.gray{
-      background: rgba(255,255,255,.10);
-      min-width:auto;
-    }
+    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
 
-    .status{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-    }
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); }
     .status.bad{ color:var(--bad); font-weight:900; }
     .status.ok{ color:var(--ok); font-weight:900; }
 
@@ -128,7 +111,6 @@
     </div>
 
     <div class="card">
-      <!-- Основные пункты как на P2P -->
       <div class="section">
         <div class="kv">
           <div class="item">
@@ -153,21 +135,19 @@
           Ордер: <span class="mono" id="orderId">—</span>
         </div>
         <div class="hint" style="margin-top:8px;">
-          Это демо-страница ордера. Следующим шагом можем сделать реальные статусы сделки:
-          “Ожидание оплаты → Проверка → Завершено”.
+          Выберите способ оплаты и нажмите “Продолжить”.
         </div>
       </div>
 
-      <!-- Выбор способа оплаты -->
       <div class="section">
         <div style="font-weight:950; margin-bottom:10px;">Выберите способ оплаты</div>
 
-        <div class="payMethods" id="payMethods">
+        <div class="payMethods">
           <label class="method">
             <input type="radio" name="pay" value="CROSSFLAG" checked />
             <div>
               <div class="mTitle">Через Crossflag Exchange</div>
-              <div class="mDesc">Полностью автоматическая сделка внутри обменника.</div>
+              <div class="mDesc">Оплата и подтверждение внутри вашего обменника.</div>
             </div>
           </label>
 
@@ -175,7 +155,7 @@
             <input type="radio" name="pay" value="HTX" />
             <div>
               <div class="mTitle">Через HTX</div>
-              <div class="mDesc">Оплата через безопасную сделку на бирже HTX.</div>
+              <div class="mDesc">Оплата через безопасную сделку на HTX</div>
             </div>
           </label>
 
@@ -183,7 +163,7 @@
             <input type="radio" name="pay" value="BYBIT" />
             <div>
               <div class="mTitle">Через Bybit</div>
-              <div class="mDesc">Оплата через безопасную сделку на бирже Bybit.</div>
+              <div class="mDesc">Оплата через безопасную сделку на Bybit</div>
             </div>
           </label>
         </div>
@@ -199,7 +179,6 @@
   </div>
 
 <script>
-  // Читаем параметры из URL
   const params = new URLSearchParams(location.search);
 
   const id = params.get("id") || "";
@@ -226,7 +205,6 @@
     if (kind) statusEl.classList.add(kind);
   }
 
-  // Валидация входных данных
   const ok = Number.isFinite(amountRub) && amountRub > 0 && Number.isFinite(rate) && rate > 0;
 
   if (!ok){
@@ -265,17 +243,29 @@
 
     const pay = getPayMethod();
 
-    // На этом шаге — просто демонстрация.
-    // Следующий шаг: создавать реальную “сделку” в Worker KV и вести статусы.
-    if (pay === "CROSSFLAG"){
-      setStatus("Ок: выбрано Crossflag Exchange. Следующий шаг — страница оплаты внутри обменника.", "ok");
-    } else if (pay === "HTX"){
-      setStatus("Ок: выбрано HTX. Следующий шаг — логика редиректа/инструкций.", "ok");
-    } else if (pay === "BYBIT"){
-      setStatus("Ок: выбрано Bybit. Следующий шаг — логика редиректа/инструкций.", "ok");
-    } else {
-      setStatus("Выбери способ оплаты.", "bad");
+    if (pay === "CROSSFLAG") {
+      // ✅ редирект на страницу оплаты Crossflag
+      const qs = new URLSearchParams({
+        id: id || orderIdEl.textContent,
+        amountRub: String(amountRub),
+        rate: String(rate),
+        method: String(method),
+      });
+      window.location.href = "./crossflag-buy-order.html?" + qs.toString();
+      return;
     }
+
+    if (pay === "HTX") {
+      setStatus("Далее будет логика оплаты через HTX (на следующем шаге).", "ok");
+      return;
+    }
+
+    if (pay === "BYBIT") {
+      setStatus("Далее будет логика оплаты через Bybit (на следующем шаге).", "ok");
+      return;
+    }
+
+    setStatus("Выбери способ оплаты.", "bad");
   };
 </script>
 </body>

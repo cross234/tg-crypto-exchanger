@@ -200,9 +200,15 @@
 
       tr.querySelector("button").onclick = () => {
         alert(
-          `Покупка (демо)\n\nСумма: ${fmtRub(o.amountRub)}\nМетод: ${methodLabel(o.method)}\nКурс: ${fmtRate(o.rate)}`
-        );
-      };
+         tr.querySelector("button").onclick = () => {
+  const qs = new URLSearchParams({
+    id: o.id || "",
+    amountRub: String(o.amountRub),
+    method: String(o.method),
+    rate: String(o.rate),
+  });
+  window.location.href = "./buy-order.html?" + qs.toString();
+};
 
       rowsEl.appendChild(tr);
     }

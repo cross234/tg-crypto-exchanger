@@ -198,19 +198,17 @@
         </td>
       `;
 
+      // ✅ правильный переход на buy-order.html
       tr.querySelector("button").onclick = () => {
-        alert(
-tr.querySelector("button").onclick = () => {
-  const qs = new URLSearchParams({
-    id: o.id || "",
-    amountRub: String(o.amountRub),
-    method: String(o.method),
-    rate: String(o.rate),
-  });
+        const qs = new URLSearchParams({
+          id: o.id || "",
+          amountRub: String(o.amountRub),
+          method: String(o.method),
+          rate: String(o.rate),
+        });
 
-  window.location.href = "./buy-order.html?" + qs.toString();
-};
-
+        window.location.href = "./buy-order.html?" + qs.toString();
+      };
 
       rowsEl.appendChild(tr);
     }

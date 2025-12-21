@@ -26,15 +26,9 @@
       box-shadow: 0 18px 50px rgba(0,0,0,.35);
     }
     .title{ font-size:16px; font-weight:900; margin:0 0 10px; }
-    .rates{
-      display:grid;
-      gap:10px;
-      margin: 10px 0 14px;
-    }
+    .rates{ display:grid; gap:10px; margin: 10px 0 14px; }
     .rate{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      display:flex; align-items:center; justify-content:space-between;
       padding:12px 12px;
       border-radius:14px;
       background: rgba(255,255,255,.03);
@@ -67,6 +61,12 @@
       font-size:12px;
       font-weight:800;
     }
+    .sub{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+      line-height: 1.35;
+    }
   </style>
 </head>
 <body>
@@ -79,13 +79,26 @@
           <span>Пара</span>
           <span class="pill" id="pair">USDT/RUB</span>
         </div>
+
+        <!-- Курс с учетом процентов (из админки) -->
         <div class="rate">
-          <span>Купить (Ask)</span>
-          <b id="ask">—</b>
+          <span>Купить (с %)</span>
+          <b id="buy">—</b>
         </div>
         <div class="rate">
-          <span>Продать (Bid)</span>
-          <b id="bid">—</b>
+          <span>Продать (с %)</span>
+          <b id="sell">—</b>
+        </div>
+
+        <!-- Для контроля: базовые котировки Rapira -->
+        <div class="rate">
+          <span>Rapira Ask / Bid</span>
+          <b><span id="ask">—</span> / <span id="bid">—</span></b>
+        </div>
+
+        <div class="rate">
+          <span>Проценты</span>
+          <b><span id="bp">—</span>% / <span id="sp">—</span>%</b>
         </div>
       </div>
 
@@ -95,22 +108,27 @@
       </div>
 
       <div class="status" id="status">Обновляю курс…</div>
+      <div class="sub">
+        Курс “с %” берётся из <code>/api/public/quotes</code> и меняется в зависимости от настроек в <code>admin.html</code>.
+      </div>
     </div>
   </div>
 
   <script>
-    // Твой воркер (уже подставил)
+    // Твой воркер
     const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
-    const SYMBOL = "USDT/RUB";
 
+    const buyEl = document.getElementById("buy");
+    const sellEl = document.getElementById("sell");
     const askEl = document.getElementById("ask");
     const bidEl = document.getElementById("bid");
+    const bpEl = document.getElementById("bp");
+    const spEl = document.getElementById("sp");
     const statusEl = document.getElementById("status");
 
     document.getElementById("buyBtn").addEventListener("click", () => {
       window.location.href = "./buy.html";
     });
-
     document.getElementById("sellBtn").addEventListener("click", () => {
       window.location.href = "./sell.html";
     });
@@ -120,16 +138,31 @@
       statusEl.classList.toggle("error", isError);
     }
 
-    async function loadRate() {
+    function fmt(n){
+      const x = Number(n);
+      return Number.isFinite(x) ? x.toLocaleString("ru-RU") : "—";
+    }
+
+    async function loadQuotes() {
       try {
         setStatus("Обновляю курс…");
-        const url = `${WORKER_BASE}/rates?symbol=${encodeURIComponent(SYMBOL)}`;
-        const r = await fetch(url);
-        const j = await r.json();
-        if (!j.ok) throw new Error(j.error || "Worker error");
 
-        askEl.textContent = Number(j.ask).toLocaleString("ru-RU");
-        bidEl.textContent = Number(j.bid).toLocaleString("ru-RU");
+        const res = await fetch(WORKER_BASE + "/api/public/quotes", { method: "GET" });
+        const j = await res.json();
+
+        if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+        // adjusted (с %)
+        buyEl.textContent = fmt(j.adjusted?.buy);
+        sellEl.textContent = fmt(j.adjusted?.sell);
+
+        // base (rapira)
+        askEl.textContent = fmt(j.base?.ask);
+        bidEl.textContent = fmt(j.base?.bid);
+
+        // percents
+        bpEl.textContent = fmt(j.percents?.buyPercent);
+        spEl.textContent = fmt(j.percents?.sellPercent);
 
         setStatus("Обновлено: " + new Date(j.ts).toLocaleString("ru-RU"));
       } catch (e) {
@@ -137,8 +170,8 @@
       }
     }
 
-    loadRate();
-    setInterval(loadRate, 10000);
+    loadQuotes();
+    setInterval(loadQuotes, 10000);
   </script>
 </body>
 </html>

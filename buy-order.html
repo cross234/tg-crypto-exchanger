@@ -3,50 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>P2P · Ордер покупки</title>
+  <title>Crossflag · Оплата</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1a30;
-      --border:#223255;
-      --text:#e9f0ff;
-      --muted:#9fb0d4;
-      --buy:#2563eb;
-      --row:#0c162a;
-      --bad:#ffb4b4;
-      --ok:#9dffb8;
+      --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
+      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb; --danger:#ef4444;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
     .wrap{ max-width:720px; margin:0 auto; padding:18px; }
-
     .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .title{ font-size:16px; font-weight:950; }
     .back{
       color:#cfe0ff; text-decoration:none; font-weight:800;
-      border:1px solid rgba(255,255,255,.12);
-      padding:8px 10px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
       background: rgba(255,255,255,.03);
     }
-
     .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      overflow:hidden;
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
+      background:var(--card); border:1px solid var(--border); border-radius:18px;
+      overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35);
     }
     .section{ padding:14px; }
     .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
-
-    .kv{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width: 640px){
-      .kv{ grid-template-columns: 1fr; }
-    }
+    .kv{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width:640px){ .kv{ grid-template-columns:1fr; } }
     .item{
       background: rgba(255,255,255,.03);
       border:1px solid rgba(255,255,255,.06);
@@ -54,68 +34,73 @@
       padding:12px;
     }
     .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
-    .value{ font-size:15px; font-weight:950; }
+    .value{ font-size:15px; font-weight:950; word-break:break-word; }
 
-    .hint{ color:var(--muted); font-size:12px; line-height:1.4; }
-
-    .payMethods{ display:grid; gap:10px; }
-    .method{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
+    .rowLine{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.03);
-      cursor:pointer;
-      user-select:none;
-    }
-    .method input{ margin-top:3px; }
-    .mTitle{ font-weight:950; }
-    .mDesc{ color:var(--muted); font-size:12px; margin-top:2px; line-height:1.35; }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .btn{
-      border:0;
-      border-radius:12px;
-      padding:12px 14px;
-      cursor:pointer;
-      color:#fff;
+      color:#cfe0ff;
       font-weight:950;
-      background: var(--buy);
+      font-size:12px;
+    }
+    .pill b{ color:#fff; }
+
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
+    .status.ok{ color:var(--ok); font-weight:900; }
+    .status.bad{ color:var(--bad); font-weight:900; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
+    .btn{
+      border:0; border-radius:12px; padding:12px 14px; cursor:pointer;
+      color:#fff; font-weight:950; background: var(--btn);
       min-width:160px;
     }
-    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
-
-    .status{ margin-top:10px; font-size:12px; color:var(--muted); }
-    .status.bad{ color:var(--bad); font-weight:900; }
-    .status.ok{ color:var(--ok); font-weight:900; }
+    .btn.danger{ background: var(--danger); min-width:auto; }
+    .btn.small{
+      padding:8px 10px;
+      min-width:auto;
+      font-size:12px;
+      border-radius:10px;
+      background: rgba(255,255,255,.10);
+    }
 
     .mono{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      color:#cfe0ff;
+      font-size:12px; color:#cfe0ff;
+    }
+
+    .reqLine{
+      display:flex; align-items:center; gap:10px; justify-content:space-between;
+    }
+    .reqValue{
+      flex:1;
+      word-break:break-word;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="title">P2P · Ордер покупки</div>
-      <a class="back" href="./buy.html">← Назад к стакану</a>
+      <div class="title">Crossflag Exchange · Оплата</div>
+      <a class="back" href="./buy.html">← Назад</a>
     </div>
 
     <div class="card">
       <div class="section">
         <div class="kv">
           <div class="item">
-            <div class="label">Сумма (RUB)</div>
-            <div class="value" id="amountRub">—</div>
+            <div class="label">Ордер</div>
+            <div class="value mono" id="oid">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Сумма к оплате (RUB)</div>
+            <div class="value" id="amount">—</div>
           </div>
           <div class="item">
             <div class="label">Курс (RUB/USDT)</div>
@@ -125,148 +110,235 @@
             <div class="label">Получите (USDT)</div>
             <div class="value" id="usdt">—</div>
           </div>
-          <div class="item">
-            <div class="label">Метод заявки</div>
-            <div class="value" id="method">—</div>
-          </div>
         </div>
 
-        <div class="status" id="orderStatus">
-          Ордер: <span class="mono" id="orderId">—</span>
+        <div class="rowLine">
+          <span class="pill">Статус: <b id="st">Резервирую…</b></span>
+          <span class="pill">Осталось: <b id="timer">15:00</b></span>
         </div>
-        <div class="hint" style="margin-top:8px;">
-          Выберите способ оплаты и нажмите “Продолжить”.
-        </div>
+
+        <div class="status" id="status">Загружаю реквизиты и резервирую заявку…</div>
       </div>
 
       <div class="section">
-        <div style="font-weight:950; margin-bottom:10px;">Выберите способ оплаты</div>
+        <div style="font-weight:950; margin-bottom:10px;">Реквизиты для оплаты</div>
 
-        <div class="payMethods">
-          <label class="method">
-            <input type="radio" name="pay" value="CROSSFLAG" checked />
-            <div>
-              <div class="mTitle">Через Crossflag Exchange</div>
-              <div class="mDesc">Оплата и подтверждение внутри вашего обменника.</div>
-            </div>
-          </label>
+        <div class="kv">
+          <div class="item">
+            <div class="label">Банк</div>
+            <div class="value" id="bank">—</div>
+          </div>
 
-          <label class="method">
-            <input type="radio" name="pay" value="HTX" />
-            <div>
-              <div class="mTitle">Через HTX</div>
-              <div class="mDesc">Оплата через безопасную сделку на HTX</div>
+          <div class="item">
+            <div class="label">Реквизиты (СБП/карта)</div>
+            <div class="reqLine">
+              <div class="value reqValue mono" id="req">—</div>
+              <button class="btn small" id="copyReqBtn" type="button">Копировать</button>
             </div>
-          </label>
-
-          <label class="method">
-            <input type="radio" name="pay" value="BYBIT" />
-            <div>
-              <div class="mTitle">Через Bybit</div>
-              <div class="mDesc">Оплата через безопасную сделку на Bybit</div>
-            </div>
-          </label>
+          </div>
         </div>
 
-        <div class="actions" style="margin-top:12px;">
-          <button class="btn gray" id="cancelBtn" type="button">Отмена</button>
-          <button class="btn" id="continueBtn" type="button">Продолжить</button>
+        <div class="status" style="margin-top:10px;">
+          Переведи точную сумму и нажми “Я оплатил”.
         </div>
 
-        <div class="status" id="status">—</div>
+        <div class="btnRow">
+          <button class="btn danger" id="cancelBtn" type="button">Отменить ордер</button>
+          <button class="btn" id="paidBtn" type="button">Я оплатил</button>
+        </div>
+
+        <div class="status" id="paidStatus">—</div>
       </div>
     </div>
   </div>
 
 <script>
-  const params = new URLSearchParams(location.search);
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const id = params.get("id") || "";
-  const amountRub = Number(params.get("amountRub"));
-  const rate = Number(params.get("rate"));
-  const method = (params.get("method") || "").toUpperCase();
+  const p = new URLSearchParams(location.search);
+  const id = p.get("id") || "";
+  const amountRub = Number(p.get("amountRub"));
+  const rate = Number(p.get("rate"));
 
-  const amountRubEl = document.getElementById("amountRub");
+  const oidEl = document.getElementById("oid");
+  const amountEl = document.getElementById("amount");
   const rateEl = document.getElementById("rate");
   const usdtEl = document.getElementById("usdt");
-  const methodEl = document.getElementById("method");
-  const orderIdEl = document.getElementById("orderId");
-  const orderStatusEl = document.getElementById("orderStatus");
+
+  const bankEl = document.getElementById("bank");
+  const reqEl = document.getElementById("req");
+
+  const stEl = document.getElementById("st");
+  const timerEl = document.getElementById("timer");
+
   const statusEl = document.getElementById("status");
+  const paidStatusEl = document.getElementById("paidStatus");
+
+  let reserveId = "";
+  let reservedUntil = 0;
+  let timerHandle = null;
+  let finished = false;
 
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
   function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
   function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
-  function methodLabel(m){ return m === "SBP" ? "СБП" : (m === "CARD" ? "Карта" : "—"); }
 
   function setStatus(text, kind){
     statusEl.textContent = text;
-    statusEl.classList.remove("bad","ok");
+    statusEl.classList.remove("ok","bad");
     if (kind) statusEl.classList.add(kind);
   }
-
-  const ok = Number.isFinite(amountRub) && amountRub > 0 && Number.isFinite(rate) && rate > 0;
-
-  if (!ok){
-    amountRubEl.textContent = "—";
-    rateEl.textContent = "—";
-    usdtEl.textContent = "—";
-    methodEl.textContent = "—";
-    orderIdEl.textContent = "ошибка";
-    orderStatusEl.textContent = "Ошибка: данные ордера не переданы";
-    orderStatusEl.className = "status bad";
-    setStatus("Вернись в стакан и нажми “Купить” ещё раз.", "bad");
-  } else {
-    amountRubEl.textContent = fmtRub(amountRub);
-    rateEl.textContent = fmtRate(rate);
-    usdtEl.textContent = fmtUsdt(amountRub / rate);
-    methodEl.textContent = methodLabel(method);
-    orderIdEl.textContent = id || ("order_" + Math.random().toString(16).slice(2, 10));
-    orderStatusEl.className = "status ok";
-    setStatus("Выбери способ оплаты и нажми “Продолжить”.");
+  function setPaidStatus(text, kind){
+    paidStatusEl.textContent = text;
+    paidStatusEl.classList.remove("ok","bad");
+    if (kind) paidStatusEl.classList.add(kind);
   }
 
-  function getPayMethod(){
-    const el = document.querySelector('input[name="pay"]:checked');
-    return el ? el.value : "CROSSFLAG";
+  function setState(text){ stEl.textContent = text; }
+
+  function basicFill(){
+    oidEl.textContent = id || "—";
+    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
+    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
+    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
   }
 
-  document.getElementById("cancelBtn").onclick = () => {
-    window.location.href = "./buy.html";
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  function updateTimer(){
+    if (!reservedUntil) return;
+    const ms = reservedUntil - Date.now();
+    const clamped = Math.max(0, ms);
+    const totalSec = Math.floor(clamped / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    timerEl.textContent = `${pad2(m)}:${pad2(s)}`;
+
+    if (ms <= 0 && !finished){
+      // time is up => auto-cancel (unfreeze)
+      autoCancelDueToTimeout();
+    }
+  }
+
+  async function postJson(path, body){
+    const res = await fetch(WORKER_BASE + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
+  async function reserveAndLoad(){
+    basicFill();
+
+    if (!id){
+      setState("Ошибка");
+      setStatus("Ошибка: нет id заявки. Вернись в стакан и выбери заявку заново.", "bad");
+      return;
+    }
+
+    try{
+      setState("Резервирую…");
+      setStatus("Загружаю реквизиты и резервирую заявку…");
+
+      const j = await postJson("/api/public/reserve_buy_offer", { id });
+
+      reserveId = j.reserve.reserveId;
+      reservedUntil = j.reserve.reservedUntil;
+
+      bankEl.textContent = j.offer.payBank || "—";
+      reqEl.textContent = j.offer.payRequisite || "—";
+
+      if (!j.offer.payBank || !j.offer.payRequisite){
+        setState("Резерв");
+        setStatus("⚠️ Реквизиты не заполнены в админке для этой заявки.", "bad");
+      } else {
+        setState("Ожидание оплаты");
+        setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
+      }
+
+      updateTimer();
+      timerHandle = setInterval(updateTimer, 1000);
+    } catch(e){
+      setState("Ошибка");
+      setStatus("Ошибка: " + e.message, "bad");
+    }
+  }
+
+  async function autoCancelDueToTimeout(){
+    if (finished) return;
+    finished = true;
+    if (timerHandle) clearInterval(timerHandle);
+
+    setState("Отменено");
+    setStatus("Время оплаты истекло. Ордер отменён, заявка разморожена.", "bad");
+
+    // попробуем разморозить (если reserveId есть)
+    try{
+      if (reserveId){
+        await postJson("/api/public/cancel_buy_offer", { id, reserveId });
+      }
+    } catch {}
+    setPaidStatus("—");
+  }
+
+  document.getElementById("paidBtn").onclick = async () => {
+    if (finished) return;
+    if (!reserveId){
+      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
+      return;
+    }
+    try{
+      await postJson("/api/public/confirm_buy_offer_paid", { id, reserveId });
+      finished = true;
+      if (timerHandle) clearInterval(timerHandle);
+
+      setState("Оплачено");
+      setStatus("Отлично. Мы получили отметку “Оплачено”. Далее будет проверка оплаты.", "ok");
+      setPaidStatus("Ожидайте подтверждения оплаты.", "ok");
+    } catch(e){
+      setPaidStatus("Ошибка: " + e.message, "bad");
+    }
   };
 
-  document.getElementById("continueBtn").onclick = () => {
-    if (!ok){
-      setStatus("Нельзя продолжить: нет данных ордера.", "bad");
+  document.getElementById("cancelBtn").onclick = async () => {
+    if (finished) return;
+    if (!reserveId){
+      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
       return;
     }
+    try{
+      await postJson("/api/public/cancel_buy_offer", { id, reserveId });
+      finished = true;
+      if (timerHandle) clearInterval(timerHandle);
 
-    const pay = getPayMethod();
-
-    if (pay === "CROSSFLAG") {
-      // ✅ редирект на страницу оплаты Crossflag
-      const qs = new URLSearchParams({
-        id: id || orderIdEl.textContent,
-        amountRub: String(amountRub),
-        rate: String(rate),
-        method: String(method),
-      });
-      window.location.href = "./crossflag-buy-order.html?" + qs.toString();
-      return;
+      setState("Отменено");
+      setStatus("Ордер отменён, заявка разморожена.", "bad");
+      setPaidStatus("—");
+    } catch(e){
+      setPaidStatus("Ошибка: " + e.message, "bad");
     }
-
-    if (pay === "HTX") {
-      setStatus("Далее будет логика оплаты через HTX (на следующем шаге).", "ok");
-      return;
-    }
-
-    if (pay === "BYBIT") {
-      setStatus("Далее будет логика оплаты через Bybit (на следующем шаге).", "ok");
-      return;
-    }
-
-    setStatus("Выбери способ оплаты.", "bad");
   };
+
+  document.getElementById("copyReqBtn").onclick = async () => {
+    const txt = reqEl.textContent || "";
+    if (!txt || txt === "—"){
+      setPaidStatus("Нечего копировать.", "bad");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(txt);
+      setPaidStatus("Реквизиты скопированы ✅", "ok");
+    } catch {
+      setPaidStatus("Не удалось скопировать (браузер запретил). Скопируй вручную.", "bad");
+    }
+  };
+
+  reserveAndLoad();
 </script>
 </body>
 </html>

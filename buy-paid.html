@@ -7,12 +7,18 @@
   <style>
     :root{
       --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
-      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb; --danger:#ef4444;
+      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
     .wrap{ max-width:760px; margin:0 auto; padding:18px; }
-    .title{ font-size:16px; font-weight:950; margin-bottom:12px; }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .title{ font-size:16px; font-weight:950; }
+    .back{
+      color:#cfe0ff; text-decoration:none; font-weight:800;
+      border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
+      background: rgba(255,255,255,.03);
+    }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35); }
     .section{ padding:14px; }
     .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
@@ -36,14 +42,12 @@
       outline:none;
     }
     input[type="file"]{ padding:10px; }
-    select:focus, input:focus{ border-color: rgba(37,99,235,.5); box-shadow:0 0 0 4px rgba(37,99,235,.12); }
-
     .hint{ color:var(--muted); font-size:12px; line-height:1.4; margin-top:8px; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
 
     .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
     .btn{ border:0; border-radius:12px; padding:12px 14px; cursor:pointer; color:#fff; font-weight:950; background: var(--btn); min-width:180px; }
-    .btn.danger{ background: var(--danger); min-width:auto; }
+    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
 
     .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
     .status.ok{ color:var(--ok); font-weight:900; }
@@ -55,7 +59,10 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="title">Подтверждение оплаты</div>
+    <div class="top">
+      <div class="title">Подтверждение оплаты</div>
+      <a class="back" id="backBtn" href="#">← Назад</a>
+    </div>
 
     <div class="card">
       <div class="section">
@@ -79,7 +86,8 @@
         </div>
 
         <div class="hint">
-          Выбери банк, с которого ты оплатил. После отправки данных статус заявки станет <b>“На проверке”</b>.
+          Выбери банк, с которого ты оплатил. Затем прикрепи нужные файлы.
+          После отправки статус станет <b>“На проверке”</b>.
         </div>
       </div>
 
@@ -90,7 +98,7 @@
         <!-- T-bank / Sovcom -->
         <div class="block" id="blockEmail">
           <div class="hint" style="margin-top:10px;">
-            Для этого банка нужно отправить <b>PDF чек от лица банка</b> на почту:
+            Отправь <b>PDF чек от лица банка</b> на почту:
             <div class="mono" style="margin-top:6px;">anton.semenovf@postchkr.com</div>
           </div>
           <div class="btnRow">
@@ -134,17 +142,21 @@
           </div>
         </div>
 
-        <!-- Default -->
-        <div class="block" id="blockDefault">
+        <!-- OTHER BANKS: pdf + video -->
+        <div class="block" id="blockOther">
           <div class="hint" style="margin-top:10px;">
-            Для выбранного банка приложи <b>PDF чек</b>.
+            Для выбранного банка нужно: <b>PDF чек</b> + <b>видео из личного кабинета банка</b>.
           </div>
           <div style="margin-top:10px;">
             <label>PDF чек</label>
-            <input id="defPdf" type="file" accept="application/pdf" />
+            <input id="otherPdf" type="file" accept="application/pdf" />
+          </div>
+          <div style="margin-top:10px;">
+            <label>Видео из личного кабинета банка</label>
+            <input id="otherVideo" type="file" accept="video/*" />
           </div>
           <div class="btnRow">
-            <button class="btn" id="btnDefSend" type="button">Отправить на проверку</button>
+            <button class="btn" id="btnOtherSend" type="button">Отправить на проверку</button>
           </div>
         </div>
 
@@ -161,19 +173,19 @@
   const reserveId = p.get("reserveId") || "";
   const amountRub = Number(p.get("amountRub"));
   const rate = Number(p.get("rate"));
+  const method = String(p.get("method") || "");
 
   const oidEl = document.getElementById("oid");
   const amountEl = document.getElementById("amount");
   const rateEl = document.getElementById("rate");
   const usdtEl = document.getElementById("usdt");
   const statusEl = document.getElementById("status");
-
   const bankSelect = document.getElementById("bankSelect");
 
   const blockEmail = document.getElementById("blockEmail");
   const blockAlfa = document.getElementById("blockAlfa");
   const blockSber = document.getElementById("blockSber");
-  const blockDefault = document.getElementById("blockDefault");
+  const blockOther = document.getElementById("blockOther");
 
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
   function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
@@ -186,24 +198,21 @@
   }
 
   function normalizeBankName(s){
-    return (s || "")
-      .toLowerCase()
-      .replace(/ё/g, "е")
-      .replace(/[-–—]/g, "-")
-      .replace(/\s+/g, " ")
-      .trim();
+    return (s || "").toLowerCase().replace(/ё/g, "е").replace(/[-–—]/g, "-").replace(/\s+/g, " ").trim();
   }
 
+  // 100 банков
   const BANKS_100 = [
     "Сбербанк","Т-банк","Альфа-Банк","ВТБ","Газпромбанк","Россельхозбанк","Райффайзенбанк","Открытие","Совкомбанк","Росбанк",
-    "Тинькофф (ист.)","Промсвязьбанк","Московский кредитный банк","ЮниКредит Банк","Банк Санкт-Петербург","Почта Банк","РНКБ","Ак Барс Банк","Уралсиб","Ситибанк",
-    "Абсолют Банк","БКС Банк","Ренессанс Банк","Хоум Банк","МТС Банк","Точка","Синара","Зенит","Новикомбанк","МИнБанк",
-    "СМП Банк","Азиатско-Тихоокеанский Банк","Русский Стандарт","ОТП Банк","Хлынов","ДОМ.РФ","Кредит Европа Банк","Экспобанк","ТрансКапиталБанк","Солид Банк",
-    "Локо-Банк","Банк УБРиР","Банк Авангард","Металлинвестбанк","Примсоцбанк","Банк Приморье","Банк Центр-инвест","СДМ-Банк","Интерпромбанк","Генбанк",
-    "Банк Союз","Национальный Клиринговый Центр","ФК Банк Зенит","РосДорБанк","Банк Кубань Кредит","Мособлбанк","Банк Возрождение","Таврический","Агророс","Фора-Банк",
-    "Банк Дальневосточный","Банк Левобережный","Банк Нордеа (ист.)","Банк Ингосстрах","Банк МКБ (МКБ)","Банк Российский Капитал (ист.)","Банк ИТБ","Банк Оней (ист.)","КБ Пойдем!","Банк Русь",
-    "Банк Снежинский","Банк Саровбизнесбанк","Банк Энерготрансбанк","Банк Элита","Банк МБА-Москва","Банк Нейва","Банк Кошелев","Банк АТБ","Банк Восточный (ист.)","Банк Пересвет",
-    "Банк Тимер","Банк Финсервис","Банк Кредит Урал Банк","Банк Урал ФД","Банк ББР","Банк Челиндбанк","Банк Промсвязь (ПСБ)","Банк Банк Оранжевый","Банк Югра (ист.)","Банк Модульбанк",
+    "Промсвязьбанк","Московский кредитный банк","ЮниКредит Банк","Банк Санкт-Петербург","Почта Банк","РНКБ","Ак Барс Банк","Уралсиб","Ситибанк","Абсолют Банк",
+    "БКС Банк","Ренессанс Банк","Хоум Банк","МТС Банк","Точка","Синара","Зенит","Новикомбанк","СМП Банк","Азиатско-Тихоокеанский Банк",
+    "Русский Стандарт","ОТП Банк","Хлынов","ДОМ.РФ","Кредит Европа Банк","Экспобанк","ТрансКапиталБанк","Локо-Банк","УБРиР","Авангард",
+    "Металлинвестбанк","Примсоцбанк","Приморье","Центр-инвест","СДМ-Банк","Генбанк","Союз","РосДорБанк","Кубань Кредит","Мособлбанк",
+    "Таврический","Агророс","Фора-Банк","Левобережный","Ингосстрах Банк","КБ Пойдем!","Финсервис","Кредит Урал Банк","Урал ФД","ББР Банк",
+    "Челиндбанк","Модульбанк","Пересвет","Энерготрансбанк","Нейва","Кошелев","АТБ","Саровбизнесбанк","Снежинский","Банк Русь",
+    "Дальневосточный","Солид Банк","Интерпромбанк","Банк МБА-Москва","Банк Элита","Тимер","Акцепт","Банк Казани","Севергазбанк","Банк Оранжевый",
+    "Сургутнефтегазбанк","Банк Хакасский","Татсоцбанк","Примтеркомбанк","Енисейский объединенный банк","Банк РЕСО Кредит","Банк Венец","Банк БЖФ","Банк РНКБ (Крым)","Банк Дружба",
+    "НБД-Банк","Банк Кузнецкий","Банк Вологжанин","Банк ПСКБ","Банк Пойдём! (дубль)","Банк Синара (дубль)","Банк Живаго","Банк Национальный стандарт","Банк Открытие (дубль)","Банк Уралсиб (дубль)"
   ].slice(0,100);
 
   function fillBanks(){
@@ -220,35 +229,43 @@
     blockEmail.classList.remove("show");
     blockAlfa.classList.remove("show");
     blockSber.classList.remove("show");
-    blockDefault.classList.remove("show");
+    blockOther.classList.remove("show");
+  }
+
+  function bankMode(){
+    const b = bankSelect.value;
+    const n = normalizeBankName(b);
+    if (n === normalizeBankName("т-банк") || n === normalizeBankName("совкомбанк")) return "EMAIL";
+    if (n === normalizeBankName("альфа-банк")) return "ALFA";
+    if (n === normalizeBankName("сбербанк")) return "SBER";
+    return "OTHER";
   }
 
   function onBankChange(){
     hideAll();
-    const b = bankSelect.value;
-    const n = normalizeBankName(b);
-
-    if (n === normalizeBankName("т-банк") || n === normalizeBankName("совкомбанк")){
-      blockEmail.classList.add("show");
-      setStatus("Выбери действия для банка: отправка чека на почту.", "");
-      return;
-    }
-
-    if (n === normalizeBankName("альфа-банк")){
-      blockAlfa.classList.add("show");
-      setStatus("Нужны ссылка “разделение платежа” + PDF чек.", "");
-      return;
-    }
-
-    if (n === normalizeBankName("сбербанк")){
-      blockSber.classList.add("show");
-      setStatus("Нужны PDF выписка с QR + PDF чек.", "");
-      return;
-    }
-
-    blockDefault.classList.add("show");
-    setStatus("Приложи PDF чек и отправь на проверку.", "");
+    const mode = bankMode();
+    if (mode === "EMAIL") blockEmail.classList.add("show");
+    else if (mode === "ALFA") blockAlfa.classList.add("show");
+    else if (mode === "SBER") blockSber.classList.add("show");
+    else blockOther.classList.add("show");
+    setStatus("—");
   }
+
+  function initHeader(){
+    oidEl.textContent = id || "—";
+    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
+    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
+    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+  }
+
+  function goBack(){
+    const qs = new URLSearchParams({
+      id, amountRub: String(amountRub), rate: String(rate), method: String(method)
+    });
+    window.location.href = "./crossflag-buy-order.html?" + qs.toString();
+  }
+
+  document.getElementById("backBtn").onclick = (e) => { e.preventDefault(); goBack(); };
 
   async function postJson(path, body){
     const res = await fetch(WORKER_BASE + path, {
@@ -263,74 +280,120 @@
     return j;
   }
 
-  function initHeader(){
-    oidEl.textContent = id || "—";
-    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
-    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
-    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+  async function uploadFile(kind, file){
+    const fd = new FormData();
+    fd.append("id", id);
+    fd.append("reserveId", reserveId);
+    fd.append("kind", kind);
+    fd.append("file", file);
+
+    const res = await fetch(WORKER_BASE + "/api/public/upload_proof", {
+      method: "POST",
+      body: fd
+    });
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("Upload ответ не JSON: " + text.slice(0, 200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
   }
 
-  async function submitProof(proofType, extra={}){
-    if (!id || !reserveId){
-      setStatus("Ошибка: нет id или reserveId.", "bad");
-      return;
-    }
-    const bankFrom = bankSelect.value;
+  function goToCheck(){
+    const qs = new URLSearchParams({ id, reserveId });
+    window.location.href = "./check.html?" + qs.toString();
+  }
 
-    setStatus("Отправляю…", "");
+  async function submitOnCheck(proofType, alphaLink=""){
+    await postJson("/api/public/submit_payment_proof", {
+      id, reserveId,
+      bankFrom: bankSelect.value,
+      proofType,
+      alphaLink
+    });
+  }
+
+  // EMAIL (T-bank / Sovcom)
+  document.getElementById("btnEmailSent").onclick = async () => {
     try{
-      await postJson("/api/public/submit_payment_proof", {
-        id,
-        reserveId,
-        bankFrom,
-        proofType,
-        ...extra,
-      });
-      setStatus("Готово ✅ Статус заявки: “На проверке”.", "ok");
+      setStatus("Отправляю…");
+      await submitOnCheck("EMAIL");
+      setStatus("Готово ✅ Статус: На проверке", "ok");
+      goToCheck();
     } catch(e){
       setStatus("Ошибка: " + e.message, "bad");
     }
-  }
-
-  document.getElementById("btnEmailSent").onclick = async () => {
-    await submitProof("EMAIL", { hasPdf1: true });
   };
 
+  // ALFA: link + pdf
   document.getElementById("btnAlfaSend").onclick = async () => {
-    const link = document.getElementById("alfaLink").value.trim();
-    const pdf = document.getElementById("alfaPdf").files.length > 0;
-    if (!link){
-      setStatus("Для Альфа-Банка нужна ссылка “разделение платежа”.", "bad");
-      return;
+    try{
+      const link = document.getElementById("alfaLink").value.trim();
+      const pdfFile = document.getElementById("alfaPdf").files[0];
+
+      if (!link) return setStatus("Нужна ссылка “разделение платежа”.", "bad");
+      if (!pdfFile) return setStatus("Нужен PDF чек.", "bad");
+
+      setStatus("Загружаю PDF (в Telegram)…");
+      await uploadFile("alfa_pdf", pdfFile);
+
+      setStatus("Отправляю на проверку…");
+      await submitOnCheck("ALFA", link);
+
+      setStatus("Готово ✅ Статус: На проверке", "ok");
+      goToCheck();
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
     }
-    if (!pdf){
-      setStatus("Для Альфа-Банка нужен PDF чек.", "bad");
-      return;
-    }
-    await submitProof("ALFA", { alphaLink: link, hasPdf1: true });
   };
 
+  // SBER: stmt + check
   document.getElementById("btnSberSend").onclick = async () => {
-    const stmt = document.getElementById("sberStmt").files.length > 0;
-    const чек = document.getElementById("sberCheck").files.length > 0;
-    if (!stmt){
-      setStatus("Для Сбера нужна PDF выписка с QR.", "bad");
-      return;
+    try{
+      const stmt = document.getElementById("sberStmt").files[0];
+      const чек = document.getElementById("sberCheck").files[0];
+
+      if (!stmt) return setStatus("Нужна PDF выписка с QR.", "bad");
+      if (!чек) return setStatus("Нужен PDF чек.", "bad");
+
+      setStatus("Загружаю выписку (в Telegram)…");
+      await uploadFile("sber_stmt", stmt);
+
+      setStatus("Загружаю чек (в Telegram)…");
+      await uploadFile("sber_check", чек);
+
+      setStatus("Отправляю на проверку…");
+      await submitOnCheck("SBER");
+
+      setStatus("Готово ✅ Статус: На проверке", "ok");
+      goToCheck();
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
     }
-    if (!чек){
-      setStatus("Для Сбера нужен PDF чек.", "bad");
-      return;
-    }
-    await submitProof("SBER", { hasPdf1: true, hasPdf2: true });
   };
 
-  document.getElementById("btnDefSend").onclick = async () => {
-    const pdf = document.getElementById("defPdf").files.length > 0;
-    if (!pdf){
-      setStatus("Нужен PDF чек.", "bad");
-      return;
+  // OTHER: pdf + video
+  document.getElementById("btnOtherSend").onclick = async () => {
+    try{
+      const pdf = document.getElementById("otherPdf").files[0];
+      const vid = document.getElementById("otherVideo").files[0];
+
+      if (!pdf) return setStatus("Нужен PDF чек.", "bad");
+      if (!vid) return setStatus("Нужно видео из личного кабинета банка.", "bad");
+
+      setStatus("Загружаю PDF (в Telegram)…");
+      await uploadFile("other_pdf", pdf);
+
+      setStatus("Загружаю видео (в Telegram)…");
+      await uploadFile("other_video", vid);
+
+      setStatus("Отправляю на проверку…");
+      await submitOnCheck("OTHER");
+
+      setStatus("Готово ✅ Статус: На проверке", "ok");
+      goToCheck();
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
     }
-    await submitProof("PDF", { hasPdf1: true });
   };
 
   fillBanks();
@@ -338,7 +401,11 @@
   onBankChange();
   bankSelect.onchange = onBankChange;
 
-  setStatus("Выбери банк, затем отправь данные на проверку.", "");
+  if (!id || !reserveId){
+    setStatus("Ошибка: отсутствуют id/reserveId. Вернись назад.", "bad");
+  } else {
+    setStatus("Выбери банк и отправь подтверждение.", "");
+  }
 </script>
 </body>
 </html>

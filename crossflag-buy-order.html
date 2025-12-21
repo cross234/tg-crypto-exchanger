@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crossflag · Оплата ордера</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
+      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .title{ font-size:16px; font-weight:950; }
+    .back{
+      color:#cfe0ff; text-decoration:none; font-weight:800;
+      border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
+      background: rgba(255,255,255,.03);
+    }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:18px;
+      overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35);
+    }
+    .section{ padding:14px; }
+    .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
+    .kv{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width:640px){ .kv{ grid-template-columns:1fr; } }
+    .item{
+      background: rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px;
+    }
+    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
+    .value{ font-size:15px; font-weight:950; word-break:break-word; }
+
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
+    .status.ok{ color:var(--ok); font-weight:900; }
+    .status.bad{ color:var(--bad); font-weight:900; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .btn{
+      border:0; border-radius:12px; padding:12px 14px; cursor:pointer;
+      color:#fff; font-weight:950; background: var(--btn);
+      min-width:160px;
+    }
+    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px; color:#cfe0ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">Crossflag Exchange · Оплата</div>
+      <a class="back" href="./buy.html">← Назад</a>
+    </div>
+
+    <div class="card">
+      <div class="section">
+        <div class="kv">
+          <div class="item">
+            <div class="label">Ордер</div>
+            <div class="value mono" id="oid">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Сумма к оплате (RUB)</div>
+            <div class="value" id="amount">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Курс (RUB/USDT)</div>
+            <div class="value" id="rate">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Получите (USDT)</div>
+            <div class="value" id="usdt">—</div>
+          </div>
+        </div>
+
+        <div class="status" id="status">Загружаю реквизиты…</div>
+      </div>
+
+      <div class="section">
+        <div style="font-weight:950; margin-bottom:10px;">Реквизиты для оплаты</div>
+
+        <div class="kv">
+          <div class="item">
+            <div class="label">Банк</div>
+            <div class="value" id="bank">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Реквизиты (СБП/карта)</div>
+            <div class="value" id="req">—</div>
+          </div>
+        </div>
+
+        <div class="status" style="margin-top:10px;">
+          Переведи точную сумму и нажми “Я оплатил”.
+        </div>
+
+        <div class="btnRow" style="margin-top:12px;">
+          <button class="btn gray" id="copyBtn" type="button">Скопировать реквизиты</button>
+          <button class="btn" id="paidBtn" type="button">Я оплатил</button>
+        </div>
+
+        <div class="status" id="paidStatus">—</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
+  const p = new URLSearchParams(location.search);
+  const id = p.get("id") || "";
+  const amountRub = Number(p.get("amountRub"));
+  const rate = Number(p.get("rate"));
+
+  const oidEl = document.getElementById("oid");
+  const amountEl = document.getElementById("amount");
+  const rateEl = document.getElementById("rate");
+  const usdtEl = document.getElementById("usdt");
+
+  const bankEl = document.getElementById("bank");
+  const reqEl = document.getElementById("req");
+
+  const statusEl = document.getElementById("status");
+  const paidStatusEl = document.getElementById("paidStatus");
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
+  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.classList.remove("ok","bad");
+    if (kind) statusEl.classList.add(kind);
+  }
+  function setPaidStatus(text, kind){
+    paidStatusEl.textContent = text;
+    paidStatusEl.classList.remove("ok","bad");
+    if (kind) paidStatusEl.classList.add(kind);
+  }
+
+  function basicFill(){
+    oidEl.textContent = id || "—";
+    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
+    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
+    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+  }
+
+  async function loadRequisites(){
+    basicFill();
+
+    if (!id){
+      setStatus("Ошибка: нет id заявки. Вернись в стакан и выбери заявку заново.", "bad");
+      return;
+    }
+
+    try{
+      setStatus("Загружаю реквизиты…");
+
+      const res = await fetch(WORKER_BASE + "/api/public/buy_offer?id=" + encodeURIComponent(id));
+      const text = await res.text();
+      let j;
+      try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
+
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      bankEl.textContent = j.offer.payBank || "—";
+      reqEl.textContent = j.offer.payRequisite || "—";
+
+      if (!j.offer.payBank || !j.offer.payRequisite){
+        setStatus("⚠️ Реквизиты не заполнены в админке для этой заявки.", "bad");
+      } else {
+        setStatus("Реквизиты получены. Оплати и нажми “Я оплатил”.", "ok");
+      }
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
+    }
+  }
+
+  document.getElementById("copyBtn").onclick = async () => {
+    const txt = `Банк: ${bankEl.textContent}\nРеквизиты: ${reqEl.textContent}\nСумма: ${amountEl.textContent}`;
+    try{
+      await navigator.clipboard.writeText(txt);
+      setPaidStatus("Скопировано ✅", "ok");
+    } catch {
+      setPaidStatus("Не удалось скопировать (браузер запретил). Скопируй вручную.", "bad");
+    }
+  };
+
+  document.getElementById("paidBtn").onclick = () => {
+    // На этом шаге — просто подтверждение.
+    // Следующий шаг: создавать сделку в KV со статусами и подтверждением оператором.
+    setPaidStatus("Отмечено: “Я оплатил”. Следующий шаг — проверка оплаты и выдача USDT.", "ok");
+  };
+
+  loadRequisites();
+</script>
+</body>
+</html>

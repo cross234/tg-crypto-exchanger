@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Админка обменника</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1a30; --border:#223255;
+      --text:#e9f0ff; --muted:#9fb0d4; --ok:#16a34a; --bad:#ffb4b4;
+      --btn:#2563eb; --warn:#f59e0b; --danger:#ef4444;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
+    .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    .title{ font-weight:950; font-size:16px; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+    label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:800; }
+    input, select{
+      width:100%; box-sizing:border-box; padding:10px 12px;
+      border-radius:12px; border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03); color:var(--text); font-weight:850; outline:none;
+    }
+    input:focus, select:focus{ border-color: rgba(37,99,235,.5); box-shadow:0 0 0 4px rgba(37,99,235,.12); }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+    .btn{
+      border:0; border-radius:12px; padding:10px 14px; cursor:pointer;
+      color:#fff; font-weight:950; background:var(--btn);
+    }
+    .btn.warn{ background:var(--warn); color:#111827; }
+    .btn.danger{ background:var(--danger); }
+    .btn.gray{ background:rgba(255,255,255,.10); }
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); }
+    .status.ok{ color:#9dffb8; font-weight:900; }
+    .status.bad{ color:var(--bad); font-weight:900; }
+    table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:13px; }
+    th, td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; }
+    th{ color:var(--muted); font-weight:950; }
+    .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
+    .tag.frozen{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+    .tag.deleted{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
+    .small{ font-size:12px; color:var(--muted); }
+    a{ color:#cfe0ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">Админка обменника</div>
+      <div class="small">
+        Worker: <span id="w"></span> · <a href="./index.html">на сайт</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div style="font-weight:950; margin-bottom:8px;">Авторизация</div>
+        <label>Admin token (X-Admin-Token)</label>
+        <input id="token" placeholder="вставь секретный токен из Cloudflare" />
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="saveToken">Сохранить</button>
+          <button class="btn gray" id="clearToken">Сбросить</button>
+        </div>
+        <div class="status" id="authStatus">Токен хранится локально в браузере.</div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:950; margin-bottom:8px;">Настройка процентов</div>
+        <div class="row">
+          <div style="flex:1; min-width:180px;">
+            <label>Покупка % (для buy / ask)</label>
+            <input id="buyPercent" placeholder="например 1.5 или -0.5" />
+          </div>
+          <div style="flex:1; min-width:180px;">
+            <label>Продажа % (для sell / bid)</label>
+            <input id="sellPercent" placeholder="например 1.0 или -1.0" />
+          </div>
+          <button class="btn" id="saveConfig">Сохранить</button>
+        </div>
+        <div class="status" id="cfgStatus">—</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div style="font-weight:950;">Заявки в стакан покупки</div>
+      <div class="small">Метод: SBP = СБП, CARD = Карта</div>
+
+      <div class="row" style="margin-top:10px;">
+        <div style="flex:1; min-width:200px;">
+          <label>Сумма (RUB)</label>
+          <input id="amountRub" placeholder="например 25000" />
+        </div>
+        <div style="flex:1; min-width:160px;">
+          <label>Метод</label>
+          <select id="method">
+            <option value="SBP">SBP (СБП)</option>
+            <option value="CARD">CARD (Карта)</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:180px;">
+          <label>Курс (RUB/USDT)</label>
+          <input id="rate" placeholder="например 80.55" />
+        </div>
+        <button class="btn" id="addOffer">Добавить</button>
+        <button class="btn gray" id="refresh">Обновить</button>
+      </div>
+
+      <div class="status" id="offerStatus">—</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Сумма</th>
+            <th>Метод</th>
+            <th>Курс</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+  document.getElementById("w").textContent = WORKER_BASE;
+
+  const tokenInput = document.getElementById("token");
+  const authStatus = document.getElementById("authStatus");
+
+  const cfgStatus = document.getElementById("cfgStatus");
+  const offerStatus = document.getElementById("offerStatus");
+
+  const buyPercent = document.getElementById("buyPercent");
+  const sellPercent = document.getElementById("sellPercent");
+
+  const amountRub = document.getElementById("amountRub");
+  const method = document.getElementById("method");
+  const rate = document.getElementById("rate");
+
+  const tbody = document.getElementById("tbody");
+
+  function getToken() {
+    return localStorage.getItem("admin_token") || "";
+  }
+  function setToken(t) {
+    localStorage.setItem("admin_token", t);
+  }
+
+  tokenInput.value = getToken();
+
+  document.getElementById("saveToken").onclick = () => {
+    setToken(tokenInput.value.trim());
+    authStatus.textContent = "Токен сохранён локально.";
+    authStatus.className = "status ok";
+  };
+
+  document.getElementById("clearToken").onclick = () => {
+    localStorage.removeItem("admin_token");
+    tokenInput.value = "";
+    authStatus.textContent = "Токен сброшен.";
+    authStatus.className = "status";
+  };
+
+  async function api(path, opts = {}) {
+    const headers = Object.assign(
+      { "Content-Type": "application/json" },
+      opts.headers || {}
+    );
+
+    const t = getToken();
+    if (t) headers["X-Admin-Token"] = t;
+
+    const res = await fetch(WORKER_BASE + path, { ...opts, headers });
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 120)); }
+    if (!res.ok || !json.ok) throw new Error(json.error || ("HTTP " + res.status));
+    return json;
+  }
+
+  async function loadConfig() {
+    try {
+      cfgStatus.textContent = "Загружаю…";
+      cfgStatus.className = "status";
+      const j = await api("/api/admin/config", { method: "GET" });
+      buyPercent.value = j.config.buyPercent;
+      sellPercent.value = j.config.sellPercent;
+      cfgStatus.textContent = "Загружено.";
+      cfgStatus.className = "status ok";
+    } catch (e) {
+      cfgStatus.textContent = "Ошибка: " + e.message;
+      cfgStatus.className = "status bad";
+    }
+  }
+
+  async function saveConfig() {
+    try {
+      cfgStatus.textContent = "Сохраняю…";
+      cfgStatus.className = "status";
+      const body = {
+        buyPercent: buyPercent.value,
+        sellPercent: sellPercent.value,
+      };
+      await api("/api/admin/config", { method: "POST", body: JSON.stringify(body) });
+      cfgStatus.textContent = "Сохранено.";
+      cfgStatus.className = "status ok";
+    } catch (e) {
+      cfgStatus.textContent = "Ошибка: " + e.message;
+      cfgStatus.className = "status bad";
+    }
+  }
+
+  function fmtRub(n) {
+    return Number(n).toLocaleString("ru-RU") + " ₽";
+  }
+
+  async function loadOffers() {
+    try {
+      offerStatus.textContent = "Загружаю заявки…";
+      offerStatus.className = "status";
+      const j = await api("/api/admin/offers", { method: "GET" });
+
+      tbody.innerHTML = "";
+      for (const o of j.offers) {
+        const tr = document.createElement("tr");
+
+        const statusTags = [];
+        if (o.deleted) statusTags.push(`<span class="tag deleted">Удалена</span>`);
+        if (o.frozen) statusTags.push(`<span class="tag frozen">Заморожена</span>`);
+        if (!o.deleted && !o.frozen) statusTags.push(`<span class="tag">Активна</span>`);
+
+        tr.innerHTML = `
+          <td><span class="small">${o.id}</span></td>
+          <td>${fmtRub(o.amountRub)}</td>
+          <td><span class="tag">${o.method}</span></td>
+          <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
+          <td>${statusTags.join(" ")}</td>
+          <td></td>
+        `;
+
+        const td = tr.querySelector("td:last-child");
+
+        const freezeBtn = document.createElement("button");
+        freezeBtn.className = "btn warn";
+        freezeBtn.textContent = o.frozen ? "Разморозить" : "Заморозить";
+        freezeBtn.onclick = async () => {
+          await api(`/api/admin/offers/${o.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ frozen: !o.frozen }),
+          });
+          await loadOffers();
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn danger";
+        delBtn.style.marginLeft = "8px";
+        delBtn.textContent = "Удалить";
+        delBtn.onclick = async () => {
+          if (!confirm("Удалить заявку?")) return;
+          await api(`/api/admin/offers/${o.id}`, { method: "DELETE" });
+          await loadOffers();
+        };
+
+        td.appendChild(freezeBtn);
+        td.appendChild(delBtn);
+
+        tbody.appendChild(t

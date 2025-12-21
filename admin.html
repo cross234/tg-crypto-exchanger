@@ -12,7 +12,7 @@
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
-    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:18px; }
     .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .title{ font-weight:950; font-size:16px; }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); }
@@ -33,16 +33,18 @@
     .btn.warn{ background:var(--warn); color:#111827; }
     .btn.danger{ background:var(--danger); }
     .btn.gray{ background:rgba(255,255,255,.10); }
-    .status{ margin-top:10px; font-size:12px; color:var(--muted); }
+    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
     .status.ok{ color:#9dffb8; font-weight:900; }
     .status.bad{ color:var(--bad); font-weight:900; }
+
     table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:13px; }
-    th, td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; }
+    th, td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; vertical-align:top; }
     th{ color:var(--muted); font-weight:950; }
     .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
     .tag.frozen{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
     .tag.deleted{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
     .small{ font-size:12px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
     a{ color:#cfe0ff; }
   </style>
 </head>
@@ -71,11 +73,11 @@
         <div style="font-weight:950; margin-bottom:8px;">Настройка процентов</div>
         <div class="row">
           <div style="flex:1; min-width:180px;">
-            <label>Покупка % (для buy / ask)</label>
+            <label>Покупка %</label>
             <input id="buyPercent" placeholder="например 1.5 или -0.5" />
           </div>
           <div style="flex:1; min-width:180px;">
-            <label>Продажа % (для sell / bid)</label>
+            <label>Продажа %</label>
             <input id="sellPercent" placeholder="например 1.0 или -1.0" />
           </div>
           <button class="btn" id="saveConfig">Сохранить</button>
@@ -86,24 +88,37 @@
 
     <div class="card" style="margin-top:12px;">
       <div style="font-weight:950;">Заявки в стакан покупки</div>
-      <div class="small">Метод: SBP = СБП, CARD = Карта</div>
+      <div class="small">Метод: SBP = СБП, CARD = Карта. Реквизиты показываются только на Crossflag оплате.</div>
 
       <div class="row" style="margin-top:10px;">
-        <div style="flex:1; min-width:200px;">
+        <div style="flex:1; min-width:160px;">
           <label>Сумма (RUB)</label>
           <input id="amountRub" placeholder="например 25000" />
         </div>
-        <div style="flex:1; min-width:160px;">
+
+        <div style="flex:1; min-width:150px;">
           <label>Метод</label>
           <select id="method">
             <option value="SBP">SBP (СБП)</option>
             <option value="CARD">CARD (Карта)</option>
           </select>
         </div>
-        <div style="flex:1; min-width:180px;">
+
+        <div style="flex:1; min-width:160px;">
           <label>Курс (RUB/USDT)</label>
           <input id="rate" placeholder="например 80.55" />
         </div>
+
+        <div style="flex:1; min-width:160px;">
+          <label>Банк (Crossflag)</label>
+          <input id="payBank" placeholder="например Сбербанк" />
+        </div>
+
+        <div style="flex:1; min-width:220px;">
+          <label>Реквизиты (Crossflag)</label>
+          <input id="payRequisite" placeholder="телефон СБП или номер карты" />
+        </div>
+
         <button class="btn" id="addOffer">Добавить</button>
         <button class="btn gray" id="refresh">Обновить</button>
       </div>
@@ -117,6 +132,7 @@
             <th>Сумма</th>
             <th>Метод</th>
             <th>Курс</th>
+            <th>Crossflag реквизиты</th>
             <th>Статус</th>
             <th>Действия</th>
           </tr>
@@ -142,15 +158,13 @@
   const amountRub = document.getElementById("amountRub");
   const method = document.getElementById("method");
   const rate = document.getElementById("rate");
+  const payBank = document.getElementById("payBank");
+  const payRequisite = document.getElementById("payRequisite");
 
   const tbody = document.getElementById("tbody");
 
-  function getToken() {
-    return localStorage.getItem("admin_token") || "";
-  }
-  function setToken(t) {
-    localStorage.setItem("admin_token", t);
-  }
+  function getToken() { return localStorage.getItem("admin_token") || ""; }
+  function setToken(t) { localStorage.setItem("admin_token", t); }
 
   tokenInput.value = getToken();
 
@@ -172,16 +186,15 @@
       { "Content-Type": "application/json" },
       opts.headers || {}
     );
-
     const t = getToken();
     if (t) headers["X-Admin-Token"] = t;
 
     const res = await fetch(WORKER_BASE + path, { ...opts, headers });
     const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 120)); }
-    if (!res.ok || !json.ok) throw new Error(json.error || ("HTTP " + res.status));
-    return json;
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
   }
 
   async function loadConfig() {
@@ -203,10 +216,7 @@
     try {
       cfgStatus.textContent = "Сохраняю…";
       cfgStatus.className = "status";
-      const body = {
-        buyPercent: buyPercent.value,
-        sellPercent: sellPercent.value,
-      };
+      const body = { buyPercent: buyPercent.value, sellPercent: sellPercent.value };
       await api("/api/admin/config", { method: "POST", body: JSON.stringify(body) });
       cfgStatus.textContent = "Сохранено.";
       cfgStatus.className = "status ok";
@@ -216,9 +226,8 @@
     }
   }
 
-  function fmtRub(n) {
-    return Number(n).toLocaleString("ru-RU") + " ₽";
-  }
+  function fmtRub(n) { return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function safe(s){ return (s || "").toString().replace(/[<>&]/g, (c)=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
 
   async function loadOffers() {
     try {
@@ -227,6 +236,7 @@
       const j = await api("/api/admin/offers", { method: "GET" });
 
       tbody.innerHTML = "";
+
       for (const o of j.offers) {
         const tr = document.createElement("tr");
 
@@ -236,10 +246,14 @@
         if (!o.deleted && !o.frozen) statusTags.push(`<span class="tag">Активна</span>`);
 
         tr.innerHTML = `
-          <td><span class="small">${o.id}</span></td>
+          <td><span class="mono">${safe(o.id)}</span></td>
           <td>${fmtRub(o.amountRub)}</td>
-          <td><span class="tag">${o.method}</span></td>
+          <td><span class="tag">${safe(o.method)}</span></td>
           <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
+          <td class="small">
+            Банк: <b>${safe(o.payBank || "—")}</b><br/>
+            Рекв.: <span class="mono">${safe(o.payRequisite || "—")}</span>
+          </td>
           <td>${statusTags.join(" ")}</td>
           <td></td>
         `;
@@ -290,11 +304,16 @@
         amountRub: amountRub.value,
         method: method.value,
         rate: rate.value,
+        payBank: payBank.value,
+        payRequisite: payRequisite.value,
       };
+
       await api("/api/admin/offers", { method: "POST", body: JSON.stringify(body) });
 
       amountRub.value = "";
       rate.value = "";
+      payBank.value = "";
+      payRequisite.value = "";
 
       await loadOffers();
       offerStatus.textContent = "Добавлено.";
@@ -312,7 +331,6 @@
     await loadOffers();
   };
 
-  // старт
   loadConfig();
   loadOffers();
 </script>

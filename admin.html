@@ -270,4 +270,51 @@
         td.appendChild(freezeBtn);
         td.appendChild(delBtn);
 
-        tbody.appendChild(t
+        tbody.appendChild(tr);
+      }
+
+      offerStatus.textContent = "Готово.";
+      offerStatus.className = "status ok";
+    } catch (e) {
+      offerStatus.textContent = "Ошибка: " + e.message;
+      offerStatus.className = "status bad";
+    }
+  }
+
+  async function addOffer() {
+    try {
+      offerStatus.textContent = "Добавляю…";
+      offerStatus.className = "status";
+
+      const body = {
+        amountRub: amountRub.value,
+        method: method.value,
+        rate: rate.value,
+      };
+      await api("/api/admin/offers", { method: "POST", body: JSON.stringify(body) });
+
+      amountRub.value = "";
+      rate.value = "";
+
+      await loadOffers();
+      offerStatus.textContent = "Добавлено.";
+      offerStatus.className = "status ok";
+    } catch (e) {
+      offerStatus.textContent = "Ошибка: " + e.message;
+      offerStatus.className = "status bad";
+    }
+  }
+
+  document.getElementById("saveConfig").onclick = saveConfig;
+  document.getElementById("addOffer").onclick = addOffer;
+  document.getElementById("refresh").onclick = async () => {
+    await loadConfig();
+    await loadOffers();
+  };
+
+  // старт
+  loadConfig();
+  loadOffers();
+</script>
+</body>
+</html>

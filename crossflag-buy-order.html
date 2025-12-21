@@ -14,11 +14,6 @@
     .wrap{ max-width:720px; margin:0 auto; padding:18px; }
     .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .title{ font-size:16px; font-weight:950; }
-    .back{
-      color:#cfe0ff; text-decoration:none; font-weight:800;
-      border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
-      background: rgba(255,255,255,.03);
-    }
     .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35); }
     .section{ padding:14px; }
     .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
@@ -46,7 +41,6 @@
   <div class="wrap">
     <div class="top">
       <div class="title">Crossflag Exchange · Оплата</div>
-      <a class="back" href="./buy-order.html">← Назад</a>
     </div>
 
     <div class="card">
@@ -213,17 +207,13 @@
       return;
     }
 
-    // 1) если уже есть reserveId в браузере — пробуем открыть СВОЙ резерв (F5-friendly)
     const cached = loadReserveLocal();
     if (cached?.reserveId){
       try{
         setState("Открываю резерв…");
         setStatus("Восстанавливаю твою сделку после обновления страницы…");
 
-        const j = await postJson("/api/public/get_reserved_buy_offer", {
-          id,
-          reserveId: cached.reserveId
-        });
+        const j = await postJson("/api/public/get_reserved_buy_offer", { id, reserveId: cached.reserveId });
 
         reserveId = j.reserve.reserveId;
         reservedUntil = j.reserve.reservedUntil;
@@ -239,13 +229,11 @@
         updateTimer();
         timerHandle = setInterval(updateTimer, 1000);
         return;
-      } catch(e){
-        // если резерв уже невалиден/истёк — очистим и пойдём на новый reserve
+      } catch {
         clearReserveLocal();
       }
     }
 
-    // 2) иначе — резервируем заново
     try{
       setState("Резервирую…");
       setStatus("Загружаю реквизиты и резервирую заявку…");
@@ -276,6 +264,14 @@
     }
   }
 
+  async function goBackAfterCancel(){
+    // возвращаем на страницу выбора способа оплаты
+    window.location.href = "./buy-order.html?id=" + encodeURIComponent(id)
+      + "&amountRub=" + encodeURIComponent(String(amountRub))
+      + "&rate=" + encodeURIComponent(String(rate))
+      + "&method=" + encodeURIComponent(String(p.get("method") || ""));
+  }
+
   async function autoCancelDueToTimeout(){
     if (finished) return;
     finished = true;
@@ -289,8 +285,12 @@
         await postJson("/api/public/cancel_buy_offer", { id, reserveId });
       }
     } catch {}
+
     clearReserveLocal();
     setPaidStatus("—");
+
+    // откидываем назад
+    await goBackAfterCancel();
   }
 
   document.getElementById("paidBtn").onclick = async () => {
@@ -307,8 +307,6 @@
       setState("Оплачено");
       setStatus("Отлично. Мы получили отметку “Оплачено”. Далее будет проверка оплаты.", "ok");
       setPaidStatus("Ожидайте подтверждения оплаты.", "ok");
-      // оставляем reserve в localStorage (не критично), но можно очистить:
-      // clearReserveLocal();
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
     }
@@ -329,6 +327,9 @@
       setStatus("Ордер отменён, заявка разморожена.", "bad");
       clearReserveLocal();
       setPaidStatus("—");
+
+      // откидываем назад
+      await goBackAfterCancel();
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
     }

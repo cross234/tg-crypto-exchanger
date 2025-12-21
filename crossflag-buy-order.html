@@ -19,65 +19,26 @@
       border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
       background: rgba(255,255,255,.03);
     }
-    .card{
-      background:var(--card); border:1px solid var(--border); border-radius:18px;
-      overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35);
-    }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35); }
     .section{ padding:14px; }
     .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
     .kv{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
     @media (max-width:640px){ .kv{ grid-template-columns:1fr; } }
-    .item{
-      background: rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;
-      padding:12px;
-    }
+    .item{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px; }
     .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
     .value{ font-size:15px; font-weight:950; word-break:break-word; }
-
-    .rowLine{
-      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-      margin-top:10px;
-    }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      color:#cfe0ff;
-      font-weight:950;
-      font-size:12px;
-    }
+    .rowLine{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); color:#cfe0ff; font-weight:950; font-size:12px; }
     .pill b{ color:#fff; }
-
     .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
     .status.ok{ color:var(--ok); font-weight:900; }
     .status.bad{ color:var(--bad); font-weight:900; }
-
     .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
-    .btn{
-      border:0; border-radius:12px; padding:12px 14px; cursor:pointer;
-      color:#fff; font-weight:950; background: var(--btn);
-      min-width:160px;
-    }
+    .btn{ border:0; border-radius:12px; padding:12px 14px; cursor:pointer; color:#fff; font-weight:950; background: var(--btn); min-width:160px; }
     .btn.danger{ background: var(--danger); min-width:auto; }
-    .btn.small{
-      padding:8px 10px;
-      min-width:auto;
-      font-size:12px;
-      border-radius:10px;
-      background: rgba(255,255,255,.10);
-    }
-
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px; color:#cfe0ff;
-    }
-
-    .reqLine{
-      display:flex; align-items:center; gap:10px; justify-content:space-between;
-    }
+    .btn.small{ padding:8px 10px; min-width:auto; font-size:12px; border-radius:10px; background: rgba(255,255,255,.10); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
+    .reqLine{ display:flex; align-items:center; gap:10px; justify-content:space-between; }
     .reqValue{ flex:1; word-break:break-word; }
   </style>
 </head>
@@ -110,11 +71,11 @@
         </div>
 
         <div class="rowLine">
-          <span class="pill">Статус: <b id="st">Резервирую…</b></span>
+          <span class="pill">Статус: <b id="st">Загрузка…</b></span>
           <span class="pill">Осталось: <b id="timer">15:00</b></span>
         </div>
 
-        <div class="status" id="status">Загружаю реквизиты и резервирую заявку…</div>
+        <div class="status" id="status">—</div>
       </div>
 
       <div class="section">
@@ -176,6 +137,8 @@
   let timerHandle = null;
   let finished = false;
 
+  const storageKey = "cf_reserve_" + id;
+
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
   function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
   function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
@@ -190,7 +153,6 @@
     paidStatusEl.classList.remove("ok","bad");
     if (kind) paidStatusEl.classList.add(kind);
   }
-
   function setState(text){ stEl.textContent = text; }
 
   function basicFill(){
@@ -228,7 +190,21 @@
     return j;
   }
 
-  async function reserveAndLoad(){
+  function saveReserveLocal(reserveId, reservedUntil){
+    localStorage.setItem(storageKey, JSON.stringify({ reserveId, reservedUntil }));
+  }
+  function loadReserveLocal(){
+    try{
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
+  }
+  function clearReserveLocal(){
+    localStorage.removeItem(storageKey);
+  }
+
+  async function loadOrReserve(){
     basicFill();
 
     if (!id){
@@ -237,6 +213,39 @@
       return;
     }
 
+    // 1) если уже есть reserveId в браузере — пробуем открыть СВОЙ резерв (F5-friendly)
+    const cached = loadReserveLocal();
+    if (cached?.reserveId){
+      try{
+        setState("Открываю резерв…");
+        setStatus("Восстанавливаю твою сделку после обновления страницы…");
+
+        const j = await postJson("/api/public/get_reserved_buy_offer", {
+          id,
+          reserveId: cached.reserveId
+        });
+
+        reserveId = j.reserve.reserveId;
+        reservedUntil = j.reserve.reservedUntil;
+
+        bankEl.textContent = j.offer.payBank || "—";
+        reqEl.textContent = j.offer.payRequisite || "—";
+
+        saveReserveLocal(reserveId, reservedUntil);
+
+        setState("Ожидание оплаты");
+        setStatus("Сделка восстановлена. Продолжай оплату и нажми “Я оплатил”.", "ok");
+
+        updateTimer();
+        timerHandle = setInterval(updateTimer, 1000);
+        return;
+      } catch(e){
+        // если резерв уже невалиден/истёк — очистим и пойдём на новый reserve
+        clearReserveLocal();
+      }
+    }
+
+    // 2) иначе — резервируем заново
     try{
       setState("Резервирую…");
       setStatus("Загружаю реквизиты и резервирую заявку…");
@@ -248,6 +257,8 @@
 
       bankEl.textContent = j.offer.payBank || "—";
       reqEl.textContent = j.offer.payRequisite || "—";
+
+      saveReserveLocal(reserveId, reservedUntil);
 
       if (!j.offer.payBank || !j.offer.payRequisite){
         setState("Резерв");
@@ -278,6 +289,7 @@
         await postJson("/api/public/cancel_buy_offer", { id, reserveId });
       }
     } catch {}
+    clearReserveLocal();
     setPaidStatus("—");
   }
 
@@ -295,6 +307,8 @@
       setState("Оплачено");
       setStatus("Отлично. Мы получили отметку “Оплачено”. Далее будет проверка оплаты.", "ok");
       setPaidStatus("Ожидайте подтверждения оплаты.", "ok");
+      // оставляем reserve в localStorage (не критично), но можно очистить:
+      // clearReserveLocal();
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
     }
@@ -313,6 +327,7 @@
 
       setState("Отменено");
       setStatus("Ордер отменён, заявка разморожена.", "bad");
+      clearReserveLocal();
       setPaidStatus("—");
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
@@ -333,7 +348,7 @@
     }
   };
 
-  reserveAndLoad();
+  loadOrReserve();
 </script>
 </body>
 </html>

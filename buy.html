@@ -150,3 +150,120 @@
           <tr>
             <th>Сумма (RUB)</th>
             <th>Метод</th>
+            <th>Курс (RUB/USDT)</th>
+            <th style="width:160px;">Действие</th>
+          </tr>
+        </thead>
+        <tbody class="tbody" id="rows">
+          <!-- строки появятся тут -->
+        </tbody>
+      </table>
+
+      <div class="footnote">
+        Сейчас “стакан” демонстрационный: заявки генерируются из рыночного курса (ask/bid) Rapira.
+        Следующим шагом подключим реальные P2P заявки, если найдём/подключим источник.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Твой воркер (уже подставил)
+    const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+    const SYMBOL = "USDT/RUB";
+
+    const askEl = document.getElementById("ask");
+    const bidEl = document.getElementById("bid");
+    const statusEl = document.getElementById("status");
+    const rowsEl = document.getElementById("rows");
+
+    const METHODS = ["СБП", "Тинькофф", "Сбербанк", "Альфа", "ВТБ", "Райффайзен"];
+
+    function setStatus(text, isError=false){
+      statusEl.textContent = text;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function rub(n){
+      return Math.round(n).toLocaleString("ru-RU");
+    }
+
+    function rnd(min, max){
+      return Math.random() * (max - min) + min;
+    }
+
+    // Генерация “P2P офферов” около ask
+    function buildOffers(ask){
+      // офферы покупки USDT за RUB обычно чуть выше лучшей рыночной цены
+      // делаем 12 строк с разным курсом и суммами
+      const offers = [];
+      for (let i = 0; i < 12; i++){
+        const premium = rnd(0.00, 0.018);               // +0%..+1.8%
+        const rate = +(ask * (1 + premium)).toFixed(2);
+
+        const amountRub = Math.round(rnd(5_000, 250_000));
+        const method = METHODS[Math.floor(Math.random() * METHODS.length)];
+
+        offers.push({ amountRub, method, rate });
+      }
+      // сортируем как “лучшие сверху” (самый низкий курс выгоднее покупателю? наоборот)
+      // Ты покупаешь USDT за RUB: тебе выгоднее МЕНЬШЕ курс. Значит сортируем по rate ASC.
+      offers.sort((a,b)=>a.rate-b.rate);
+      return offers;
+    }
+
+    function renderOffers(offers){
+      rowsEl.innerHTML = "";
+      for (const o of offers){
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td data-label="Сумма" class="amt">${rub(o.amountRub)} ₽</td>
+          <td data-label="Метод"><span class="method">${o.method}</span></td>
+          <td data-label="Курс" class="rate">${o.rate.toLocaleString("ru-RU")} ₽</td>
+          <td data-label="Действие">
+            <button class="buybtn" type="button">Купить</button>
+          </td>
+        `;
+
+        // обработчик “Купить”
+        tr.querySelector("button").addEventListener("click", () => {
+          // Пока просто показываем подтверждение.
+          // На следующем шаге сделаем форму: сумма, реквизиты, заявка, подтверждение.
+          alert(
+            `Покупка (демо)\n\nСумма: ${rub(o.amountRub)} ₽\nМетод: ${o.method}\nКурс: ${o.rate} ₽ за 1 USDT`
+          );
+        });
+
+        rowsEl.appendChild(tr);
+      }
+    }
+
+    async function loadRateAndBuild(){
+      try{
+        setStatus("Загружаю курс…");
+        const url = `${WORKER_BASE}/rates?symbol=${encodeURIComponent(SYMBOL)}`;
+        const r = await fetch(url);
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || "Worker error");
+
+        const ask = Number(j.ask);
+        const bid = Number(j.bid);
+
+        askEl.textContent = ask.toLocaleString("ru-RU");
+        bidEl.textContent = bid.toLocaleString("ru-RU");
+
+        const offers = buildOffers(ask);
+        renderOffers(offers);
+
+        setStatus("Обновлено: " + new Date(j.ts).toLocaleString("ru-RU"));
+      } catch(e){
+        setStatus("Ошибка: " + e.message, true);
+      }
+    }
+
+    loadRateAndBuild();
+    // раз в 10 секунд обновим ask/bid и перегенерим стакан
+    setInterval(loadRateAndBuild, 10000);
+  </script>
+</body>
+</html>

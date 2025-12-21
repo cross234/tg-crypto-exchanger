@@ -61,12 +61,6 @@
       font-size:12px;
       font-weight:800;
     }
-    .sub{
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 10px;
-      line-height: 1.35;
-    }
   </style>
 </head>
 <body>
@@ -80,25 +74,14 @@
           <span class="pill" id="pair">USDT/RUB</span>
         </div>
 
-        <!-- Курс с учетом процентов (из админки) -->
         <div class="rate">
-          <span>Купить (с %)</span>
+          <span>Купить</span>
           <b id="buy">—</b>
         </div>
+
         <div class="rate">
-          <span>Продать (с %)</span>
+          <span>Продать</span>
           <b id="sell">—</b>
-        </div>
-
-        <!-- Для контроля: базовые котировки Rapira -->
-        <div class="rate">
-          <span>Rapira Ask / Bid</span>
-          <b><span id="ask">—</span> / <span id="bid">—</span></b>
-        </div>
-
-        <div class="rate">
-          <span>Проценты</span>
-          <b><span id="bp">—</span>% / <span id="sp">—</span>%</b>
         </div>
       </div>
 
@@ -108,22 +91,14 @@
       </div>
 
       <div class="status" id="status">Обновляю курс…</div>
-      <div class="sub">
-        Курс “с %” берётся из <code>/api/public/quotes</code> и меняется в зависимости от настроек в <code>admin.html</code>.
-      </div>
     </div>
   </div>
 
   <script>
-    // Твой воркер
     const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
     const buyEl = document.getElementById("buy");
     const sellEl = document.getElementById("sell");
-    const askEl = document.getElementById("ask");
-    const bidEl = document.getElementById("bid");
-    const bpEl = document.getElementById("bp");
-    const spEl = document.getElementById("sp");
     const statusEl = document.getElementById("status");
 
     document.getElementById("buyBtn").addEventListener("click", () => {
@@ -137,7 +112,6 @@
       statusEl.textContent = text;
       statusEl.classList.toggle("error", isError);
     }
-
     function fmt(n){
       const x = Number(n);
       return Number.isFinite(x) ? x.toLocaleString("ru-RU") : "—";
@@ -146,23 +120,12 @@
     async function loadQuotes() {
       try {
         setStatus("Обновляю курс…");
-
-        const res = await fetch(WORKER_BASE + "/api/public/quotes", { method: "GET" });
+        const res = await fetch(WORKER_BASE + "/api/public/quotes");
         const j = await res.json();
-
         if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-        // adjusted (с %)
         buyEl.textContent = fmt(j.adjusted?.buy);
         sellEl.textContent = fmt(j.adjusted?.sell);
-
-        // base (rapira)
-        askEl.textContent = fmt(j.base?.ask);
-        bidEl.textContent = fmt(j.base?.bid);
-
-        // percents
-        bpEl.textContent = fmt(j.percents?.buyPercent);
-        spEl.textContent = fmt(j.percents?.sellPercent);
 
         setStatus("Обновлено: " + new Date(j.ts).toLocaleString("ru-RU"));
       } catch (e) {

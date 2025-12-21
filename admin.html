@@ -7,8 +7,8 @@
   <style>
     :root{
       --bg:#0b1220; --card:#0f1a30; --border:#223255;
-      --text:#e9f0ff; --muted:#9fb0d4; --ok:#16a34a; --bad:#ffb4b4;
-      --btn:#2563eb; --warn:#f59e0b; --danger:#ef4444;
+      --text:#e9f0ff; --muted:#9fb0d4;
+      --btn:#2563eb; --warn:#f59e0b; --danger:#ef4444; --ok:#22c55e;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
@@ -18,6 +18,7 @@
     .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); }
     .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+
     label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:800; }
     input, select{
       width:100%; box-sizing:border-box; padding:10px 12px;
@@ -31,28 +32,26 @@
     }
     .btn.warn{ background:var(--warn); color:#111827; }
     .btn.danger{ background:var(--danger); }
+    .btn.ok{ background:var(--ok); color:#052e16; }
     .btn.gray{ background:rgba(255,255,255,.10); }
+
     .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
     .status.ok{ color:#9dffb8; font-weight:900; }
-    .status.bad{ color:var(--bad); font-weight:900; }
+    .status.bad{ color:#ffb4b4; font-weight:900; }
 
     table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:13px; }
     th, td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; vertical-align:top; }
     th{ color:var(--muted); font-weight:950; }
     .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
-    .tag.frozen{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
-    .tag.deleted{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12); }
-    .tag.paid{ border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.14); }
-    .tag.check{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.14); }
-    .small{ font-size:12px; color:var(--muted); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
+    .small{ font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div class="title">Админка обменника</div>
-      <div class="small">Worker: <span id="w"></span> · <a href="./index.html" style="color:#cfe0ff;">на сайт</a></div>
+      <div class="small">Worker: <span id="w"></span></div>
     </div>
 
     <div class="grid">
@@ -64,7 +63,7 @@
           <button class="btn" id="saveToken">Сохранить</button>
           <button class="btn gray" id="clearToken">Сбросить</button>
         </div>
-        <div class="status" id="authStatus">Токен хранится локально в браузере.</div>
+        <div class="status" id="authStatus">Токен хранится локально.</div>
       </div>
 
       <div class="card">
@@ -72,11 +71,11 @@
         <div class="row">
           <div style="flex:1; min-width:180px;">
             <label>Покупка %</label>
-            <input id="buyPercent" placeholder="например 1.5 или -0.5" />
+            <input id="buyPercent" />
           </div>
           <div style="flex:1; min-width:180px;">
             <label>Продажа %</label>
-            <input id="sellPercent" placeholder="например 1.0 или -1.0" />
+            <input id="sellPercent" />
           </div>
           <button class="btn" id="saveConfig">Сохранить</button>
         </div>
@@ -85,13 +84,12 @@
     </div>
 
     <div class="card" style="margin-top:12px;">
-      <div style="font-weight:950;">Заявки в стакан покупки</div>
-      <div class="small">Реквизиты показываются только на Crossflag оплате.</div>
+      <div style="font-weight:950;">Заявки</div>
 
       <div class="row" style="margin-top:10px;">
         <div style="flex:1; min-width:160px;">
           <label>Сумма (RUB)</label>
-          <input id="amountRub" placeholder="например 25000" />
+          <input id="amountRub" />
         </div>
 
         <div style="flex:1; min-width:150px;">
@@ -103,18 +101,18 @@
         </div>
 
         <div style="flex:1; min-width:160px;">
-          <label>Курс (RUB/USDT)</label>
-          <input id="rate" placeholder="например 80.55" />
+          <label>Курс</label>
+          <input id="rate" />
         </div>
 
         <div style="flex:1; min-width:160px;">
           <label>Банк (Crossflag)</label>
-          <input id="payBank" placeholder="например Сбербанк" />
+          <input id="payBank" />
         </div>
 
         <div style="flex:1; min-width:220px;">
           <label>Реквизиты (Crossflag)</label>
-          <input id="payRequisite" placeholder="телефон СБП или номер карты" />
+          <input id="payRequisite" />
         </div>
 
         <button class="btn" id="addOffer">Добавить</button>
@@ -130,9 +128,9 @@
             <th>Сумма</th>
             <th>Метод</th>
             <th>Курс</th>
-            <th>Crossflag реквизиты</th>
             <th>Статус</th>
-            <th>Данные проверки</th>
+            <th>Проверка</th>
+            <th>Файлы (Telegram)</th>
             <th>Действия</th>
           </tr>
         </thead>
@@ -147,7 +145,6 @@
 
   const tokenInput = document.getElementById("token");
   const authStatus = document.getElementById("authStatus");
-
   const cfgStatus = document.getElementById("cfgStatus");
   const offerStatus = document.getElementById("offerStatus");
 
@@ -164,12 +161,11 @@
 
   function getToken(){ return localStorage.getItem("admin_token") || ""; }
   function setToken(t){ localStorage.setItem("admin_token", t); }
-
   tokenInput.value = getToken();
 
   document.getElementById("saveToken").onclick = () => {
     setToken(tokenInput.value.trim());
-    authStatus.textContent = "Токен сохранён локально.";
+    authStatus.textContent = "Токен сохранён.";
     authStatus.className = "status ok";
   };
   document.getElementById("clearToken").onclick = () => {
@@ -180,9 +176,10 @@
   };
 
   async function api(path, opts = {}) {
-    const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+    const headers = Object.assign({}, opts.headers || {});
     const t = getToken();
     if (t) headers["X-Admin-Token"] = t;
+    if (!headers["Content-Type"] && opts.method && opts.method !== "GET") headers["Content-Type"] = "application/json";
 
     const res = await fetch(WORKER_BASE + path, { ...opts, headers });
     const text = await res.text();
@@ -190,6 +187,23 @@
     try { j = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 200)); }
     if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
     return j;
+  }
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function safe(s){ return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
+
+  function statusRu(s){
+    const m = { NEW:"Активна", PAID:"Оплачено", ON_CHECK:"На проверке", SUCCESS:"Успешно", FAILED:"Неуспешно" };
+    return m[s] || s || "—";
+  }
+
+  function tgLink(chatId, messageId){
+    // Для приватных каналов Telegram: https://t.me/c/<internal>/<messageId>
+    // internal = chatId без "-100"
+    const s = String(chatId || "");
+    if (!s.startsWith("-100")) return "";
+    const internal = s.slice(4);
+    return "https://t.me/c/" + internal + "/" + String(messageId);
   }
 
   async function loadConfig(){
@@ -217,87 +231,6 @@
     } catch(e){
       cfgStatus.textContent = "Ошибка: " + e.message;
       cfgStatus.className = "status bad";
-    }
-  }
-
-  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function safe(s){ return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
-
-  function renderStatus(o){
-    if (o.deleted) return `<span class="tag deleted">Удалена</span>`;
-    if (o.onCheck) return `<span class="tag check">На проверке</span>`;
-    if (o.paid) return `<span class="tag paid">Оплачено</span>`;
-    if (o.frozen) return `<span class="tag frozen">Заморожена</span>`;
-    return `<span class="tag">Активна</span>`;
-  }
-
-  function renderCheckInfo(o){
-    if (!o.checkInfo) return `<span class="small">—</span>`;
-    const ci = o.checkInfo;
-    return `
-      <div class="small">
-        Банк: <b>${safe(ci.bankFrom || "—")}</b><br/>
-        Тип: <b>${safe(ci.proofType || "—")}</b><br/>
-        ${ci.alphaLink ? `Ссылка: <span class="mono">${safe(ci.alphaLink)}</span><br/>` : ""}
-        PDF1: <b>${ci.hasPdf1 ? "да" : "нет"}</b> · PDF2: <b>${ci.hasPdf2 ? "да" : "нет"}</b><br/>
-        Время: <span class="mono">${safe(new Date(ci.submittedAt || Date.now()).toLocaleString("ru-RU"))}</span>
-      </div>
-    `;
-  }
-
-  async function loadOffers(){
-    try{
-      offerStatus.textContent = "Загружаю заявки…";
-      offerStatus.className = "status";
-      const j = await api("/api/admin/offers", { method:"GET" });
-
-      tbody.innerHTML = "";
-      for (const o of j.offers){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><span class="mono">${safe(o.id)}</span></td>
-          <td>${fmtRub(o.amountRub)}</td>
-          <td><span class="tag">${safe(o.method)}</span></td>
-          <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
-          <td class="small">
-            Банк: <b>${safe(o.payBank || "—")}</b><br/>
-            Рекв.: <span class="mono">${safe(o.payRequisite || "—")}</span>
-          </td>
-          <td>${renderStatus(o)}</td>
-          <td>${renderCheckInfo(o)}</td>
-          <td></td>
-        `;
-
-        const td = tr.querySelector("td:last-child");
-
-        const freezeBtn = document.createElement("button");
-        freezeBtn.className = "btn warn";
-        freezeBtn.textContent = o.frozen ? "Разморозить" : "Заморозить";
-        freezeBtn.onclick = async () => {
-          await api(`/api/admin/offers/${o.id}`, { method:"PATCH", body: JSON.stringify({ frozen: !o.frozen }) });
-          await loadOffers();
-        };
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "btn danger";
-        delBtn.style.marginLeft = "8px";
-        delBtn.textContent = "Удалить";
-        delBtn.onclick = async () => {
-          if (!confirm("Удалить заявку?")) return;
-          await api(`/api/admin/offers/${o.id}`, { method:"DELETE" });
-          await loadOffers();
-        };
-
-        td.appendChild(freezeBtn);
-        td.appendChild(delBtn);
-        tbody.appendChild(tr);
-      }
-
-      offerStatus.textContent = "Готово.";
-      offerStatus.className = "status ok";
-    } catch(e){
-      offerStatus.textContent = "Ошибка: " + e.message;
-      offerStatus.className = "status bad";
     }
   }
 
@@ -330,12 +263,114 @@
     }
   }
 
+  function renderCheck(o){
+    if (!o.checkInfo) return `<span class="small">—</span>`;
+    const ci = o.checkInfo;
+    return `
+      <div class="small">
+        Банк: <b>${safe(ci.bankFrom || "—")}</b><br/>
+        Тип: <b>${safe(ci.proofType || "—")}</b><br/>
+        ${ci.alphaLink ? `Ссылка: <span class="mono">${safe(ci.alphaLink)}</span><br/>` : ""}
+      </div>
+    `;
+  }
+
+  function renderFiles(o){
+    const files = o?.checkInfo?.files || [];
+    if (!files.length) return `<span class="small">—</span>`;
+    const items = files.map(f => {
+      const tg = f.tg || {};
+      const link = tgLink(tg.chatId, tg.messageId);
+      const label = `${safe(f.kind || "file")} · ${safe(f.name || "")}`;
+      if (!link) return `<div class="small">Нет ссылки</div>`;
+      return `<div><a href="${link}" target="_blank" style="color:#cfe0ff; text-decoration:none; font-weight:900;">Открыть</a> <span class="small">${label}</span></div>`;
+    }).join("");
+    return items;
+  }
+
+  async function setStatus(id, status){
+    await api(`/api/admin/offers/${id}`, { method:"PATCH", body: JSON.stringify({ status }) });
+    await loadOffers();
+  }
+
+  async function loadOffers(){
+    try{
+      offerStatus.textContent = "Загружаю заявки…";
+      offerStatus.className = "status";
+      const j = await api("/api/admin/offers", { method:"GET" });
+
+      tbody.innerHTML = "";
+
+      for (const o of j.offers){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="mono">${safe(o.id)}</span></td>
+          <td>${fmtRub(o.amountRub)}</td>
+          <td><span class="tag">${safe(o.method)}</span></td>
+          <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
+          <td><span class="tag">${safe(statusRu(o.status))}</span></td>
+          <td>${renderCheck(o)}</td>
+          <td>${renderFiles(o)}</td>
+          <td></td>
+        `;
+
+        const td = tr.querySelector("td:last-child");
+
+        const freezeBtn = document.createElement("button");
+        freezeBtn.className = "btn warn";
+        freezeBtn.textContent = o.frozen ? "Разморозить" : "Заморозить";
+        freezeBtn.onclick = async () => {
+          await api(`/api/admin/offers/${o.id}`, { method:"PATCH", body: JSON.stringify({ frozen: !o.frozen }) });
+          await loadOffers();
+        };
+        td.appendChild(freezeBtn);
+
+        if (o.status === "ON_CHECK") {
+          const okBtn = document.createElement("button");
+          okBtn.className = "btn ok";
+          okBtn.style.marginLeft = "8px";
+          okBtn.textContent = "Успешно";
+          okBtn.onclick = async () => setStatus(o.id, "SUCCESS");
+
+          const failBtn = document.createElement("button");
+          failBtn.className = "btn danger";
+          failBtn.style.marginLeft = "8px";
+          failBtn.textContent = "Неуспешно";
+          failBtn.onclick = async () => setStatus(o.id, "FAILED");
+
+          td.appendChild(okBtn);
+          td.appendChild(failBtn);
+        }
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn danger";
+        delBtn.style.marginLeft = "8px";
+        delBtn.textContent = "Удалить";
+        delBtn.onclick = async () => {
+          if (!confirm("Удалить заявку?")) return;
+          await api(`/api/admin/offers/${o.id}`, { method:"DELETE" });
+          await loadOffers();
+        };
+        td.appendChild(delBtn);
+
+        tbody.appendChild(tr);
+      }
+
+      offerStatus.textContent = "Готово.";
+      offerStatus.className = "status ok";
+    } catch(e){
+      offerStatus.textContent = "Ошибка: " + e.message;
+      offerStatus.className = "status bad";
+    }
+  }
+
   document.getElementById("saveConfig").onclick = saveConfig;
   document.getElementById("addOffer").onclick = addOffer;
   document.getElementById("refresh").onclick = async () => { await loadConfig(); await loadOffers(); };
 
   loadConfig();
   loadOffers();
+  setInterval(loadOffers, 5000);
 </script>
 </body>
 </html>

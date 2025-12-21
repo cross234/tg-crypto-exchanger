@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crossflag · Оплата ордера</title>
+  <title>Crossflag · Оплата</title>
   <style>
     :root{
       --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
-      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb;
+      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb; --danger:#ef4444;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     body{ margin:0; background:var(--bg); color:var(--text); }
@@ -36,29 +36,56 @@
     .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
     .value{ font-size:15px; font-weight:950; word-break:break-word; }
 
+    .rowLine{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      color:#cfe0ff;
+      font-weight:950;
+      font-size:12px;
+    }
+    .pill b{ color:#fff; }
+
     .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
     .status.ok{ color:var(--ok); font-weight:900; }
     .status.bad{ color:var(--bad); font-weight:900; }
 
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
     .btn{
       border:0; border-radius:12px; padding:12px 14px; cursor:pointer;
       color:#fff; font-weight:950; background: var(--btn);
       min-width:160px;
     }
-    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
+    .btn.danger{ background: var(--danger); min-width:auto; }
+    .btn.small{
+      padding:8px 10px;
+      min-width:auto;
+      font-size:12px;
+      border-radius:10px;
+      background: rgba(255,255,255,.10);
+    }
 
     .mono{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size:12px; color:#cfe0ff;
     }
+
+    .reqLine{
+      display:flex; align-items:center; gap:10px; justify-content:space-between;
+    }
+    .reqValue{ flex:1; word-break:break-word; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div class="title">Crossflag Exchange · Оплата</div>
-      <a class="back" href="./buy.html">← Назад</a>
+      <a class="back" href="./buy-order.html">← Назад</a>
     </div>
 
     <div class="card">
@@ -82,7 +109,12 @@
           </div>
         </div>
 
-        <div class="status" id="status">Загружаю реквизиты…</div>
+        <div class="rowLine">
+          <span class="pill">Статус: <b id="st">Резервирую…</b></span>
+          <span class="pill">Осталось: <b id="timer">15:00</b></span>
+        </div>
+
+        <div class="status" id="status">Загружаю реквизиты и резервирую заявку…</div>
       </div>
 
       <div class="section">
@@ -93,9 +125,13 @@
             <div class="label">Банк</div>
             <div class="value" id="bank">—</div>
           </div>
+
           <div class="item">
             <div class="label">Реквизиты (СБП/карта)</div>
-            <div class="value" id="req">—</div>
+            <div class="reqLine">
+              <div class="value reqValue mono" id="req">—</div>
+              <button class="btn small" id="copyReqBtn" type="button">Копировать</button>
+            </div>
           </div>
         </div>
 
@@ -103,8 +139,8 @@
           Переведи точную сумму и нажми “Я оплатил”.
         </div>
 
-        <div class="btnRow" style="margin-top:12px;">
-          <button class="btn gray" id="copyBtn" type="button">Скопировать реквизиты</button>
+        <div class="btnRow">
+          <button class="btn danger" id="cancelBtn" type="button">Отменить ордер</button>
           <button class="btn" id="paidBtn" type="button">Я оплатил</button>
         </div>
 
@@ -129,8 +165,16 @@
   const bankEl = document.getElementById("bank");
   const reqEl = document.getElementById("req");
 
+  const stEl = document.getElementById("st");
+  const timerEl = document.getElementById("timer");
+
   const statusEl = document.getElementById("status");
   const paidStatusEl = document.getElementById("paidStatus");
+
+  let reserveId = "";
+  let reservedUntil = 0;
+  let timerHandle = null;
+  let finished = false;
 
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
   function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
@@ -147,6 +191,8 @@
     if (kind) paidStatusEl.classList.add(kind);
   }
 
+  function setState(text){ stEl.textContent = text; }
+
   function basicFill(){
     oidEl.textContent = id || "—";
     amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
@@ -154,54 +200,140 @@
     usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
   }
 
-  async function loadRequisites(){
+  function pad2(n){ return String(n).padStart(2, "0"); }
+  function updateTimer(){
+    if (!reservedUntil) return;
+    const ms = reservedUntil - Date.now();
+    const clamped = Math.max(0, ms);
+    const totalSec = Math.floor(clamped / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    timerEl.textContent = `${pad2(m)}:${pad2(s)}`;
+
+    if (ms <= 0 && !finished){
+      autoCancelDueToTimeout();
+    }
+  }
+
+  async function postJson(path, body){
+    const res = await fetch(WORKER_BASE + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
+  async function reserveAndLoad(){
     basicFill();
 
     if (!id){
-      setStatus("Ошибка: нет id заявки. Вернись в стакан и выбери заявку заново.", "bad");
+      setState("Ошибка");
+      setStatus("Ошибка: нет id заявки. Вернись назад и выбери заявку заново.", "bad");
       return;
     }
 
     try{
-      setStatus("Загружаю реквизиты…");
+      setState("Резервирую…");
+      setStatus("Загружаю реквизиты и резервирую заявку…");
 
-      const res = await fetch(WORKER_BASE + "/api/public/buy_offer?id=" + encodeURIComponent(id));
-      const text = await res.text();
-      let j;
-      try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
+      const j = await postJson("/api/public/reserve_buy_offer", { id });
 
-      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+      reserveId = j.reserve.reserveId;
+      reservedUntil = j.reserve.reservedUntil;
 
       bankEl.textContent = j.offer.payBank || "—";
       reqEl.textContent = j.offer.payRequisite || "—";
 
       if (!j.offer.payBank || !j.offer.payRequisite){
+        setState("Резерв");
         setStatus("⚠️ Реквизиты не заполнены в админке для этой заявки.", "bad");
       } else {
-        setStatus("Реквизиты получены. Оплати и нажми “Я оплатил”.", "ok");
+        setState("Ожидание оплаты");
+        setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
       }
+
+      updateTimer();
+      timerHandle = setInterval(updateTimer, 1000);
     } catch(e){
+      setState("Ошибка");
       setStatus("Ошибка: " + e.message, "bad");
     }
   }
 
-  document.getElementById("copyBtn").onclick = async () => {
-    const txt = `Банк: ${bankEl.textContent}\nРеквизиты: ${reqEl.textContent}\nСумма: ${amountEl.textContent}`;
+  async function autoCancelDueToTimeout(){
+    if (finished) return;
+    finished = true;
+    if (timerHandle) clearInterval(timerHandle);
+
+    setState("Отменено");
+    setStatus("Время оплаты истекло. Ордер отменён, заявка разморожена.", "bad");
+
     try{
-      await navigator.clipboard.writeText(txt);
-      setPaidStatus("Скопировано ✅", "ok");
-    } catch {
-      setPaidStatus("Не удалось скопировать (браузер запретил). Скопируй вручную.", "bad");
+      if (reserveId){
+        await postJson("/api/public/cancel_buy_offer", { id, reserveId });
+      }
+    } catch {}
+    setPaidStatus("—");
+  }
+
+  document.getElementById("paidBtn").onclick = async () => {
+    if (finished) return;
+    if (!reserveId){
+      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
+      return;
+    }
+    try{
+      await postJson("/api/public/confirm_buy_offer_paid", { id, reserveId });
+      finished = true;
+      if (timerHandle) clearInterval(timerHandle);
+
+      setState("Оплачено");
+      setStatus("Отлично. Мы получили отметку “Оплачено”. Далее будет проверка оплаты.", "ok");
+      setPaidStatus("Ожидайте подтверждения оплаты.", "ok");
+    } catch(e){
+      setPaidStatus("Ошибка: " + e.message, "bad");
     }
   };
 
-  document.getElementById("paidBtn").onclick = () => {
-    // На этом шаге — просто подтверждение.
-    // Следующий шаг: создавать сделку в KV со статусами и подтверждением оператором.
-    setPaidStatus("Отмечено: “Я оплатил”. Следующий шаг — проверка оплаты и выдача USDT.", "ok");
+  document.getElementById("cancelBtn").onclick = async () => {
+    if (finished) return;
+    if (!reserveId){
+      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
+      return;
+    }
+    try{
+      await postJson("/api/public/cancel_buy_offer", { id, reserveId });
+      finished = true;
+      if (timerHandle) clearInterval(timerHandle);
+
+      setState("Отменено");
+      setStatus("Ордер отменён, заявка разморожена.", "bad");
+      setPaidStatus("—");
+    } catch(e){
+      setPaidStatus("Ошибка: " + e.message, "bad");
+    }
   };
 
-  loadRequisites();
+  document.getElementById("copyReqBtn").onclick = async () => {
+    const txt = reqEl.textContent || "";
+    if (!txt || txt === "—"){
+      setPaidStatus("Нечего копировать.", "bad");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(txt);
+      setPaidStatus("Реквизиты скопированы ✅", "ok");
+    } catch {
+      setPaidStatus("Не удалось скопировать. Скопируй вручную.", "bad");
+    }
+  };
+
+  reserveAndLoad();
 </script>
 </body>
 </html>

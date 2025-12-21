@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>P2P · Ордер покупки</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a30;
+      --border:#223255;
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --buy:#2563eb;
+      --row:#0c162a;
+      --bad:#ffb4b4;
+      --ok:#9dffb8;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
+
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:12px;
+    }
+    .title{ font-size:16px; font-weight:950; }
+    .back{
+      color:#cfe0ff; text-decoration:none; font-weight:800;
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px; border-radius:12px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 18px 50px rgba(0,0,0,.35);
+    }
+    .section{ padding:14px; }
+    .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 640px){
+      .kv{ grid-template-columns: 1fr; }
+    }
+    .item{
+      background: rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px;
+    }
+    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
+    .value{ font-size:15px; font-weight:950; }
+
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .payMethods{
+      display:grid;
+      gap:10px;
+    }
+    .method{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      user-select:none;
+    }
+    .method input{ margin-top:3px; }
+    .mTitle{ font-weight:950; }
+    .mDesc{ color:var(--muted); font-size:12px; margin-top:2px; line-height:1.35; }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:0;
+      border-radius:12px;
+      padding:12px 14px;
+      cursor:pointer;
+      color:#fff;
+      font-weight:950;
+      background: var(--buy);
+      min-width:160px;
+    }
+    .btn.gray{
+      background: rgba(255,255,255,.10);
+      min-width:auto;
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .status.bad{ color:var(--bad); font-weight:900; }
+    .status.ok{ color:var(--ok); font-weight:900; }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color:#cfe0ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">P2P · Ордер покупки</div>
+      <a class="back" href="./buy.html">← Назад к стакану</a>
+    </div>
+
+    <div class="card">
+      <!-- Основные пункты как на P2P -->
+      <div class="section">
+        <div class="kv">
+          <div class="item">
+            <div class="label">Сумма (RUB)</div>
+            <div class="value" id="amountRub">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Курс (RUB/USDT)</div>
+            <div class="value" id="rate">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Получите (USDT)</div>
+            <div class="value" id="usdt">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Метод заявки</div>
+            <div class="value" id="method">—</div>
+          </div>
+        </div>
+
+        <div class="status" id="orderStatus">
+          Ордер: <span class="mono" id="orderId">—</span>
+        </div>
+        <div class="hint" style="margin-top:8px;">
+          Это демо-страница ордера. Следующим шагом можем сделать реальные статусы сделки:
+          “Ожидание оплаты → Проверка → Завершено”.
+        </div>
+      </div>
+
+      <!-- Выбор способа оплаты -->
+      <div class="section">
+        <div style="font-weight:950; margin-bottom:10px;">Выберите способ оплаты</div>
+
+        <div class="payMethods" id="payMethods">
+          <label class="method">
+            <input type="radio" name="pay" value="CROSSFLAG" checked />
+            <div>
+              <div class="mTitle">Через Crossflag Exchange</div>
+              <div class="mDesc">Оплата и подтверждение внутри вашего обменника.</div>
+            </div>
+          </label>
+
+          <label class="method">
+            <input type="radio" name="pay" value="HTX" />
+            <div>
+              <div class="mTitle">через HTX</div>
+              <div class="mDesc">Переход на оплату через внешнюю площадку (заглушка на этом шаге).</div>
+            </div>
+          </label>
+
+          <label class="method">
+            <input type="radio" name="pay" value="BYBIT" />
+            <div>
+              <div class="mTitle">Через Bybit</div>
+              <div class="mDesc">Переход на оплату через внешнюю площадку (заглушка на этом шаге).</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn gray" id="cancelBtn" type="button">Отмена</button>
+          <button class="btn" id="continueBtn" type="button">Продолжить</button>
+        </div>
+
+        <div class="status" id="status">—</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Читаем параметры из URL
+  const params = new URLSearchParams(location.search);
+
+  const id = params.get("id") || "";
+  const amountRub = Number(params.get("amountRub"));
+  const rate = Number(params.get("rate"));
+  const method = (params.get("method") || "").toUpperCase();
+
+  const amountRubEl = document.getElementById("amountRub");
+  const rateEl = document.getElementById("rate");
+  const usdtEl = document.getElementById("usdt");
+  const methodEl = document.getElementById("method");
+  const orderIdEl = document.getElementById("orderId");
+  const orderStatusEl = document.getElementById("orderStatus");
+  const statusEl = document.getElementById("status");
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
+  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
+  function methodLabel(m){ return m === "SBP" ? "СБП" : (m === "CARD" ? "Карта" : "—"); }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.classList.remove("bad","ok");
+    if (kind) statusEl.classList.add(kind);
+  }
+
+  // Валидация входных данных
+  const ok = Number.isFinite(amountRub) && amountRub > 0 && Number.isFinite(rate) && rate > 0;
+
+  if (!ok){
+    amountRubEl.textContent = "—";
+    rateEl.textContent = "—";
+    usdtEl.textContent = "—";
+    methodEl.textContent = "—";
+    orderIdEl.textContent = "ошибка";
+    orderStatusEl.textContent = "Ошибка: данные ордера не переданы";
+    orderStatusEl.className = "status bad";
+    setStatus("Вернись в стакан и нажми “Купить” ещё раз.", "bad");
+  } else {
+    amountRubEl.textContent = fmtRub(amountRub);
+    rateEl.textContent = fmtRate(rate);
+    usdtEl.textContent = fmtUsdt(amountRub / rate);
+    methodEl.textContent = methodLabel(method);
+    orderIdEl.textContent = id || ("order_" + Math.random().toString(16).slice(2, 10));
+    orderStatusEl.className = "status ok";
+    setStatus("Выбери способ оплаты и нажми “Продолжить”.");
+  }
+
+  function getPayMethod(){
+    const el = document.querySelector('input[name="pay"]:checked');
+    return el ? el.value : "CROSSFLAG";
+  }
+
+  document.getElementById("cancelBtn").onclick = () => {
+    window.location.href = "./buy.html";
+  };
+
+  document.getElementById("continueBtn").onclick = () => {
+    if (!ok){
+      setStatus("Нельзя продолжить: нет данных ордера.", "bad");
+      return;
+    }
+
+    const pay = getPayMethod();
+
+    // На этом шаге — просто демонстрация.
+    // Следующий шаг: создавать реальную “сделку” в Worker KV и вести статусы.
+    if (pay === "CROSSFLAG"){
+      setStatus("Ок: выбрано Crossflag Exchange. Следующий шаг — страница оплаты внутри обменника.", "ok");
+    } else if (pay === "HTX"){
+      setStatus("Ок: выбрано HTX. Следующий шаг — логика редиректа/инструкций.", "ok");
+    } else if (pay === "BYBIT"){
+      setStatus("Ок: выбрано Bybit. Следующий шаг — логика редиректа/инструкций.", "ok");
+    } else {
+      setStatus("Выбери способ оплаты.", "bad");
+    }
+  };
+</script>
+</body>
+</html>

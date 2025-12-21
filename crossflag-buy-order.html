@@ -111,6 +111,7 @@
   const id = p.get("id") || "";
   const amountRub = Number(p.get("amountRub"));
   const rate = Number(p.get("rate"));
+  const method = String(p.get("method") || "");
 
   const oidEl = document.getElementById("oid");
   const amountEl = document.getElementById("amount");
@@ -165,10 +166,7 @@
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     timerEl.textContent = `${pad2(m)}:${pad2(s)}`;
-
-    if (ms <= 0 && !finished){
-      autoCancelDueToTimeout();
-    }
+    if (ms <= 0 && !finished) autoCancelDueToTimeout();
   }
 
   async function postJson(path, body){
@@ -198,12 +196,19 @@
     localStorage.removeItem(storageKey);
   }
 
+  function goBackToBuyOrder(){
+    window.location.href =
+      "./buy-order.html?id=" + encodeURIComponent(id) +
+      "&amountRub=" + encodeURIComponent(String(amountRub)) +
+      "&rate=" + encodeURIComponent(String(rate)) +
+      "&method=" + encodeURIComponent(method);
+  }
+
   async function loadOrReserve(){
     basicFill();
-
     if (!id){
       setState("Ошибка");
-      setStatus("Ошибка: нет id заявки. Вернись назад и выбери заявку заново.", "bad");
+      setStatus("Ошибка: нет id заявки.", "bad");
       return;
     }
 
@@ -211,21 +216,15 @@
     if (cached?.reserveId){
       try{
         setState("Открываю резерв…");
-        setStatus("Восстанавливаю твою сделку после обновления страницы…");
-
+        setStatus("Восстанавливаю сделку после обновления…");
         const j = await postJson("/api/public/get_reserved_buy_offer", { id, reserveId: cached.reserveId });
-
         reserveId = j.reserve.reserveId;
         reservedUntil = j.reserve.reservedUntil;
-
         bankEl.textContent = j.offer.payBank || "—";
         reqEl.textContent = j.offer.payRequisite || "—";
-
         saveReserveLocal(reserveId, reservedUntil);
-
         setState("Ожидание оплаты");
-        setStatus("Сделка восстановлена. Продолжай оплату и нажми “Я оплатил”.", "ok");
-
+        setStatus("Сделка восстановлена. Нажми “Я оплатил” после перевода.", "ok");
         updateTimer();
         timerHandle = setInterval(updateTimer, 1000);
         return;
@@ -237,25 +236,14 @@
     try{
       setState("Резервирую…");
       setStatus("Загружаю реквизиты и резервирую заявку…");
-
       const j = await postJson("/api/public/reserve_buy_offer", { id });
-
       reserveId = j.reserve.reserveId;
       reservedUntil = j.reserve.reservedUntil;
-
       bankEl.textContent = j.offer.payBank || "—";
       reqEl.textContent = j.offer.payRequisite || "—";
-
       saveReserveLocal(reserveId, reservedUntil);
-
-      if (!j.offer.payBank || !j.offer.payRequisite){
-        setState("Резерв");
-        setStatus("⚠️ Реквизиты не заполнены в админке для этой заявки.", "bad");
-      } else {
-        setState("Ожидание оплаты");
-        setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
-      }
-
+      setState("Ожидание оплаты");
+      setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
       updateTimer();
       timerHandle = setInterval(updateTimer, 1000);
     } catch(e){
@@ -264,33 +252,18 @@
     }
   }
 
-  async function goBackAfterCancel(){
-    // возвращаем на страницу выбора способа оплаты
-    window.location.href = "./buy-order.html?id=" + encodeURIComponent(id)
-      + "&amountRub=" + encodeURIComponent(String(amountRub))
-      + "&rate=" + encodeURIComponent(String(rate))
-      + "&method=" + encodeURIComponent(String(p.get("method") || ""));
-  }
-
   async function autoCancelDueToTimeout(){
     if (finished) return;
     finished = true;
     if (timerHandle) clearInterval(timerHandle);
-
     setState("Отменено");
     setStatus("Время оплаты истекло. Ордер отменён, заявка разморожена.", "bad");
-
     try{
-      if (reserveId){
-        await postJson("/api/public/cancel_buy_offer", { id, reserveId });
-      }
+      if (reserveId) await postJson("/api/public/cancel_buy_offer", { id, reserveId });
     } catch {}
-
     clearReserveLocal();
     setPaidStatus("—");
-
-    // откидываем назад
-    await goBackAfterCancel();
+    goBackToBuyOrder();
   }
 
   document.getElementById("paidBtn").onclick = async () => {
@@ -300,13 +273,23 @@
       return;
     }
     try{
-      await postJson("/api/public/confirm_buy_offer_paid", { id, reserveId });
+      await postJson("/api/public/confirm_buy_offer_paid", { id, reserveId }); // ✅ статус "Оплачено"
       finished = true;
       if (timerHandle) clearInterval(timerHandle);
 
       setState("Оплачено");
-      setStatus("Отлично. Мы получили отметку “Оплачено”. Далее будет проверка оплаты.", "ok");
-      setPaidStatus("Ожидайте подтверждения оплаты.", "ok");
+      setStatus("Отмечено как “Оплачено”. Сейчас нужно подтвердить чек/выписку.", "ok");
+      setPaidStatus("Перенаправляю…", "ok");
+
+      // переходим на buy-paid и передаём reserveId
+      const qs = new URLSearchParams({
+        id,
+        reserveId,
+        amountRub: String(amountRub),
+        rate: String(rate),
+        method: String(method),
+      });
+      window.location.href = "./buy-paid.html?" + qs.toString();
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
     }
@@ -322,14 +305,11 @@
       await postJson("/api/public/cancel_buy_offer", { id, reserveId });
       finished = true;
       if (timerHandle) clearInterval(timerHandle);
-
       setState("Отменено");
       setStatus("Ордер отменён, заявка разморожена.", "bad");
       clearReserveLocal();
       setPaidStatus("—");
-
-      // откидываем назад
-      await goBackAfterCancel();
+      goBackToBuyOrder();
     } catch(e){
       setPaidStatus("Ошибка: " + e.message, "bad");
     }

@@ -45,6 +45,7 @@
     .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
     .small{ font-size:12px; color:var(--muted); }
+    a{ color:#cfe0ff; font-weight:900; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -192,25 +193,47 @@
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
   function safe(s){ return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
 
-  function statusRu(s){
+  function statusRuRaw(s){
     const m = { NEW:"Активна", PAID:"Оплачено", ON_CHECK:"На проверке", SUCCESS:"Успешно", FAILED:"Неуспешно" };
-    return m[s] || s || "—";
+    return m[s] || s || "Активна";
   }
 
   function tgLink(chatId, messageId){
-    // Для приватных каналов Telegram: https://t.me/c/<internal>/<messageId>
-    // internal = chatId без "-100"
     const s = String(chatId || "");
     if (!s.startsWith("-100")) return "";
     const internal = s.slice(4);
     return "https://t.me/c/" + internal + "/" + String(messageId);
   }
 
+  function renderCheck(o){
+    const ci = o.checkInfo || null;
+    if (!ci) return `<span class="small">—</span>`;
+    return `
+      <div class="small">
+        Банк: <b>${safe(ci.bankFrom || "—")}</b><br/>
+        Тип: <b>${safe(ci.proofType || "—")}</b><br/>
+        ${ci.alphaLink ? `Ссылка: <span class="mono">${safe(ci.alphaLink)}</span><br/>` : ""}
+      </div>
+    `;
+  }
+
+  function renderFiles(o){
+    const files = o?.checkInfo?.files || [];
+    if (!files.length) return `<span class="small">—</span>`;
+    return files.map(f => {
+      const tg = f.tg || {};
+      const link = tgLink(tg.chatId, tg.messageId);
+      const label = `${safe(f.kind || "file")} · ${safe(f.name || "")}`;
+      if (!link) return `<div class="small">Нет ссылки</div>`;
+      return `<div><a href="${link}" target="_blank">Открыть</a> <span class="small">${label}</span></div>`;
+    }).join("");
+  }
+
   async function loadConfig(){
     try{
       cfgStatus.textContent = "Загружаю…";
       cfgStatus.className = "status";
-      const j = await api("/api/admin/config", { method: "GET" });
+      const j = await api("/api/admin/config", { method:"GET" });
       buyPercent.value = j.config.buyPercent;
       sellPercent.value = j.config.sellPercent;
       cfgStatus.textContent = "Загружено.";
@@ -263,31 +286,6 @@
     }
   }
 
-  function renderCheck(o){
-    if (!o.checkInfo) return `<span class="small">—</span>`;
-    const ci = o.checkInfo;
-    return `
-      <div class="small">
-        Банк: <b>${safe(ci.bankFrom || "—")}</b><br/>
-        Тип: <b>${safe(ci.proofType || "—")}</b><br/>
-        ${ci.alphaLink ? `Ссылка: <span class="mono">${safe(ci.alphaLink)}</span><br/>` : ""}
-      </div>
-    `;
-  }
-
-  function renderFiles(o){
-    const files = o?.checkInfo?.files || [];
-    if (!files.length) return `<span class="small">—</span>`;
-    const items = files.map(f => {
-      const tg = f.tg || {};
-      const link = tgLink(tg.chatId, tg.messageId);
-      const label = `${safe(f.kind || "file")} · ${safe(f.name || "")}`;
-      if (!link) return `<div class="small">Нет ссылки</div>`;
-      return `<div><a href="${link}" target="_blank" style="color:#cfe0ff; text-decoration:none; font-weight:900;">Открыть</a> <span class="small">${label}</span></div>`;
-    }).join("");
-    return items;
-  }
-
   async function setStatus(id, status){
     await api(`/api/admin/offers/${id}`, { method:"PATCH", body: JSON.stringify({ status }) });
     await loadOffers();
@@ -301,14 +299,17 @@
 
       tbody.innerHTML = "";
 
-      for (const o of j.offers){
+      for (const o0 of (j.offers || [])){
+        const o = o0 || {};
+        const st = (o.status || "NEW").toUpperCase();
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><span class="mono">${safe(o.id)}</span></td>
           <td>${fmtRub(o.amountRub)}</td>
           <td><span class="tag">${safe(o.method)}</span></td>
           <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
-          <td><span class="tag">${safe(statusRu(o.status))}</span></td>
+          <td><span class="tag">${safe(statusRuRaw(st))}</span></td>
           <td>${renderCheck(o)}</td>
           <td>${renderFiles(o)}</td>
           <td></td>
@@ -325,20 +326,19 @@
         };
         td.appendChild(freezeBtn);
 
-        if (o.status === "ON_CHECK") {
+        if (st === "ON_CHECK") {
           const okBtn = document.createElement("button");
           okBtn.className = "btn ok";
           okBtn.style.marginLeft = "8px";
           okBtn.textContent = "Успешно";
           okBtn.onclick = async () => setStatus(o.id, "SUCCESS");
+          td.appendChild(okBtn);
 
           const failBtn = document.createElement("button");
           failBtn.className = "btn danger";
           failBtn.style.marginLeft = "8px";
           failBtn.textContent = "Неуспешно";
           failBtn.onclick = async () => setStatus(o.id, "FAILED");
-
-          td.appendChild(okBtn);
           td.appendChild(failBtn);
         }
 

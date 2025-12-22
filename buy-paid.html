@@ -2,168 +2,151 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>P2P · Подтверждение оплаты</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag · Подтверждение</title>
   <style>
     :root{
       --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
       --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
+    html,body{ height:100%; }
     body{ margin:0; background:var(--bg); color:var(--text); }
-    .wrap{ max-width:760px; margin:0 auto; padding:18px; }
+    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
     .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .title{ font-size:16px; font-weight:950; }
-    .back{
-      color:#cfe0ff; text-decoration:none; font-weight:800;
-      border:1px solid rgba(255,255,255,.12); padding:8px 10px; border-radius:12px;
-      background: rgba(255,255,255,.03);
-    }
-    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35); }
-    .section{ padding:14px; }
-    .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
-
-    .kv{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width:680px){ .kv{ grid-template-columns:1fr; } }
-
-    .item{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px; }
-    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
-    .value{ font-size:15px; font-weight:950; word-break:break-word; }
-
-    label{ display:block; color:var(--muted); font-size:12px; font-weight:900; margin:0 0 6px; }
-    select, input{
-      width:100%; box-sizing:border-box;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+    .pad{ padding:16px; }
+    .grid{ display:grid; gap:12px; grid-template-columns:1fr 1fr; }
+    .cell{ border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
+    .k{ color:var(--muted); font-size:12px; margin-bottom:4px; }
+    .v{ font-weight:850; }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; letter-spacing:.2px; }
+    .hr{ height:1px; background:rgba(255,255,255,.08); }
+    .status{ font-size:12px; color:var(--muted); }
+    .status.ok{ color:var(--ok); }
+    .status.bad{ color:var(--bad); }
+    label{ display:block; color:var(--muted); font-size:12px; margin-bottom:6px; }
+    input,select{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
       color:var(--text);
-      font-weight:850;
+      border-radius:14px;
+      padding:10px 12px;
       outline:none;
     }
-    input[type="file"]{ padding:10px; }
-    .hint{ color:var(--muted); font-size:12px; line-height:1.4; margin-top:8px; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
-
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
-    .btn{ border:0; border-radius:12px; padding:12px 14px; cursor:pointer; color:#fff; font-weight:950; background: var(--btn); min-width:180px; }
-    .btn.gray{ background: rgba(255,255,255,.10); min-width:auto; }
-
-    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
-    .status.ok{ color:var(--ok); font-weight:900; }
-    .status.bad{ color:var(--bad); font-weight:900; }
-
-    .block{ display:none; margin-top:12px; }
-    .block.show{ display:block; }
+    .block{ border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); margin-top:12px; }
+    .hint{ color:var(--muted); font-size:12px; }
+    .btnRow{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+    .btn{
+      border:0; border-radius:14px; padding:12px 16px; font-weight:900; cursor:pointer;
+      color:white; background:var(--btn);
+    }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="title">Подтверждение оплаты</div>
-      <a class="back" id="backBtn" href="#">← Назад</a>
-    </div>
+<div class="wrap">
+  <div class="top">
+    <div class="title">Crossflag Exchange · Подтверждение оплаты</div>
+    <button class="btn" id="backBtn" type="button">Назад</button>
+  </div>
 
-    <div class="card">
-      <div class="section">
-        <div class="kv">
-          <div class="item">
-            <div class="label">Ордер</div>
-            <div class="value mono" id="oid">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Сумма (RUB)</div>
-            <div class="value" id="amount">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Курс (RUB/USDT)</div>
-            <div class="value" id="rate">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Получите (USDT)</div>
-            <div class="value" id="usdt">—</div>
-          </div>
+  <div class="card">
+    <div class="pad">
+      <div class="grid">
+        <div class="cell">
+          <div class="k">Ордер</div>
+          <div class="v mono" id="oid">—</div>
         </div>
-
-        <div class="hint">
-          Выбери банк, с которого ты оплатил. Затем прикрепи нужные файлы.
-          После отправки статус станет <b>“На проверке”</b>.
+        <div class="cell">
+          <div class="k">Сумма (RUB)</div>
+          <div class="v" id="amount">—</div>
+        </div>
+        <div class="cell">
+          <div class="k">Курс (RUB/USDT)</div>
+          <div class="v" id="rate">—</div>
+        </div>
+        <div class="cell">
+          <div class="k">Получите (USDT)</div>
+          <div class="v" id="usdt">—</div>
         </div>
       </div>
 
-      <div class="section">
-        <label>Банк, с которого была произведена оплата</label>
+      <div class="status" id="status" style="margin-top:10px;"></div>
+
+      <div style="margin-top:12px;">
+        <label>Банк отправителя</label>
         <select id="bankSelect"></select>
-
-        <!-- T-bank / Sovcom -->
-        <div class="block" id="blockEmail">
-          <div class="hint" style="margin-top:10px;">
-            Отправь <b>PDF чек от лица банка</b> на почту:
-            <div class="mono" style="margin-top:6px;">anton.semenovf@postchkr.com</div>
-          </div>
-          <div class="btnRow">
-            <button class="btn" id="btnEmailSent" type="button">Я отправил чек на почту</button>
-          </div>
-        </div>
-
-        <!-- Alfa -->
-        <div class="block" id="blockAlfa">
-          <div class="hint" style="margin-top:10px;">
-            Нужны: <b>ссылка “разделение платежа”</b> + <b>PDF чек</b>.
-          </div>
-          <div style="margin-top:10px;">
-            <label>Ссылка “разделение платежа”</label>
-            <input id="alfaLink" placeholder="вставь ссылку разделения платежа" />
-          </div>
-          <div style="margin-top:10px;">
-            <label>PDF чек</label>
-            <input id="alfaPdf" type="file" accept="application/pdf" />
-          </div>
-          <div class="btnRow">
-            <button class="btn" id="btnAlfaSend" type="button">Отправить на проверку</button>
-          </div>
-        </div>
-
-        <!-- Sber -->
-        <div class="block" id="blockSber">
-          <div class="hint" style="margin-top:10px;">
-            Нужны: <b>PDF выписка с QR</b> + <b>PDF чек</b>.
-          </div>
-          <div style="margin-top:10px;">
-            <label>PDF выписка с QR</label>
-            <input id="sberStmt" type="file" accept="application/pdf" />
-          </div>
-          <div style="margin-top:10px;">
-            <label>PDF чек</label>
-            <input id="sberCheck" type="file" accept="application/pdf" />
-          </div>
-          <div class="btnRow">
-            <button class="btn" id="btnSberSend" type="button">Отправить на проверку</button>
-          </div>
-        </div>
-
-        <!-- OTHER BANKS: pdf + video -->
-        <div class="block" id="blockOther">
-          <div class="hint" style="margin-top:10px;">
-            Для выбранного банка нужно: <b>PDF чек</b> + <b>видео из личного кабинета банка</b>.
-          </div>
-          <div style="margin-top:10px;">
-            <label>PDF чек</label>
-            <input id="otherPdf" type="file" accept="application/pdf" />
-          </div>
-          <div style="margin-top:10px;">
-            <label>Видео из личного кабинета банка</label>
-            <input id="otherVideo" type="file" accept="video/*" />
-          </div>
-          <div class="btnRow">
-            <button class="btn" id="btnOtherSend" type="button">Отправить на проверку</button>
-          </div>
-        </div>
-
-        <div class="status" id="status">—</div>
       </div>
+
+      <div class="block" id="blockEmail">
+        <div class="hint">
+          <b>Т-Банк / Совкомбанк:</b> отправь чек <b>от лица банка</b> на почту:
+          <div class="mono" style="margin-top:6px;">anton.semenovf@postchkr.com</div>
+        </div>
+        <div class="btnRow">
+          <button class="btn" id="btnEmailSent" type="button">Я отправил чек на почту</button>
+        </div>
+      </div>
+
+      <div class="block" id="blockAlfa">
+        <div class="hint" style="margin-top:10px;">
+          Нужны: <b>ссылка “разделение платежа”</b> + <b>PDF чек</b>.
+        </div>
+        <div style="margin-top:10px;">
+          <label>Ссылка “разделение платежа”</label>
+          <input id="alfaLink" placeholder="вставь ссылку разделения платежа" />
+        </div>
+        <div style="margin-top:10px;">
+          <label>PDF чек</label>
+          <input id="alfaPdf" type="file" accept="application/pdf" />
+        </div>
+        <div class="btnRow">
+          <button class="btn" id="btnAlfaSend" type="button">Отправить на проверку</button>
+        </div>
+      </div>
+
+      <div class="block" id="blockSber">
+        <div class="hint" style="margin-top:10px;">
+          <b>Сбер:</b> нужны <b>PDF чек</b> и <b>PDF выписка</b>.
+        </div>
+        <div style="margin-top:10px;">
+          <label>PDF чек</label>
+          <input id="sberCheck" type="file" accept="application/pdf" />
+        </div>
+        <div style="margin-top:10px;">
+          <label>PDF выписка</label>
+          <input id="sberStmt" type="file" accept="application/pdf" />
+        </div>
+        <div class="btnRow">
+          <button class="btn" id="btnSberSend" type="button">Отправить на проверку</button>
+        </div>
+      </div>
+
+      <div class="block" id="blockOther">
+        <div class="hint" style="margin-top:10px;">
+          <b>Другие банки:</b> нужен <b>PDF чек</b> + <b>видео из личного кабинета банка</b>.
+        </div>
+        <div style="margin-top:10px;">
+          <label>PDF чек</label>
+          <input id="otherPdf" type="file" accept="application/pdf" />
+        </div>
+        <div style="margin-top:10px;">
+          <label>Видео</label>
+          <input id="otherVideo" type="file" accept="video/*" />
+        </div>
+        <div class="btnRow">
+          <button class="btn" id="btnOtherSend" type="button">Отправить на проверку</button>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
@@ -187,225 +170,83 @@
   const blockSber = document.getElementById("blockSber");
   const blockOther = document.getElementById("blockOther");
 
-  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
-  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
-
-  function setStatus(text, kind){
-    statusEl.textContent = text;
-    statusEl.classList.remove("ok","bad");
-    if (kind) statusEl.classList.add(kind);
+  function fmtRub(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU") + " ₽";
+  }
+  function fmtNum(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 });
+  }
+  function setStatus(text, kind=""){
+    statusEl.textContent = text || "";
+    statusEl.className = "status " + (kind || "");
   }
 
   function normalizeBankName(s){
     return (s || "").toLowerCase().replace(/ё/g, "е").replace(/[-–—]/g, "-").replace(/\s+/g, " ").trim();
   }
 
-  // 100 банков
+  // список банков (как у тебя было)
   const BANKS_100 = [
     "Сбербанк","Т-банк","Альфа-Банк","ВТБ","Газпромбанк","Россельхозбанк","Райффайзенбанк","Открытие","Совкомбанк","Росбанк",
-    "Промсвязьбанк","Московский кредитный банк","ЮниКредит Банк","Банк Санкт-Петербург","Почта Банк","РНКБ","Ак Барс Банк","Уралсиб","Ситибанк","Абсолют Банк",
-    "БКС Банк","Ренессанс Банк","Хоум Банк","МТС Банк","Точка","Синара","Зенит","Новикомбанк","СМП Банк","Азиатско-Тихоокеанский Банк",
-    "Русский Стандарт","ОТП Банк","Хлынов","ДОМ.РФ","Кредит Европа Банк","Экспобанк","ТрансКапиталБанк","Локо-Банк","УБРиР","Авангард",
-    "Металлинвестбанк","Примсоцбанк","Приморье","Центр-инвест","СДМ-Банк","Генбанк","Союз","РосДорБанк","Кубань Кредит","Мособлбанк",
-    "Таврический","Агророс","Фора-Банк","Левобережный","Ингосстрах Банк","КБ Пойдем!","Финсервис","Кредит Урал Банк","Урал ФД","ББР Банк",
-    "Челиндбанк","Модульбанк","Пересвет","Энерготрансбанк","Нейва","Кошелев","АТБ","Саровбизнесбанк","Снежинский","Банк Русь",
-    "Дальневосточный","Солид Банк","Интерпромбанк","Банк МБА-Москва","Банк Элита","Тимер","Акцепт","Банк Казани","Севергазбанк","Банк Оранжевый",
-    "Сургутнефтегазбанк","Банк Хакасский","Татсоцбанк","Примтеркомбанк","Енисейский объединенный банк","Банк РЕСО Кредит","Банк Венец","Банк БЖФ","Банк РНКБ (Крым)","Банк Дружба",
-    "НБД-Банк","Банк Кузнецкий","Банк Вологжанин","Банк ПСКБ","Банк Пойдём! (дубль)","Банк Синара (дубль)","Банк Живаго","Банк Национальный стандарт","Банк Открытие (дубль)","Банк Уралсиб (дубль)"
-  ].slice(0,100);
+    "Промсвязьбанк","Московский кредитный банк","ЮниКредит Банк","Банк Санкт-Петербург","Ситибанк","Абсолют Банк","БКС Банк",
+    "Ренессанс Банк","Хоум Банк","МТС Банк","Точка","Русский Стандарт","ОТП Банк","Хлынов","ДОМ.РФ","Экспобанк",
+    "ТрансКапиталБанк","Локо-Банк","УБРиР","Авангард","Примсоцбанк","Приморье","Центр-инвест","Ак Барс Банк","Уралсиб",
+    "РНКБ","Союз","Мособлбанк","Зенит","Новикомбанк","СМП Банк","Азиатско-Тихоокеанский Банк","Генбанк","Кубань Кредит"
+  ];
 
   function fillBanks(){
     bankSelect.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Выбери банк…";
+    bankSelect.appendChild(opt0);
+
     for (const b of BANKS_100){
-      const opt = document.createElement("option");
-      opt.value = b;
-      opt.textContent = b;
-      bankSelect.appendChild(opt);
+      const o = document.createElement("option");
+      o.value = b;
+      o.textContent = b;
+      bankSelect.appendChild(o);
     }
-  }
-
-  function hideAll(){
-    blockEmail.classList.remove("show");
-    blockAlfa.classList.remove("show");
-    blockSber.classList.remove("show");
-    blockOther.classList.remove("show");
-  }
-
-  function bankMode(){
-    const b = bankSelect.value;
-    const n = normalizeBankName(b);
-    if (n === normalizeBankName("т-банк") || n === normalizeBankName("совкомбанк")) return "EMAIL";
-    if (n === normalizeBankName("альфа-банк")) return "ALFA";
-    if (n === normalizeBankName("сбербанк")) return "SBER";
-    return "OTHER";
-  }
-
-  function onBankChange(){
-    hideAll();
-    const mode = bankMode();
-    if (mode === "EMAIL") blockEmail.classList.add("show");
-    else if (mode === "ALFA") blockAlfa.classList.add("show");
-    else if (mode === "SBER") blockSber.classList.add("show");
-    else blockOther.classList.add("show");
-    setStatus("—");
   }
 
   function initHeader(){
     oidEl.textContent = id || "—";
-    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
-    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
-    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+    amountEl.textContent = fmtRub(amountRub);
+    rateEl.textContent = fmtNum(rate);
+    const usdt = (Number(amountRub) && Number(rate)) ? (Number(amountRub) / Number(rate)) : NaN;
+    usdtEl.textContent = Number.isFinite(usdt) ? (fmtNum(usdt) + " USDT") : "—";
   }
 
-  function goBack(){
-    const qs = new URLSearchParams({
-      id, amountRub: String(amountRub), rate: String(rate), method: String(method)
-    });
-    window.location.href = "./crossflag-buy-order.html?" + qs.toString();
+  function showOnly(el){
+    for (const b of [blockEmail, blockAlfa, blockSber, blockOther]) b.style.display = "none";
+    el.style.display = "block";
   }
 
-  document.getElementById("backBtn").onclick = (e) => { e.preventDefault(); goBack(); };
+  function onBankChange(){
+    const b = normalizeBankName(bankSelect.value);
 
-  async function postJson(path, body){
-    const res = await fetch(WORKER_BASE + path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    let j;
-    try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
-    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
-    return j;
+    // логика как у тебя: Email для T-bank / Sovcom, Alfa — отдельный, Sber — отдельный, остальные — Other
+    if (b.includes("т-банк") || b.includes("t-банк") || b.includes("тинькоф") || b.includes("совком")){
+      showOnly(blockEmail);
+    } else if (b.includes("альфа")){
+      showOnly(blockAlfa);
+    } else if (b.includes("сбер")){
+      showOnly(blockSber);
+    } else {
+      showOnly(blockOther);
+    }
   }
 
-  async function uploadFile(kind, file){
+  async function submitProofMultipart({ proofType, alphaLink = "", pdf1 = null, pdf2 = null, video = null }){
     const fd = new FormData();
     fd.append("id", id);
     fd.append("reserveId", reserveId);
-    fd.append("kind", kind);
-    fd.append("file", file);
-
-    const res = await fetch(WORKER_BASE + "/api/public/upload_proof", {
-      method: "POST",
-      body: fd
-    });
-    const text = await res.text();
-    let j;
-    try { j = JSON.parse(text); } catch { throw new Error("Upload ответ не JSON: " + text.slice(0, 200)); }
-    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
-    return j;
-  }
-
-  function goToCheck(){
-    const qs = new URLSearchParams({ id, reserveId });
-    window.location.href = "./check.html?" + qs.toString();
-  }
-
-  async function submitOnCheck(proofType, alphaLink=""){
-    await postJson("/api/public/submit_payment_proof", {
-      id, reserveId,
-      bankFrom: bankSelect.value,
-      proofType,
-      alphaLink
-    });
-  }
-
-  // EMAIL (T-bank / Sovcom)
-  document.getElementById("btnEmailSent").onclick = async () => {
-    try{
-      setStatus("Отправляю…");
-      await submitOnCheck("EMAIL");
-      setStatus("Готово ✅ Статус: На проверке", "ok");
-      goToCheck();
-    } catch(e){
-      setStatus("Ошибка: " + e.message, "bad");
-    }
-  };
-
-  // ALFA: link + pdf
-  document.getElementById("btnAlfaSend").onclick = async () => {
-    try{
-      const link = document.getElementById("alfaLink").value.trim();
-      const pdfFile = document.getElementById("alfaPdf").files[0];
-
-      if (!link) return setStatus("Нужна ссылка “разделение платежа”.", "bad");
-      if (!pdfFile) return setStatus("Нужен PDF чек.", "bad");
-
-      setStatus("Загружаю PDF (в Telegram)…");
-      await uploadFile("alfa_pdf", pdfFile);
-
-      setStatus("Отправляю на проверку…");
-      await submitOnCheck("ALFA", link);
-
-      setStatus("Готово ✅ Статус: На проверке", "ok");
-      goToCheck();
-    } catch(e){
-      setStatus("Ошибка: " + e.message, "bad");
-    }
-  };
-
-  // SBER: stmt + check
-  document.getElementById("btnSberSend").onclick = async () => {
-    try{
-      const stmt = document.getElementById("sberStmt").files[0];
-      const чек = document.getElementById("sberCheck").files[0];
-
-      if (!stmt) return setStatus("Нужна PDF выписка с QR.", "bad");
-      if (!чек) return setStatus("Нужен PDF чек.", "bad");
-
-      setStatus("Загружаю выписку (в Telegram)…");
-      await uploadFile("sber_stmt", stmt);
-
-      setStatus("Загружаю чек (в Telegram)…");
-      await uploadFile("sber_check", чек);
-
-      setStatus("Отправляю на проверку…");
-      await submitOnCheck("SBER");
-
-      setStatus("Готово ✅ Статус: На проверке", "ok");
-      goToCheck();
-    } catch(e){
-      setStatus("Ошибка: " + e.message, "bad");
-    }
-  };
-
-  // OTHER: pdf + video
-  document.getElementById("btnOtherSend").onclick = async () => {
-    try{
-      const pdf = document.getElementById("otherPdf").files[0];
-      const vid = document.getElementById("otherVideo").files[0];
-
-      if (!pdf) return setStatus("Нужен PDF чек.", "bad");
-      if (!vid) return setStatus("Нужно видео из личного кабинета банка.", "bad");
-
-      setStatus("Загружаю PDF (в Telegram)…");
-      await uploadFile("other_pdf", pdf);
-
-      setStatus("Загружаю видео (в Telegram)…");
-      await uploadFile("other_video", vid);
-
-      setStatus("Отправляю на проверку…");
-      await submitOnCheck("OTHER");
-
-      setStatus("Готово ✅ Статус: На проверке", "ok");
-      goToCheck();
-    } catch(e){
-      setStatus("Ошибка: " + e.message, "bad");
-    }
-  };
-
-  fillBanks();
-  initHeader();
-  onBankChange();
-  bankSelect.onchange = onBankChange;
-
-  if (!id || !reserveId){
-    setStatus("Ошибка: отсутствуют id/reserveId. Вернись назад.", "bad");
-  } else {
-    setStatus("Выбери банк и отправь подтверждение.", "");
-  }
-</script>
-</body>
-</html>
+    fd.append("bankFrom", bankSelect.value || "");
+    fd.append("proofType", proofType || "OTHER");
+    fd.append("alphaLink", alphaLink || "");
+    if (pdf1) fd.append("pdf1", pdf1, pdf1.name || "check.pdf");
+    if (pdf2) fd.append("pdf2", pdf2, pdf2.name || "stmt.pdf");

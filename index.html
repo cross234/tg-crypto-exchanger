@@ -9,14 +9,12 @@
       --text:#e9f0ff;
       --muted:#9fb0d4;
 
-      /* стекло */
       --card: rgba(15, 26, 48, 0.52);
       --row:  rgba(12, 22, 42, 0.40);
       --border: rgba(255,255,255,.12);
 
-      /* кнопки */
-      --buy:#16a34a;   /* зелёная */
-      --sell:#ef4444;  /* красная */
+      --buy:#16a34a;
+      --sell:#ef4444;
 
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
@@ -26,10 +24,9 @@
       margin:0;
       color:var(--text);
       overflow-x:hidden;
-      background:#071022; /* фолбэк */
+      background:#071022;
     }
 
-    /* Видео фон */
     .bg{
       position:fixed;
       inset:0;
@@ -37,6 +34,7 @@
       overflow:hidden;
       background:#071022;
     }
+
     .bg video{
       position:absolute;
       inset:0;
@@ -46,7 +44,6 @@
       transform: scale(1.02);
     }
 
-    /* Синее затемнение поверх видео */
     .overlay{
       position:fixed;
       inset:0;
@@ -57,7 +54,6 @@
       pointer-events:none;
     }
 
-    /* Центрирование под мини-апп */
     .page{
       min-height:100svh;
       display:flex;
@@ -71,10 +67,7 @@
       box-sizing:border-box;
     }
 
-    .wrap{
-      width:100%;
-      max-width:520px;
-    }
+    .wrap{ width:100%; max-width:520px; }
 
     .card{
       background: var(--card);
@@ -113,15 +106,8 @@
       -webkit-backdrop-filter: blur(8px);
     }
 
-    .left{
-      font-weight:900;
-      color:#dbe7ff;
-    }
-    .right{
-      font-weight:1000;
-      font-size:22px;
-      letter-spacing:.2px;
-    }
+    .left{ font-weight:900; color:#dbe7ff; }
+    .right{ font-weight:1000; font-size:22px; letter-spacing:.2px; }
 
     .pill{
       display:inline-flex;
@@ -165,9 +151,29 @@
     }
 
     .statusbad{ color:#ffd0d0; font-weight:950; }
-    .statusok{ color:#c7ffd7; font-weight:950; }
 
-    /* чтобы на очень маленьких экранах не ломалось */
+    /* Кнопка запуска видео (появляется только если автоплей не прошёл) */
+    .playOverlay{
+      position:fixed;
+      left:50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      transform:translateX(-50%);
+      z-index: 20;
+      display:none;
+    }
+    .playBtn{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(15,26,48,.55);
+      color:#fff;
+      font-weight:1000;
+      padding:10px 14px;
+      border-radius:999px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 40px rgba(0,0,0,.40);
+      cursor:pointer;
+    }
+
     @media (max-width:380px){
       .right{ font-size:20px; }
       .btn{ font-size:18px; }
@@ -177,11 +183,21 @@
 <body>
   <!-- ВИДЕО ФОН -->
   <div class="bg">
-    <video autoplay muted loop playsinline preload="auto">
+    <video id="bgVideo"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="./bg.jpg">
       <source src="./bg.mp4" type="video/mp4">
     </video>
   </div>
   <div class="overlay"></div>
+
+  <div class="playOverlay" id="playOverlay">
+    <button class="playBtn" id="playBtn" type="button">▶ Включить фон</button>
+  </div>
 
   <div class="page">
     <div class="wrap">
@@ -232,13 +248,11 @@
     if (!Number.isFinite(num)) return "—";
     return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
   }
-
   function fmtDt(ts){
     const d = new Date(ts);
     const pad = (x) => String(x).padStart(2,"0");
     return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
-
   function setErr(msg){
     errEl.style.display = "block";
     errEl.className = "foot statusbad";
@@ -262,6 +276,39 @@
 
   load();
   setInterval(load, 10000);
+
+  // ===== ВИДЕО: автоплей или кнопка запуска =====
+  const video = document.getElementById("bgVideo");
+  const playOverlay = document.getElementById("playOverlay");
+  const playBtn = document.getElementById("playBtn");
+
+  function isMobile(){
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  }
+
+  async function tryAutoplay(){
+    try{
+      // На некоторых устройствах video.play() вернёт Promise с ошибкой
+      await video.play();
+      playOverlay.style.display = "none";
+    }catch(e){
+      // Автоплей заблокирован — покажем кнопку
+      if (isMobile()) playOverlay.style.display = "block";
+    }
+  }
+
+  playBtn.onclick = async () => {
+    try{
+      await video.play();
+      playOverlay.style.display = "none";
+    }catch(e){
+      // если совсем не даёт
+      playOverlay.style.display = "block";
+    }
+  };
+
+  // дать странице чуть прогрузиться
+  setTimeout(tryAutoplay, 250);
 </script>
 </body>
 </html>

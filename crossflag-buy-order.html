@@ -14,160 +14,156 @@
     .wrap{ max-width:720px; margin:0 auto; padding:18px; }
     .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .title{ font-size:16px; font-weight:950; }
-    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35); }
-    .section{ padding:14px; }
-    .section + .section{ border-top:1px solid rgba(255,255,255,.08); }
-    .kv{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width:640px){ .kv{ grid-template-columns:1fr; } }
-    .item{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px; }
-    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
-    .value{ font-size:15px; font-weight:950; word-break:break-word; }
-    .rowLine{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); color:#cfe0ff; font-weight:950; font-size:12px; }
-    .pill b{ color:#fff; }
-    .status{ margin-top:10px; font-size:12px; color:var(--muted); white-space:pre-wrap; }
-    .status.ok{ color:var(--ok); font-weight:900; }
-    .status.bad{ color:var(--bad); font-weight:900; }
-    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
-    .btn{ border:0; border-radius:12px; padding:12px 14px; cursor:pointer; color:#fff; font-weight:950; background: var(--btn); min-width:160px; }
-    .btn.danger{ background: var(--danger); min-width:auto; }
-    .btn.small{ padding:8px 10px; min-width:auto; font-size:12px; border-radius:10px; background: rgba(255,255,255,.10); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
-    .reqLine{ display:flex; align-items:center; gap:10px; justify-content:space-between; }
-    .reqValue{ flex:1; word-break:break-word; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+    .pad{ padding:16px; }
+    .grid{ display:grid; gap:12px; grid-template-columns:1fr 1fr; }
+    .cell{ border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
+    .k{ color:var(--muted); font-size:12px; margin-bottom:4px; }
+    .v{ font-weight:850; }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; letter-spacing:.2px; }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .status{ font-size:12px; color:var(--muted); }
+    .status.ok{ color:var(--ok); }
+    .status.bad{ color:var(--bad); }
+    .hr{ height:1px; background:rgba(255,255,255,.08); }
+    .btns{ display:flex; gap:10px; justify-content:flex-end; padding:16px; }
+    button{
+      border:0; border-radius:14px; padding:12px 16px; font-weight:900; cursor:pointer;
+      color:white; background:var(--btn);
+    }
+    button.danger{ background:var(--danger); }
+    button:disabled{ opacity:.6; cursor:not-allowed; }
+    .copy{
+      display:flex; gap:10px; align-items:center;
+    }
+    .copy button{ padding:8px 12px; border-radius:12px; font-weight:900; }
+    .hint{ color:var(--muted); font-size:12px; margin-top:10px; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="title">Crossflag Exchange · Оплата</div>
-    </div>
+<div class="wrap">
+  <div class="top">
+    <div class="title">Crossflag Exchange · Оплата</div>
+  </div>
 
-    <div class="card">
-      <div class="section">
-        <div class="kv">
-          <div class="item">
-            <div class="label">Ордер</div>
-            <div class="value mono" id="oid">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Сумма к оплате (RUB)</div>
-            <div class="value" id="amount">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Курс (RUB/USDT)</div>
-            <div class="value" id="rate">—</div>
-          </div>
-          <div class="item">
-            <div class="label">Получите (USDT)</div>
-            <div class="value" id="usdt">—</div>
-          </div>
+  <div class="card">
+    <div class="pad">
+      <div class="grid">
+        <div class="cell">
+          <div class="k">Ордер</div>
+          <div class="v mono" id="oid">—</div>
         </div>
-
-        <div class="rowLine">
-          <span class="pill">Статус: <b id="st">Загрузка…</b></span>
-          <span class="pill">Осталось: <b id="timer">15:00</b></span>
+        <div class="cell">
+          <div class="k">Сумма к оплате (RUB)</div>
+          <div class="v" id="amount">—</div>
         </div>
-
-        <div class="status" id="status">—</div>
+        <div class="cell">
+          <div class="k">Курс (RUB/USDT)</div>
+          <div class="v" id="rate">—</div>
+        </div>
+        <div class="cell">
+          <div class="k">Получите (USDT)</div>
+          <div class="v" id="usdt">—</div>
+        </div>
       </div>
 
-      <div class="section">
-        <div style="font-weight:950; margin-bottom:10px;">Реквизиты для оплаты</div>
+      <div style="margin-top:12px;" class="row">
+        <div class="status" id="state">Статус: —</div>
+        <div class="cell" style="padding:8px 12px; border-radius:999px; width:auto;">
+          <div class="k" style="margin:0;">Осталось: <span class="v mono" id="timer">—</span></div>
+        </div>
+      </div>
 
-        <div class="kv">
-          <div class="item">
-            <div class="label">Банк</div>
-            <div class="value" id="bank">—</div>
-          </div>
+      <div class="status bad" id="error" style="margin-top:8px; display:none;"></div>
+    </div>
 
-          <div class="item">
-            <div class="label">Реквизиты (СБП/карта)</div>
-            <div class="reqLine">
-              <div class="value reqValue mono" id="req">—</div>
-              <button class="btn small" id="copyReqBtn" type="button">Копировать</button>
+    <div class="hr"></div>
+
+    <div class="pad">
+      <div class="v" style="margin-bottom:10px;">Реквизиты для оплаты</div>
+
+      <div class="grid">
+        <div class="cell">
+          <div class="k">Банк</div>
+          <div class="v" id="bank">—</div>
+        </div>
+        <div class="cell">
+          <div class="k">Реквизиты (СБП/карта)</div>
+          <div class="row">
+            <div class="v mono" id="req" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;">—</div>
+            <div class="copy">
+              <button id="copyBtn" type="button">Копировать</button>
             </div>
           </div>
         </div>
-
-        <div class="status" style="margin-top:10px;">
-          Переведи точную сумму и нажми “Я оплатил”.
-        </div>
-
-        <div class="btnRow">
-          <button class="btn danger" id="cancelBtn" type="button">Отменить ордер</button>
-          <button class="btn" id="paidBtn" type="button">Я оплатил</button>
-        </div>
-
-        <div class="status" id="paidStatus">—</div>
       </div>
+
+      <div class="hint">Переведи точную сумму и нажми “Я оплатил”.</div>
+    </div>
+
+    <div class="btns">
+      <button class="danger" id="cancelBtn" type="button">Отменить ордер</button>
+      <button id="paidBtn" type="button">Я оплатил</button>
     </div>
   </div>
+</div>
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const p = new URLSearchParams(location.search);
-  const id = p.get("id") || "";
-  const amountRub = Number(p.get("amountRub"));
-  const rate = Number(p.get("rate"));
-  const method = String(p.get("method") || "");
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get("id") || "";
+  const amountRub = Number(qs.get("amountRub"));
+  const rate = Number(qs.get("rate"));
+  const method = String(qs.get("method") || "");
 
   const oidEl = document.getElementById("oid");
   const amountEl = document.getElementById("amount");
   const rateEl = document.getElementById("rate");
   const usdtEl = document.getElementById("usdt");
-
   const bankEl = document.getElementById("bank");
   const reqEl = document.getElementById("req");
-
-  const stEl = document.getElementById("st");
+  const stateEl = document.getElementById("state");
   const timerEl = document.getElementById("timer");
+  const errEl = document.getElementById("error");
 
-  const statusEl = document.getElementById("status");
-  const paidStatusEl = document.getElementById("paidStatus");
+  const copyBtn = document.getElementById("copyBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const paidBtn = document.getElementById("paidBtn");
 
   let reserveId = "";
-  let reservedUntil = 0;
+  let reservedUntil = 0; // ms timestamp
   let timerHandle = null;
   let finished = false;
 
-  const storageKey = "cf_reserve_" + id;
-
-  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function fmtRate(n){ return Number(n).toLocaleString("ru-RU"); }
-  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
-
-  function setStatus(text, kind){
-    statusEl.textContent = text;
-    statusEl.classList.remove("ok","bad");
-    if (kind) statusEl.classList.add(kind);
+  function fmtRub(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU") + " ₽";
   }
-  function setPaidStatus(text, kind){
-    paidStatusEl.textContent = text;
-    paidStatusEl.classList.remove("ok","bad");
-    if (kind) paidStatusEl.classList.add(kind);
+  function fmtNum(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 });
   }
-  function setState(text){ stEl.textContent = text; }
-
-  function basicFill(){
-    oidEl.textContent = id || "—";
-    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
-    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
-    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+  function setState(text){
+    stateEl.textContent = "Статус: " + text;
+  }
+  function setStatus(text, kind=""){
+    errEl.style.display = text ? "block" : "none";
+    errEl.textContent = text || "";
+    errEl.className = "status " + (kind || "");
   }
 
-  function pad2(n){ return String(n).padStart(2, "0"); }
-  function updateTimer(){
-    if (!reservedUntil) return;
-    const ms = reservedUntil - Date.now();
-    const clamped = Math.max(0, ms);
-    const totalSec = Math.floor(clamped / 1000);
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    timerEl.textContent = `${pad2(m)}:${pad2(s)}`;
-    if (ms <= 0 && !finished) autoCancelDueToTimeout();
+  function reserveLocalKey(){ return "cf_reserve_" + id; }
+  function saveReserveLocal(reserveId, expiresAt){
+    localStorage.setItem(reserveLocalKey(), JSON.stringify({ reserveId, expiresAt, savedAt: Date.now() }));
   }
+  function readReserveLocal(){
+    try{ return JSON.parse(localStorage.getItem(reserveLocalKey()) || "null"); }catch{ return null; }
+  }
+  function clearReserveLocal(){ localStorage.removeItem(reserveLocalKey()); }
 
   async function postJson(path, body){
     const res = await fetch(WORKER_BASE + path, {
@@ -182,47 +178,48 @@
     return j;
   }
 
-  function saveReserveLocal(reserveId, reservedUntil){
-    localStorage.setItem(storageKey, JSON.stringify({ reserveId, reservedUntil }));
-  }
-  function loadReserveLocal(){
-    try{
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch { return null; }
-  }
-  function clearReserveLocal(){
-    localStorage.removeItem(storageKey);
+  function updateTimer(){
+    const left = Math.max(0, reservedUntil - Date.now());
+    const sec = Math.floor(left / 1000);
+    const mm = String(Math.floor(sec / 60)).padStart(2, "0");
+    const ss = String(sec % 60).padStart(2, "0");
+    timerEl.textContent = `${mm}:${ss}`;
+
+    if (left <= 0) {
+      timerEl.textContent = "00:00";
+      autoCancelDueToTimeout();
+    }
   }
 
-  function goBackToBuyOrder(){
-    window.location.href =
-      "./buy-order.html?id=" + encodeURIComponent(id) +
-      "&amountRub=" + encodeURIComponent(String(amountRub)) +
-      "&rate=" + encodeURIComponent(String(rate)) +
-      "&method=" + encodeURIComponent(method);
-  }
-
-  async function loadOrReserve(){
-    basicFill();
-    if (!id){
+  async function startReserve(){
+    if (!id) {
       setState("Ошибка");
-      setStatus("Ошибка: нет id заявки.", "bad");
+      setStatus("Ошибка: отсутствует id", "bad");
       return;
     }
 
-    const cached = loadReserveLocal();
-    if (cached?.reserveId){
+    oidEl.textContent = id;
+    amountEl.textContent = fmtRub(amountRub);
+    rateEl.textContent = fmtNum(rate);
+    const usdt = (Number(amountRub) && Number(rate)) ? (Number(amountRub) / Number(rate)) : NaN;
+    usdtEl.textContent = Number.isFinite(usdt) ? (fmtNum(usdt) + " USDT") : "—";
+
+    // Пытаемся восстановить резерв после обновления страницы
+    const cached = readReserveLocal();
+    if (cached && cached.reserveId && Number(cached.expiresAt) > Date.now()) {
       try{
-        setState("Открываю резерв…");
+        setState("Ожидание оплаты");
         setStatus("Восстанавливаю сделку после обновления…");
-        const j = await postJson("/api/public/get_reserved_buy_offer", { id, reserveId: cached.reserveId });
-        reserveId = j.reserve.reserveId;
-        reservedUntil = j.reserve.reservedUntil;
-        bankEl.textContent = j.offer.payBank || "—";
-        reqEl.textContent = j.offer.payRequisite || "—";
+        const j = await postJson("/api/public/reserve_offer", { id, reserveId: cached.reserveId });
+
+        reserveId = j.reserveId;
+        reservedUntil = j.expiresAt;
+
+        bankEl.textContent = j.offer?.payBank || "—";
+        reqEl.textContent = j.offer?.payRequisite || "—";
+
         saveReserveLocal(reserveId, reservedUntil);
+
         setState("Ожидание оплаты");
         setStatus("Сделка восстановлена. Нажми “Я оплатил” после перевода.", "ok");
         updateTimer();
@@ -233,15 +230,21 @@
       }
     }
 
+    // Новый резерв
     try{
       setState("Резервирую…");
       setStatus("Загружаю реквизиты и резервирую заявку…");
-      const j = await postJson("/api/public/reserve_buy_offer", { id });
-      reserveId = j.reserve.reserveId;
-      reservedUntil = j.reserve.reservedUntil;
-      bankEl.textContent = j.offer.payBank || "—";
-      reqEl.textContent = j.offer.payRequisite || "—";
+
+      const j = await postJson("/api/public/reserve_offer", { id });
+
+      reserveId = j.reserveId;
+      reservedUntil = j.expiresAt;
+
+      bankEl.textContent = j.offer?.payBank || "—";
+      reqEl.textContent = j.offer?.payRequisite || "—";
+
       saveReserveLocal(reserveId, reservedUntil);
+
       setState("Ожидание оплаты");
       setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
       updateTimer();
@@ -258,78 +261,72 @@
     if (timerHandle) clearInterval(timerHandle);
     setState("Отменено");
     setStatus("Время оплаты истекло. Ордер отменён, заявка разморожена.", "bad");
+
     try{
-      if (reserveId) await postJson("/api/public/cancel_buy_offer", { id, reserveId });
-    } catch {}
+      if (reserveId) await postJson("/api/public/cancel_reserve", { id, reserveId });
+    }catch{}
     clearReserveLocal();
-    setPaidStatus("—");
-    goBackToBuyOrder();
+    paidBtn.disabled = true;
+    cancelBtn.disabled = true;
   }
 
-  document.getElementById("paidBtn").onclick = async () => {
-    if (finished) return;
-    if (!reserveId){
-      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
-      return;
-    }
+  copyBtn.onclick = async () => {
     try{
-      await postJson("/api/public/confirm_buy_offer_paid", { id, reserveId }); // ✅ статус "Оплачено"
-      finished = true;
-      if (timerHandle) clearInterval(timerHandle);
+      const txt = (reqEl.textContent || "").trim();
+      if (!txt || txt === "—") return;
+      await navigator.clipboard.writeText(txt);
+      setStatus("Скопировано ✅", "ok");
+      setTimeout(() => setStatus("", ""), 1200);
+    }catch{}
+  };
 
+  cancelBtn.onclick = async () => {
+    if (finished) return;
+    finished = true;
+    if (timerHandle) clearInterval(timerHandle);
+
+    cancelBtn.disabled = true;
+    paidBtn.disabled = true;
+
+    try{
+      setState("Отменяю…");
+      await postJson("/api/public/cancel_reserve", { id, reserveId });
+      setState("Отменено");
+      setStatus("Ордер отменён, заявка разморожена.", "ok");
+    } catch(e){
+      setState("Ошибка");
+      setStatus("Ошибка: " + e.message, "bad");
+    }
+    clearReserveLocal();
+  };
+
+  paidBtn.onclick = async () => {
+    if (finished) return;
+    paidBtn.disabled = true;
+
+    try{
+      setState("Подтверждаю оплату…");
+      await postJson("/api/public/mark_paid", { id, reserveId });
       setState("Оплачено");
-      setStatus("Отмечено как “Оплачено”. Сейчас нужно подтвердить чек/выписку.", "ok");
-      setPaidStatus("Перенаправляю…", "ok");
+      setStatus("Отлично. Теперь отправь подтверждение оплаты.", "ok");
 
-      // переходим на buy-paid и передаём reserveId
-      const qs = new URLSearchParams({
+      // Переход на страницу загрузки пруфов
+      const p = new URLSearchParams({
         id,
         reserveId,
         amountRub: String(amountRub),
         rate: String(rate),
-        method: String(method),
+        method: String(method || ""),
       });
-      window.location.href = "./buy-paid.html?" + qs.toString();
+      location.href = "./buy-paid.html?" + p.toString();
     } catch(e){
-      setPaidStatus("Ошибка: " + e.message, "bad");
+      paidBtn.disabled = false;
+      setState("Ошибка");
+      setStatus("Ошибка: " + e.message, "bad");
     }
   };
 
-  document.getElementById("cancelBtn").onclick = async () => {
-    if (finished) return;
-    if (!reserveId){
-      setPaidStatus("Нет резерва. Обнови страницу.", "bad");
-      return;
-    }
-    try{
-      await postJson("/api/public/cancel_buy_offer", { id, reserveId });
-      finished = true;
-      if (timerHandle) clearInterval(timerHandle);
-      setState("Отменено");
-      setStatus("Ордер отменён, заявка разморожена.", "bad");
-      clearReserveLocal();
-      setPaidStatus("—");
-      goBackToBuyOrder();
-    } catch(e){
-      setPaidStatus("Ошибка: " + e.message, "bad");
-    }
-  };
-
-  document.getElementById("copyReqBtn").onclick = async () => {
-    const txt = reqEl.textContent || "";
-    if (!txt || txt === "—"){
-      setPaidStatus("Нечего копировать.", "bad");
-      return;
-    }
-    try{
-      await navigator.clipboard.writeText(txt);
-      setPaidStatus("Реквизиты скопированы ✅", "ok");
-    } catch {
-      setPaidStatus("Не удалось скопировать. Скопируй вручную.", "bad");
-    }
-  };
-
-  loadOrReserve();
+  startReserve();
 </script>
 </body>
 </html>

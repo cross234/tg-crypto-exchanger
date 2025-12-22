@@ -39,13 +39,29 @@
     .status.ok{ color:#9dffb8; font-weight:900; }
     .status.bad{ color:#ffb4b4; font-weight:900; }
 
-    table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:13px; }
+    /* Таблица: защита от длинных строк */
+    .tableWrap{ overflow:auto; border-radius:14px; }
+    table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:13px; min-width: 980px; }
     th, td{ padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; vertical-align:top; }
     th{ color:var(--muted); font-weight:950; }
+    td{ max-width: 260px; }
     .tag{ display:inline-block; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); font-weight:900; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
     .small{ font-size:12px; color:var(--muted); }
-    a{ color:#cfe0ff; font-weight:900; text-decoration:none; }
+
+    /* Ссылки "Открыть ..." */
+    a.openLink{
+      display:inline-block;
+      max-width: 240px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      color:#cfe0ff;
+      font-weight:900;
+      text-decoration:none;
+      vertical-align:bottom;
+    }
+    .fileLine{ margin:2px 0; }
   </style>
 </head>
 <body>
@@ -122,21 +138,23 @@
 
       <div class="status" id="offerStatus">—</div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Сумма</th>
-            <th>Метод</th>
-            <th>Курс</th>
-            <th>Статус</th>
-            <th>Проверка</th>
-            <th>Файлы (Telegram)</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:140px;">ID</th>
+              <th style="min-width:110px;">Сумма</th>
+              <th style="min-width:80px;">Метод</th>
+              <th style="min-width:90px;">Курс</th>
+              <th style="min-width:120px;">Статус</th>
+              <th style="min-width:220px;">Проверка</th>
+              <th style="min-width:260px;">Файлы (Telegram)</th>
+              <th style="min-width:260px;">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -191,9 +209,20 @@
   }
 
   function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function safe(s){ return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c])); }
 
-  function statusRuRaw(s){
+  function safe(s){
+    return (s || "").toString().replace(/[<>&]/g, c=>({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c]));
+  }
+
+  function shortenName(name, max = 32){
+    const n = (name || "").toString();
+    if (n.length <= max) return n;
+    const head = n.slice(0, Math.max(10, max - 12));
+    const tail = n.slice(-8);
+    return head + "…" + tail;
+  }
+
+  function statusRu(s){
     const m = { NEW:"Активна", PAID:"Оплачено", ON_CHECK:"На проверке", SUCCESS:"Успешно", FAILED:"Неуспешно" };
     return m[s] || s || "Активна";
   }
@@ -220,12 +249,22 @@
   function renderFiles(o){
     const files = o?.checkInfo?.files || [];
     if (!files.length) return `<span class="small">—</span>`;
+
     return files.map(f => {
       const tg = f.tg || {};
       const link = tgLink(tg.chatId, tg.messageId);
-      const label = `${safe(f.kind || "file")} · ${safe(f.name || "")}`;
+      const full = (f.name || "").toString();
+      const short = shortenName(full, 32);
+      const label = `${safe(f.kind || "file")} · ${safe(short)}`;
+      const title = safe(full);
+
       if (!link) return `<div class="small">Нет ссылки</div>`;
-      return `<div><a href="${link}" target="_blank">Открыть</a> <span class="small">${label}</span></div>`;
+
+      return `
+        <div class="fileLine">
+          <a class="openLink" href="${link}" target="_blank" title="${title}">Открыть ${label}</a>
+        </div>
+      `;
     }).join("");
   }
 
@@ -299,9 +338,8 @@
 
       tbody.innerHTML = "";
 
-      for (const o0 of (j.offers || [])){
-        const o = o0 || {};
-        const st = (o.status || "NEW").toUpperCase();
+      for (const o of (j.offers || [])){
+        const st = String(o.status || "NEW").toUpperCase();
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -309,7 +347,7 @@
           <td>${fmtRub(o.amountRub)}</td>
           <td><span class="tag">${safe(o.method)}</span></td>
           <td><b>${Number(o.rate).toLocaleString("ru-RU")}</b></td>
-          <td><span class="tag">${safe(statusRuRaw(st))}</span></td>
+          <td><span class="tag">${safe(statusRu(st))}</span></td>
           <td>${renderCheck(o)}</td>
           <td>${renderFiles(o)}</td>
           <td></td>

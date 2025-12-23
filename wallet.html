@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Кошелёк</title>
+
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
+
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+      overflow:hidden;
+    }
+
+    /* фон как в твоих страницах */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(22px + env(safe-area-inset-bottom))
+        16px;
+      box-sizing:border-box;
+    }
+
+    .wrap{ width:100%; max-width:860px; }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .title{
+      font-weight:1000;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+
+    .timerPill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:950;
+      min-width:160px;
+      justify-content:center;
+      box-shadow: 0 10px 26px rgba(0,0,0,.20);
+    }
+    .timerDot{
+      width:10px;height:10px;border-radius:999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.16);
+    }
+    .timerPill.warn .timerDot{
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.18);
+    }
+    .timerPill.bad .timerDot{
+      background: var(--bad);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.18);
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .gridTop{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      padding:14px;
+    }
+
+    .cell{
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 12px 14px;
+      min-width: 0;
+    }
+    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
+    .value{
+      font-weight:950;
+      font-size:14px;
+      word-break: break-word;
+      overflow-wrap:anywhere;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color:#cfe0ff;
+    }
+
+    .main{
+      padding:14px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+
+    .panel{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(900px 240px at 18% 0%, rgba(45,91,255,.18), transparent 60%),
+        radial-gradient(900px 240px at 82% 0%, rgba(34,197,94,.12), transparent 60%),
+        rgba(255,255,255,.03);
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+      animation: fadeIn .35s ease-out;
+    }
+
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+    .panelHead{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .icon{
+      width:48px; height:48px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      flex: 0 0 auto;
+    }
+    .icon svg{ width:24px; height:24px; opacity:.95; }
+    .hTitle{ font-weight:1000; font-size:18px; margin:0 0 4px; }
+    .hSub{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .opt{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      padding:14px;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .opt:hover{ transform: translateY(-1px); background: rgba(255,255,255,.05); }
+    .opt.active{
+      border-color: rgba(45,91,255,.55);
+      box-shadow: 0 0 0 3px rgba(45,91,255,.18);
+    }
+
+    .optTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+    .optName{ font-weight:1000; letter-spacing:.3px; }
+    .tag{
+      font-size:12px;
+      font-weight:950;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      white-space:nowrap;
+    }
+    .tag.zero{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color:#dfffea;
+    }
+    .optDesc{ color:var(--muted); font-size:12px; line-height:1.35; margin:0; }
+
+    .form{
+      margin-top:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      padding:14px;
+      display:none;
+      animation: fadeIn .25s ease-out;
+    }
+    .form.show{ display:block; }
+
+    .fieldLabel{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:950;
+      margin-bottom:8px;
+    }
+    .input{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:950;
+      font-size:16px;
+      padding:12px 12px;
+      outline:none;
+    }
+    .input:focus{
+      border-color: rgba(45,91,255,.55);
+      box-shadow: 0 0 0 3px rgba(45,91,255,.16);
+    }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:0;
+      border-radius:16px;
+      padding:12px 16px;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      min-width: 160px;
+    }
+    .btn.ghost{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      min-width: 140px;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; }
+
+    .foot{
+      margin-top:12px;
+      font-size:12px;
+      color: rgba(233,240,255,.70);
+      font-weight:850;
+    }
+
+    @media(max-width:780px){
+      .gridTop{ grid-template-columns:1fr; }
+      .options{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+
+      <div class="topbar">
+        <div class="title">Crossflag Exchange · Кошелёк</div>
+        <div class="timerPill" id="timerPill">
+          <span class="timerDot"></span>
+          <span>Осталось: <span id="timer">05:00</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+
+        <div class="gridTop">
+          <div class="cell">
+            <div class="label">ID заявки</div>
+            <div class="value mono" id="oid">—</div>
+          </div>
+          <div class="cell">
+            <div class="label">Reserve ID</div>
+            <div class="value mono" id="rid">—</div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="panel">
+            <div class="panelHead">
+              <div class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 5v5l3 3"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="hTitle">Куда отправлять USDT?</div>
+                <p class="hSub">
+                  Выбери сеть/биржу, затем укажи адрес/UID.<br/>
+                  Мы отправим USDT туда после успешной проверки оплаты.
+                </p>
+              </div>
+            </div>
+
+            <div class="options">
+              <div class="opt" data-type="BEP20" id="optBEP20">
+                <div class="optTop">
+                  <div class="optName">BEP20</div>
+                  <div class="tag">Комиссия 1 USDT</div>
+                </div>
+                <p class="optDesc">Сеть BSC (BEP20). Укажи BEP20 адрес кошелька.</p>
+              </div>
+
+              <div class="opt" data-type="TRC20" id="optTRC20">
+                <div class="optTop">
+                  <div class="optName">TRC20</div>
+                  <div class="tag">Комиссия 2 USDT</div>
+                </div>
+                <p class="optDesc">Сеть Tron (TRC20). Укажи TRC20 адрес кошелька.</p>
+              </div>
+
+              <div class="opt" data-type="HTX_UID" id="optHTX">
+                <div class="optTop">
+                  <div class="optName">HTX UID</div>
+                  <div class="tag zero">0 комиссия</div>
+                </div>
+                <p class="optDesc">Без комиссии. Укажи UID аккаунта HTX.</p>
+              </div>
+
+              <div class="opt" data-type="BYBIT_UID" id="optBYBIT">
+                <div class="optTop">
+                  <div class="optName">Bybit UID</div>
+                  <div class="tag zero">0 комиссия</div>
+                </div>
+                <p class="optDesc">Без комиссии. Укажи UID аккаунта Bybit.</p>
+              </div>
+            </div>
+
+            <div class="form" id="form">
+              <div class="fieldLabel" id="fieldLabel">—</div>
+              <input class="input" id="walletInput" placeholder="" autocomplete="off" />
+              <div class="actions">
+                <button class="btn ghost" id="cancelBtn" type="button">Отменить</button>
+                <button class="btn primary" id="saveBtn" type="button">Сохранить</button>
+              </div>
+            </div>
+
+            <div class="foot">
+              Таймер 5 минут: если не успеть — заявка автоматически отменится и вернёт в стакан.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
+  const p = new URLSearchParams(location.search);
+
+  // ✅ поддерживаем оба варианта (на всякий случай)
+  const id = (p.get("id") || "").trim();
+  const reserveId = (p.get("reserveId") || p.get("reservedId") || "").trim();
+
+  // параметры которые надо сохранить при переходе дальше
+  const passthroughKeys = ["amountRub", "rate", "method"];
+
+  document.getElementById("oid").textContent = id || "—";
+  document.getElementById("rid").textContent = reserveId || "—";
+
+  // ===== Timer 5:00 =====
+  const timerEl = document.getElementById("timer");
+  const pill = document.getElementById("timerPill");
+  let left = 5 * 60; // seconds
+
+  function renderTimer(){
+    const m = String(Math.floor(left / 60)).padStart(2,"0");
+    const s = String(left % 60).padStart(2,"0");
+    timerEl.textContent = `${m}:${s}`;
+
+    pill.classList.remove("warn","bad");
+    if (left <= 60) pill.classList.add("bad");
+    else if (left <= 120) pill.classList.add("warn");
+  }
+
+  async function doCancel(goTo){
+    try{
+      if (id && reserveId){
+        await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, reserveId })
+        });
+      }
+    }catch(e){ /* игнор */ }
+    location.href = goTo || "buy.html";
+  }
+
+  renderTimer();
+  const t = setInterval(async () => {
+    left--;
+    if (left <= 0){
+      clearInterval(t);
+      await doCancel("buy.html");
+      return;
+    }
+    renderTimer();
+  }, 1000);
+
+  // ===== Wallet selection =====
+  const opts = Array.from(document.querySelectorAll(".opt"));
+  const form = document.getElementById("form");
+  const label = document.getElementById("fieldLabel");
+  const input = document.getElementById("walletInput");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  let selectedType = "";
+
+  function setActive(type){
+    selectedType = type;
+    opts.forEach(o => o.classList.toggle("active", o.dataset.type === type));
+    form.classList.add("show");
+
+    if (type === "BEP20"){
+      label.textContent = "BEP20 адрес кошелька";
+      input.placeholder = "Например: 0x...";
+    } else if (type === "TRC20"){
+      label.textContent = "TRC20 адрес кошелька";
+      input.placeholder = "Например: T...";
+    } else if (type === "HTX_UID"){
+      label.textContent = "HTX UID (цифры)";
+      input.placeholder = "Например: 12345678";
+    } else if (type === "BYBIT_UID"){
+      label.textContent = "Bybit UID (цифры)";
+      input.placeholder = "Например: 12345678";
+    }
+    input.focus();
+  }
+
+  opts.forEach(o => {
+    o.addEventListener("click", () => setActive(o.dataset.type));
+  });
+
+  cancelBtn.onclick = () => doCancel("buy.html");
+
+  function buildNextUrl(){
+    const next = new URL("crossflag-buy-order.html", location.href);
+    next.searchParams.set("id", id);
+    next.searchParams.set("reserveId", reserveId); // ✅ строго reserveId
+
+    // пробрасываем что уже есть в query
+    for (const k of passthroughKeys){
+      const v = p.get(k);
+      if (v != null && String(v).length) next.searchParams.set(k, v);
+    }
+    return next.toString();
+  }
+
+  function validate(type, value){
+    const v = String(value || "").trim();
+    if (!v) return "Введи значение";
+
+    if (type === "HTX_UID" || type === "BYBIT_UID"){
+      if (!/^[0-9]{4,20}$/.test(v)) return "UID должен быть цифрами";
+      return "";
+    }
+
+    // для адресов оставим мягкую проверку
+    if (type === "BEP20"){
+      if (v.length < 10) return "Слишком короткий адрес";
+      return "";
+    }
+    if (type === "TRC20"){
+      if (v.length < 10) return "Слишком короткий адрес";
+      return "";
+    }
+
+    return "";
+  }
+
+  saveBtn.onclick = async () => {
+    try{
+      if (!id || !reserveId){
+        alert("Ошибка: Missing id or reserveId");
+        return;
+      }
+      if (!selectedType){
+        alert("Выбери сеть/биржу");
+        return;
+      }
+      const walletValue = input.value.trim();
+      const err = validate(selectedType, walletValue);
+      if (err){
+        alert(err);
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Сохраняю…";
+
+      // ✅ ВАЖНО: отправляем reserveId (не reservedId)
+      const res = await fetch(WORKER_BASE + "/api/public/set_wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          reserveId,          // ✅ правильное поле
+          walletType: selectedType,
+          walletValue
+        })
+      });
+
+      const txt = await res.text();
+      let j;
+      try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      // переход к реквизитам
+      location.href = buildNextUrl();
+
+    } catch(e){
+      alert("Ошибка: " + (e.message || String(e)));
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Сохранить";
+    }
+  };
+
+  // если человек случайно открыл страницу без параметров — сразу в стакан
+  if (!id || !reserveId){
+    // не делаем авто-редирект мгновенно, чтобы он успел увидеть,
+    // но показываем нормальную ошибку без лишних запросов
+    form.classList.add("show");
+    label.textContent = "Ошибка";
+    input.value = "";
+    input.placeholder = "Открой страницу из заявки заново";
+    saveBtn.disabled = true;
+  }
+</script>
+</body>
+</html>

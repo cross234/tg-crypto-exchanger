@@ -16,6 +16,10 @@
       --buy:#16a34a;
       --sell:#ef4444;
 
+      /* NEW: сине-прозрачный стиль */
+      --blue-bg: rgba(30, 60, 120, 0.45);
+      --blue-border: rgba(120, 170, 255, 0.25);
+
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
@@ -43,7 +47,6 @@
       transform:scale(1.02);
     }
 
-    /* затемнение */
     .overlay{
       position:fixed;
       inset:0;
@@ -54,7 +57,6 @@
       pointer-events:none;
     }
 
-    /* центр */
     .page{
       min-height:100svh;
       display:flex;
@@ -70,7 +72,6 @@
 
     .wrap{ width:100%; max-width:520px; }
 
-    /* карточка */
     .card{
       background: var(--card);
       border: 1px solid var(--border);
@@ -78,7 +79,6 @@
       padding: 14px;
       box-shadow: 0 18px 50px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
     }
 
     .title{
@@ -141,57 +141,48 @@
       font-weight:850;
     }
 
-    /* кнопка запуска видео на мобиле */
-    .playOverlay{
-      position:fixed;
-      left:50%;
-      bottom: calc(18px + env(safe-area-inset-bottom));
-      transform:translateX(-50%);
-      z-index:20;
-      display:none;
-    }
-    .playBtn{
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(15,26,48,.55);
-      color:#fff;
-      font-weight:1000;
-      padding:10px 14px;
-      border-radius:999px;
-      backdrop-filter: blur(10px);
-      cursor:pointer;
-    }
-
-    /* ===== NEW: кнопки ВНЕ карточки ===== */
+    /* ===== КНОПКИ СНАРУЖИ (сине-прозрачные) ===== */
     .outerActions{
       margin-top: 12px;
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
     }
+
     .outerBtn{
       width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
       padding:14px 12px;
       border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color: rgba(233,240,255,.95);
+      border:1px solid var(--blue-border);
+      background:
+        linear-gradient(
+          180deg,
+          rgba(80,140,255,.20),
+          rgba(20,40,90,.35)
+        ),
+        var(--blue-bg);
+      color: var(--text);
       font-weight:1000;
       font-size:16px;
       cursor:pointer;
-      box-shadow: 0 10px 26px rgba(0,0,0,.22);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+      text-align:center;
     }
-    .outerBtn:active{ transform: translateY(1px); }
 
+    .outerBtn:hover{
+      background:
+        linear-gradient(
+          180deg,
+          rgba(100,160,255,.30),
+          rgba(30,60,140,.45)
+        ),
+        var(--blue-bg);
+    }
   </style>
 </head>
 
 <body>
-  <!-- ВИДЕО -->
   <div class="bg">
     <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="./bg.jpg">
       <source src="./bg.mp4" type="video/mp4">
@@ -199,11 +190,6 @@
   </div>
   <div class="overlay"></div>
 
-  <div class="playOverlay" id="playOverlay">
-    <button class="playBtn" id="playBtn">▶ Включить фон</button>
-  </div>
-
-  <!-- КАРТОЧКА + КНОПКИ СНАРУЖИ -->
   <div class="page">
     <div class="wrap">
       <div class="card">
@@ -232,10 +218,14 @@
         <div class="footer" id="updated">Обновлено: —</div>
       </div>
 
-      <!-- ✅ ВНЕ основной плашки -->
+      <!-- кнопки вне основной плашки -->
       <div class="outerActions">
-        <button class="outerBtn" onclick="window.open('https://t.me/crossflag2','_blank')">Поддержка</button>
-        <button class="outerBtn" onclick="window.open('https://t.me/+elo9TimbWVsyMTgy','_blank')">Чат</button>
+        <button class="outerBtn" onclick="window.open('https://t.me/crossflag2','_blank')">
+          Связаться с поддержкой
+        </button>
+        <button class="outerBtn" onclick="window.open('https://t.me/+elo9TimbWVsyMTgy','_blank')">
+          Чат в телеграмм
+        </button>
       </div>
 
     </div>
@@ -243,125 +233,6 @@
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
-
-  // Эти id должны уже быть в твоём index (как раньше):
-  // buyRateEl  -> элемент, где показывается "Купить"
-  // sellRateEl -> элемент, где показывается "Продать"
-  // updatedEl  -> элемент "Обновлено: ..."
-  const buyRateEl  = document.getElementById("buyRate");
-  const sellRateEl = document.getElementById("sellRate");
-  const updatedEl  = document.getElementById("updated");
-
-  // Кнопки перехода (как было)
-  const goBuyBtn  = document.getElementById("goBuy");
-  const goSellBtn = document.getElementById("goSell");
-  if (goBuyBtn)  goBuyBtn.onclick  = () => (window.location.href = "./buy.html");
-  if (goSellBtn) goSellBtn.onclick = () => (window.location.href = "./sell.html");
-
-  function fmtRate(n){
-    const num = Number(n);
-    if (!Number.isFinite(num)) return "—";
-    return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
-  const buyEl = document.getElementById("buyRate");
-  const sellEl = document.getElementById("sellRate");
-  const updatedEl = document.getElementById("updated");
-
-  function fmt(n){
-    const v = Number(n);
-    if (!Number.isFinite(v)) return "—";
-    return v.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
-  }
-
-  function bestBuyRate(offers){
-    // Для покупателя выгоднее МЕНЬШЕ
-    let best = Infinity;
-    for (const o of (offers || [])){
-  function bestBuy(offers){
-    let m = Infinity;
-    for (const o of offers){
-      const r = Number(o.rate);
-      if (Number.isFinite(r) && r > 0) best = Math.min(best, r);
-      if (Number.isFinite(r) && r > 0) m = Math.min(m, r);
-    }
-    return best === Infinity ? null : best;
-    return m === Infinity ? null : m;
-  }
-
-  function bestSellRate(offers){
-    // Для продавца выгоднее БОЛЬШЕ
-    let best = -Infinity;
-    for (const o of (offers || [])){
-  function bestSell(offers){
-    let m = -Infinity;
-    for (const o of offers){
-      const r = Number(o.rate);
-      if (Number.isFinite(r) && r > 0) best = Math.max(best, r);
-      if (Number.isFinite(r) && r > 0) m = Math.max(m, r);
-    }
-    return best === -Infinity ? null : best;
-    return m === -Infinity ? null : m;
-  }
-
-  async function loadRatesFromOrders(){
-  async function loadRates(){
-    try{
-      const [bRes, sRes] = await Promise.all([
-        fetch(WORKER_BASE + "/api/public/buy_offers", { cache: "no-store" }),
-        fetch(WORKER_BASE + "/api/public/sell_offers", { cache: "no-store" }),
-      const [b,s] = await Promise.all([
-        fetch(WORKER_BASE + "/api/public/buy_offers").then(r=>r.json()),
-        fetch(WORKER_BASE + "/api/public/sell_offers").then(r=>r.json())
-      ]);
-
-      const b = await bRes.json();
-      const s = await sRes.json();
-
-      const buyBest  = (b && b.ok) ? bestBuyRate(b.offers || []) : null;
-      const sellBest = (s && s.ok) ? bestSellRate(s.offers || []) : null;
-      buyEl.textContent  = b.ok ? fmt(bestBuy(b.offers||[])) : "—";
-      sellEl.textContent = s.ok ? fmt(bestSell(s.offers||[])) : "—";
-
-      if (buyRateEl)  buyRateEl.textContent  = (buyBest  == null) ? "—" : fmtRate(buyBest);
-      if (sellRateEl) sellRateEl.textContent = (sellBest == null) ? "—" : fmtRate(sellBest);
-
-      if (updatedEl){
-        const d = new Date();
-        updatedEl.textContent = "Обновлено: " + d.toLocaleString("ru-RU");
-      }
-      updatedEl.textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
-    }catch(e){
-      // Не ломаем интерфейс — просто показываем, что обновление не получилось
-      if (updatedEl){
-        const d = new Date();
-        updatedEl.textContent = "Обновлено: " + d.toLocaleString("ru-RU");
-      }
-      updatedEl.textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
-    }
-  }
-
-  loadRatesFromOrders();
-  setInterval(loadRatesFromOrders, 10000);
-  loadRates();
-  setInterval(loadRates, 10000);
-
-  /* видео на мобиле */
-  const video = document.getElementById("bgVideo");
-  const overlay = document.getElementById("playOverlay");
-  const btn = document.getElementById("playBtn");
-
-  function isMobile(){
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  }
-
-  setTimeout(async ()=>{
-    try{ await video.play(); }
-    catch{ if(isMobile()) overlay.style.display="block"; }
-  },200);
-
-  btn.onclick = async ()=>{
-    await video.play();
-    overlay.style.display="none";
-  };
 </script>
 </body>
 </html>

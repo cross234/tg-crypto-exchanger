@@ -2,209 +2,359 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>P2P · Ордер покупки</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Выбор оплаты</title>
+
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1a30;
-      --border:#223255;
       --text:#e9f0ff;
       --muted:#9fb0d4;
-      --buy:#2563eb;
-      --bad:#ffb4b4;
-      --ok:#9dffb8;
+
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-    body{ margin:0; background:var(--bg); color:var(--text); }
-    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
-    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-    .title{ font-size:16px; font-weight:950; }
-    .btn{
-      border:0; border-radius:12px; padding:10px 14px; cursor:pointer;
-      font-weight:950; background:rgba(255,255,255,.10); color:var(--text);
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
       overflow:hidden;
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
     }
-    .section{ padding:14px; }
-    .section + .section{ border-top:1px solid rgba(255,255,255,.06); }
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .cell{
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 12px;
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(22px + env(safe-area-inset-bottom))
+        16px;
+      box-sizing:border-box;
+    }
+
+    .wrap{ width:100%; max-width:720px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .title{
+      font-weight:1000;
+      font-size:16px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    @media(max-width:640px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .box{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
       min-width:0;
     }
-    .label{ color:var(--muted); font-size:12px; margin-bottom:6px; }
-    .value{ font-weight:950; font-size:16px; overflow-wrap:anywhere; word-break:break-word; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
-    .payList{ display:grid; gap:10px; margin-top:10px; }
-    .pay{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:18px; word-break:break-word; overflow-wrap:anywhere; }
+
+    .section{
+      padding:12px;
+      border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
+      margin-bottom:12px;
+    }
+    .sectionTitle{
+      font-weight:1000;
+      margin-bottom:10px;
+    }
+
+    .payRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
       border-radius:14px;
-      padding:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      margin-bottom:10px;
       cursor:pointer;
     }
-    .pay strong{ font-weight:1000; }
-    .pill{
-      font-weight:950; font-size:12px;
-      border:1px solid rgba(255,255,255,.12);
-      padding:8px 10px; border-radius:999px;
-      background: rgba(0,0,0,.18);
-      color:#fff;
-    }
-    .pay.active{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 12px 35px rgba(0,0,0,.25);
-      background:
-        radial-gradient(800px 160px at 20% 0%, rgba(37,99,235,.22), transparent 60%),
-        rgba(0,0,0,.16);
-    }
-    .status{
-      margin-top:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      border-radius:14px;
-      padding:12px;
-      color:var(--muted);
-      font-weight:900;
-    }
-    .status.ok{ color:var(--ok); border-color: rgba(157,255,184,.35); background: rgba(157,255,184,.08); }
-    .status.bad{ color:var(--bad); border-color: rgba(255,180,180,.35); background: rgba(255,180,180,.08); }
+    .payRow input{ transform:scale(1.1); }
+    .payLeft{ display:flex; flex-direction:column; gap:2px; }
+    .payName{ font-weight:1000; }
+    .payHint{ font-size:12px; color:var(--muted); }
 
-    .actions{ display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap; margin-top:12px; }
-    .primary{
-      background: linear-gradient(180deg, #2d5bff, #1f3fb3);
-      color:#fff;
+    .status{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:900;
+      font-size:13px;
+    }
+    .status.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn{
+      border:0;
       border-radius:14px;
       padding:12px 16px;
       font-weight:1000;
-      border:0;
       cursor:pointer;
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
     }
-    .primary:disabled{ opacity:.55; cursor:not-allowed; }
-    @media(max-width:720px){
-      .grid{ grid-template-columns:1fr; }
-      .primary,.btn{ width:100%; }
-      .actions{ justify-content:stretch; }
+    .btn.cancel{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
     }
+    .btn.next{
+      background: linear-gradient(180deg, #2d5bff, #1f3fb3);
+      color:#fff;
+      min-width:180px;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; }
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="title">Ордер покупки</div>
-      <button class="btn" onclick="location.href='buy.html'">Назад</button>
-    </div>
 
-    <div class="card">
-      <div class="section">
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+        <div class="top">
+          <div class="title">Crossflag Exchange · Купить</div>
+        </div>
+
         <div class="grid">
-          <div class="cell">
+          <div class="box">
             <div class="label">ID заявки</div>
-            <div class="value mono" id="oid">—</div>
+            <div class="value" id="orderId">—</div>
           </div>
-          <div class="cell">
+          <div class="box">
             <div class="label">Сумма (RUB)</div>
-            <div class="value" id="amount">—</div>
+            <div class="value" id="amountRub">—</div>
           </div>
-          <div class="cell">
+          <div class="box">
             <div class="label">Курс (RUB/USDT)</div>
             <div class="value" id="rate">—</div>
           </div>
-          <div class="cell">
-            <div class="label">Метод</div>
-            <div class="value" id="method">—</div>
+          <div class="box">
+            <div class="label">Получите (USDT)</div>
+            <div class="value" id="usdt">—</div>
           </div>
         </div>
 
-        <div class="status" id="status">Выбери способ оплаты.</div>
+        <div class="section">
+          <div class="sectionTitle">Способ оплаты</div>
 
-        <div class="payList" id="payList">
-          <div class="pay" data-pay="RUB">
-            <div>
-              <strong>Оплата RUB</strong>
-              <div style="color:var(--muted); font-size:12px; margin-top:4px;">Перевод по реквизитам</div>
+          <label class="payRow">
+            <div class="payLeft">
+              <div class="payName">Crossflag</div>
+              <div class="payHint">Оплата на наши реквизиты</div>
             </div>
-            <div class="pill">Рекомендуем</div>
-          </div>
+            <input type="radio" name="pay" value="CROSSFLAG" checked />
+          </label>
+
+          <label class="payRow">
+            <div class="payLeft">
+              <div class="payName">HTX</div>
+              <div class="payHint">Оплата через HTX (в разработке)</div>
+            </div>
+            <input type="radio" name="pay" value="HTX" />
+          </label>
+
+          <label class="payRow">
+            <div class="payLeft">
+              <div class="payName">Bybit</div>
+              <div class="payHint">Оплата через Bybit (в разработке)</div>
+            </div>
+            <input type="radio" name="pay" value="BYBIT" />
+          </label>
         </div>
+
+        <div class="status warn" id="orderStatus">Загрузка…</div>
 
         <div class="actions">
-          <button class="primary" id="goBtn" disabled>Продолжить</button>
+          <button class="btn cancel" id="cancelBtn" type="button">Отменить</button>
+          <button class="btn next" id="nextBtn" type="button">Продолжить</button>
         </div>
+
       </div>
     </div>
   </div>
 
 <script>
-  const p = new URLSearchParams(location.search);
-  const id = p.get("id") || "";
-  const amountRub = Number(p.get("amountRub"));
-  const rate = Number(p.get("rate"));
-  const method = p.get("method") || "";
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const oidEl = document.getElementById("oid");
-  const amountEl = document.getElementById("amount");
+  const params = new URLSearchParams(location.search);
+
+  const id = (params.get("id") || "").trim();
+  const amountRub = Number(params.get("amountRub"));
+  const rate = Number(params.get("rate"));
+  const method = (params.get("method") || "").toUpperCase();
+
+  const amountRubEl = document.getElementById("amountRub");
   const rateEl = document.getElementById("rate");
-  const methodEl = document.getElementById("method");
-  const statusEl = document.getElementById("status");
-  const goBtn = document.getElementById("goBtn");
+  const usdtEl = document.getElementById("usdt");
+  const orderIdEl = document.getElementById("orderId");
+  const orderStatusEl = document.getElementById("orderStatus");
 
-  oidEl.textContent = id || "—";
-  amountEl.textContent = Number.isFinite(amountRub) ? amountRub.toLocaleString("ru-RU") + " ₽" : "—";
-  rateEl.textContent = Number.isFinite(rate) ? rate.toLocaleString("ru-RU", { maximumFractionDigits: 2 }) : "—";
-  methodEl.textContent = method ? method.toUpperCase() : "—";
+  const nextBtn = document.getElementById("nextBtn");
 
-  function setStatus(text, kind){
-    statusEl.textContent = text;
-    statusEl.classList.remove("ok","bad");
-    if (kind) statusEl.classList.add(kind);
+  function fmtRub(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU") + " ₽";
+  }
+  function fmtRate(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  }
+  function fmtUsdt(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT";
   }
 
-  let pay = "";
+  function setStatus(text, kind){
+    orderStatusEl.textContent = text;
+    orderStatusEl.classList.remove("ok","bad","warn");
+    orderStatusEl.classList.add(kind || "warn");
+  }
 
-  document.getElementById("payList").addEventListener("click", (e)=>{
-    const item = e.target.closest(".pay");
-    if (!item) return;
-    pay = item.dataset.pay || "";
+  function getPayMethod(){
+    const el = document.querySelector('input[name="pay"]:checked');
+    return el ? el.value : "CROSSFLAG";
+  }
 
-    for (const el of document.querySelectorAll(".pay")){
-      el.classList.toggle("active", el === item);
-    }
+  const ok = !!id && Number.isFinite(amountRub) && amountRub > 0 && Number.isFinite(rate) && rate > 0;
 
-    if (pay === "RUB"){
-      setStatus("Дальше нужно указать кошелёк для получения USDT.", "ok");
-      goBtn.disabled = false;
+  if (!ok){
+    amountRubEl.textContent = "—";
+    rateEl.textContent = "—";
+    usdtEl.textContent = "—";
+    orderIdEl.textContent = "ошибка";
+    setStatus("Ошибка: данные заявки не переданы. Вернись в стакан и нажми “Купить” ещё раз.", "bad");
+    nextBtn.disabled = true;
+  } else {
+    amountRubEl.textContent = fmtRub(amountRub);
+    rateEl.textContent = fmtRate(rate);
+    usdtEl.textContent = fmtUsdt(amountRub / rate);
+    orderIdEl.textContent = id;
+    setStatus("Выбери способ оплаты и нажми “Продолжить”.", "ok");
+  }
+
+  document.getElementById("cancelBtn").onclick = () => {
+    window.location.href = "./buy.html";
+  };
+
+  nextBtn.onclick = async () => {
+    if (!ok) return;
+
+    const pay = getPayMethod();
+
+    // Пока HTX/BYBIT заглушки — оставим сообщение, но не ломаем логику
+    if (pay === "HTX" || pay === "BYBIT"){
+      setStatus("Этот способ пока в разработке. Выбери Crossflag.", "bad");
       return;
     }
 
-    setStatus("Выбери способ оплаты.", "bad");
-    goBtn.disabled = true;
-  });
+    try{
+      nextBtn.disabled = true;
+      nextBtn.textContent = "Бронирую…";
+      setStatus("Бронирую заявку…", "warn");
 
-  goBtn.onclick = () => {
-    if (!id) return;
+      const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
 
-    const qs = new URLSearchParams({
-      id: String(id),
-      amountRub: String(amountRub),
-      rate: String(rate),
-      method: String(method),
-      next: "crossflag-buy-order.html"
-    });
+      const txt = await res.text();
+      let j;
+      try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
 
-    // ✅ теперь идём на новую страницу кошелька
-    window.location.href = "./buy-wallet.html?" + qs.toString();
+      if (!res.ok || !j.ok){
+        // если занято — возвращаем в стакан
+        if (res.status === 409){
+          setStatus("Эту заявку уже заняли. Вернули в стакан.", "bad");
+          setTimeout(() => location.href = "./buy.html", 900);
+          return;
+        }
+        throw new Error(j.error || ("HTTP " + res.status));
+      }
+
+      const reserveId = String(j.reserveId || "").trim();
+      if (!reserveId) throw new Error("reserveId не получен");
+
+      // ✅ переходим на страницу ввода кошелька
+      const qs = new URLSearchParams({
+        id,
+        reserveId,
+        amountRub: String(amountRub),
+        rate: String(rate),
+        method: String(method || ""),
+      });
+
+      location.href = "./wallet.html?" + qs.toString();
+
+    } catch(e){
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+      nextBtn.disabled = false;
+      nextBtn.textContent = "Продолжить";
+    }
   };
 </script>
 </body>

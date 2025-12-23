@@ -23,9 +23,10 @@
     .v{ font-weight:850; }
     .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; letter-spacing:.2px; }
     .hr{ height:1px; background:rgba(255,255,255,.08); }
-    .status{ font-size:12px; color:var(--muted); }
+    .status{ font-size:12px; color:var(--muted); margin-top:10px; }
     .status.ok{ color:var(--ok); }
     .status.bad{ color:var(--bad); }
+
     label{ display:block; color:var(--muted); font-size:12px; margin-bottom:6px; }
     input,select{
       width:100%;
@@ -37,7 +38,13 @@
       padding:10px 12px;
       outline:none;
     }
-    .block{ border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); margin-top:12px; }
+    .block{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(255,255,255,.02);
+      margin-top:12px;
+    }
     .hint{ color:var(--muted); font-size:12px; }
     .btnRow{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
     .btn{
@@ -45,6 +52,10 @@
       color:white; background:var(--btn);
     }
     .btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+    /* скрытие блоков пока не выбрали банк */
+    .hidden{ display:none !important; }
+
     @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
   </style>
 </head>
@@ -76,14 +87,23 @@
         </div>
       </div>
 
-      <div class="status" id="status" style="margin-top:10px;"></div>
+      <div class="status" id="status"></div>
 
+      <!-- СНАЧАЛА ТОЛЬКО ВЫБОР БАНКА -->
       <div style="margin-top:12px;">
         <label>Банк отправителя</label>
         <select id="bankSelect"></select>
       </div>
 
-      <div class="block" id="blockEmail">
+      <!-- ПОДСКАЗКА ДО ВЫБОРА -->
+      <div class="block" id="blockChooseHint">
+        <div class="hint">
+          Выбери банк, с которого была оплата — после этого появится нужная форма для загрузки подтверждения.
+        </div>
+      </div>
+
+      <!-- ДАЛЬШЕ БЛОКИ, НО ОНИ СКРЫТЫ ПО УМОЛЧАНИЮ -->
+      <div class="block hidden" id="blockEmail">
         <div class="hint">
           <b>Т-Банк / Совкомбанк:</b> отправь чек <b>от лица банка</b> на почту:
           <div class="mono" style="margin-top:6px;">anton.semenovf@postchkr.com</div>
@@ -93,9 +113,9 @@
         </div>
       </div>
 
-      <div class="block" id="blockAlfa">
-        <div class="hint" style="margin-top:10px;">
-          Нужны: <b>ссылка “разделение платежа”</b> + <b>PDF чек</b>.
+      <div class="block hidden" id="blockAlfa">
+        <div class="hint">
+          <b>Альфа:</b> нужны <b>ссылка “разделение платежа”</b> + <b>PDF чек</b>.
         </div>
         <div style="margin-top:10px;">
           <label>Ссылка “разделение платежа”</label>
@@ -110,8 +130,8 @@
         </div>
       </div>
 
-      <div class="block" id="blockSber">
-        <div class="hint" style="margin-top:10px;">
+      <div class="block hidden" id="blockSber">
+        <div class="hint">
           <b>Сбер:</b> нужны <b>PDF чек</b> и <b>PDF выписка</b>.
         </div>
         <div style="margin-top:10px;">
@@ -127,8 +147,8 @@
         </div>
       </div>
 
-      <div class="block" id="blockOther">
-        <div class="hint" style="margin-top:10px;">
+      <div class="block hidden" id="blockOther">
+        <div class="hint">
           <b>Другие банки:</b> нужен <b>PDF чек</b> + <b>видео из личного кабинета банка</b>.
         </div>
         <div style="margin-top:10px;">
@@ -165,10 +185,23 @@
   const statusEl = document.getElementById("status");
   const bankSelect = document.getElementById("bankSelect");
 
+  const blockChooseHint = document.getElementById("blockChooseHint");
   const blockEmail = document.getElementById("blockEmail");
   const blockAlfa = document.getElementById("blockAlfa");
   const blockSber = document.getElementById("blockSber");
   const blockOther = document.getElementById("blockOther");
+
+  const btnEmailSent = document.getElementById("btnEmailSent");
+  const btnAlfaSend = document.getElementById("btnAlfaSend");
+  const btnSberSend = document.getElementById("btnSberSend");
+  const btnOtherSend = document.getElementById("btnOtherSend");
+
+  const alfaLink = document.getElementById("alfaLink");
+  const alfaPdf = document.getElementById("alfaPdf");
+  const sberCheck = document.getElementById("sberCheck");
+  const sberStmt = document.getElementById("sberStmt");
+  const otherPdf = document.getElementById("otherPdf");
+  const otherVideo = document.getElementById("otherVideo");
 
   function fmtRub(n){
     const v = Number(n);
@@ -186,10 +219,13 @@
   }
 
   function normalizeBankName(s){
-    return (s || "").toLowerCase().replace(/ё/g, "е").replace(/[-–—]/g, "-").replace(/\s+/g, " ").trim();
+    return (s || "").toLowerCase()
+      .replace(/ё/g, "е")
+      .replace(/[-–—]/g, "-")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
-  // список банков (как у тебя было)
   const BANKS_100 = [
     "Сбербанк","Т-банк","Альфа-Банк","ВТБ","Газпромбанк","Россельхозбанк","Райффайзенбанк","Открытие","Совкомбанк","Росбанк",
     "Промсвязьбанк","Московский кредитный банк","ЮниКредит Банк","Банк Санкт-Петербург","Ситибанк","Абсолют Банк","БКС Банк",
@@ -221,15 +257,33 @@
     usdtEl.textContent = Number.isFinite(usdt) ? (fmtNum(usdt) + " USDT") : "—";
   }
 
+  function hideAllProofBlocks(){
+    blockEmail.classList.add("hidden");
+    blockAlfa.classList.add("hidden");
+    blockSber.classList.add("hidden");
+    blockOther.classList.add("hidden");
+  }
+
   function showOnly(el){
-    for (const b of [blockEmail, blockAlfa, blockSber, blockOther]) b.style.display = "none";
-    el.style.display = "block";
+    hideAllProofBlocks();
+    el.classList.remove("hidden");
   }
 
   function onBankChange(){
-    const b = normalizeBankName(bankSelect.value);
+    const raw = bankSelect.value || "";
+    const b = normalizeBankName(raw);
 
-    // логика как у тебя: Email для T-bank / Sovcom, Alfa — отдельный, Sber — отдельный, остальные — Other
+    if (!raw) {
+      // банк не выбран — показываем только подсказку
+      hideAllProofBlocks();
+      blockChooseHint.classList.remove("hidden");
+      setStatus("");
+      return;
+    }
+
+    // банк выбран — скрываем подсказку и показываем нужный блок
+    blockChooseHint.classList.add("hidden");
+
     if (b.includes("т-банк") || b.includes("t-банк") || b.includes("тинькоф") || b.includes("совком")){
       showOnly(blockEmail);
     } else if (b.includes("альфа")){
@@ -242,6 +296,8 @@
   }
 
   async function submitProofMultipart({ proofType, alphaLink = "", pdf1 = null, pdf2 = null, video = null }){
+    if (!id || !reserveId) throw new Error("Нет id/reserveId");
+
     const fd = new FormData();
     fd.append("id", id);
     fd.append("reserveId", reserveId);
@@ -250,3 +306,120 @@
     fd.append("alphaLink", alphaLink || "");
     if (pdf1) fd.append("pdf1", pdf1, pdf1.name || "check.pdf");
     if (pdf2) fd.append("pdf2", pdf2, pdf2.name || "stmt.pdf");
+    if (video) fd.append("video", video, video.name || "video.mp4");
+
+    const res = await fetch(WORKER_BASE + "/api/public/submit_proof", {
+      method: "POST",
+      body: fd
+    });
+
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
+  function lockButtons(lock){
+    for (const b of [btnEmailSent, btnAlfaSend, btnSberSend, btnOtherSend]) {
+      if (b) b.disabled = !!lock;
+    }
+  }
+
+  // кнопки
+  btnEmailSent.onclick = async () => {
+    try{
+      if (!bankSelect.value) throw new Error("Выбери банк отправителя");
+      lockButtons(true);
+      setStatus("Отправляю на проверку…");
+      await submitProofMultipart({ proofType: "EMAIL", alphaLink: "" });
+      setStatus("Готово ✅ Отправлено на проверку.", "ok");
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
+    } finally {
+      lockButtons(false);
+    }
+  };
+
+  btnAlfaSend.onclick = async () => {
+    try{
+      if (!bankSelect.value) throw new Error("Выбери банк отправителя");
+      const link = (alfaLink.value || "").trim();
+      const pdf = alfaPdf.files && alfaPdf.files[0] ? alfaPdf.files[0] : null;
+      if (!link) throw new Error("Вставь ссылку “разделение платежа”");
+      if (!pdf) throw new Error("Прикрепи PDF чек");
+
+      lockButtons(true);
+      setStatus("Отправляю на проверку…");
+      await submitProofMultipart({ proofType: "ALFA", alphaLink: link, pdf1: pdf });
+      setStatus("Готово ✅ Отправлено на проверку.", "ok");
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
+    } finally {
+      lockButtons(false);
+    }
+  };
+
+  btnSberSend.onclick = async () => {
+    try{
+      if (!bankSelect.value) throw new Error("Выбери банк отправителя");
+      const pdf1 = sberCheck.files && sberCheck.files[0] ? sberCheck.files[0] : null;
+      const pdf2 = sberStmt.files && sberStmt.files[0] ? sberStmt.files[0] : null;
+      if (!pdf1) throw new Error("Прикрепи PDF чек");
+      if (!pdf2) throw new Error("Прикрепи PDF выписку");
+
+      lockButtons(true);
+      setStatus("Отправляю на проверку…");
+      await submitProofMultipart({ proofType: "SBER", pdf1, pdf2 });
+      setStatus("Готово ✅ Отправлено на проверку.", "ok");
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
+    } finally {
+      lockButtons(false);
+    }
+  };
+
+  btnOtherSend.onclick = async () => {
+    try{
+      if (!bankSelect.value) throw new Error("Выбери банк отправителя");
+      const pdf = otherPdf.files && otherPdf.files[0] ? otherPdf.files[0] : null;
+      const vid = otherVideo.files && otherVideo.files[0] ? otherVideo.files[0] : null;
+      if (!pdf) throw new Error("Прикрепи PDF чек");
+      if (!vid) throw new Error("Прикрепи видео");
+
+      lockButtons(true);
+      setStatus("Отправляю на проверку…");
+      await submitProofMultipart({ proofType: "OTHER", pdf1: pdf, video: vid });
+      setStatus("Готово ✅ Отправлено на проверку.", "ok");
+    } catch(e){
+      setStatus("Ошибка: " + e.message, "bad");
+    } finally {
+      lockButtons(false);
+    }
+  };
+
+  // Назад
+  document.getElementById("backBtn").onclick = () => {
+    const pp = new URLSearchParams({
+      id,
+      amountRub: String(amountRub || ""),
+      rate: String(rate || ""),
+      method: String(method || "")
+    });
+    // возвращаемся на оплату (reserveId сохраняем, чтобы восстановилось)
+    if (reserveId) pp.set("reserveId", reserveId);
+    location.href = "./crossflag-buy-order.html?" + pp.toString();
+  };
+
+  // init
+  fillBanks();
+  initHeader();
+
+  // скрываем всё, пока не выбран банк
+  hideAllProofBlocks();
+  blockChooseHint.classList.remove("hidden");
+
+  bankSelect.addEventListener("change", onBankChange);
+</script>
+</body>
+</html>

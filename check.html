@@ -1,291 +1,551 @@
-<!doctype html>
-<html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Crossflag Exchange · Статус заявки</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Статус заявки</title>
+  <title>Crossflag Exchange · Статус</title>
   <style>
     :root{
+      --bg:#0b1220;
+      --card:#0f1a30;
+      --border:#223255;
       --text:#e9f0ff;
       --muted:#9fb0d4;
-
-      --card: rgba(15, 26, 48, 0.52);
-      --border: rgba(255,255,255,.12);
-
       --ok:#22c55e;
       --bad:#ef4444;
       --warn:#f59e0b;
-
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-
-    html,body{ height:100%; }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .title{ font-size:16px; font-weight:950; }
+      --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
+      --muted:#9fb0d4; --ok:#2ecc71; --bad:#ff5a5a; --warn:#f1c40f;
+      --btn:#2d5bff; --btn2:#1f3fb3;
+      --shadow: 0 25px 70px rgba(0,0,0,.45);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
     body{
       margin:0;
+      background: radial-gradient(1200px 700px at 50% -260px, #1a2a55, #070b18);
       color:var(--text);
-      background:#071022;
-      overflow-x:hidden; /* ✅ чтобы ничего не тянуло страницу вбок */
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
     }
-
-    .page{
-      min-height:100svh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:
-        calc(14px + env(safe-area-inset-top))
-        14px
-        calc(18px + env(safe-area-inset-bottom))
-        14px;
-      box-sizing:border-box;
+    .wrap{ max-width:980px; margin:28px auto; padding:0 16px 40px; }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;
     }
-
-    .wrap{ width:100%; max-width:520px; }
-
-    /* ===== верхняя шапка как в мини-аппе ===== */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:12px;
-    }
-
-    .h1{
-      font-weight:1000;
-      font-size:18px;
-      line-height:1.15;
-    }
-
+    .title{ font-weight:800; font-size:18px; letter-spacing:.2px; }
     .btn{
-      border:0;
-      border-radius:14px;
-      padding:12px 14px;
-      font-weight:1000;
-      color:#fff;
-      cursor:pointer;
-      background: rgba(45, 91, 255, .85);
-      box-shadow: 0 10px 26px rgba(0,0,0,.30);
-      white-space:nowrap;
+      border:0; border-radius:16px; padding:12px 16px;
+      background:linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff; font-weight:800; cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
     }
-    .btn.secondary{
-      background: rgba(255,255,255,.10);
-      box-shadow: 0 10px 26px rgba(0,0,0,.18);
-    }
+    .btn:hover{ filter:brightness(1.05); }
 
     .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
+      background:var(--card);
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:18px; }
+    .cell{
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
       padding: 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-sizing:border-box;
     }
+    .label{ color:var(--muted); font-size:12px; margin-bottom:6px; }
+    .value{ font-weight:900; font-size:16px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 
-    /* ✅ ДВА ПОЛЯ: на десктопе рядом, на телефоне — столбиком */
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
+    /* BIG STATUS PANEL */
+    .statusWrap{
+      padding:18px;
+      border-top:1px solid rgba(255,255,255,.06);
     }
-
-    .field{
-      border-radius:16px;
+    .statusPanel{
+      border-radius:22px;
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      padding:12px;
-      box-sizing:border-box;
-      min-width:0; /* ✅ важно: позволяет тексту переноситься */
+      background:
+        radial-gradient(900px 220px at 20% 0%, rgba(45,91,255,.18), transparent 60%),
+        radial-gradient(900px 220px at 80% 0%, rgba(46,204,113,.14), transparent 60%),
+        rgba(255,255,255,.03);
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+      min-height: 160px;
+    }
+    .statusRow{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .statusLeft{ display:flex; gap:14px; align-items:flex-start; }
+    .icon{
+      width:52px; height:52px; border-radius:18px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      flex: 0 0 auto;
+    }
+    .icon svg{ width:26px; height:26px; opacity:.95; }
+    .statusTextBlock{ min-width:240px; }
+    .statusTitle{
+      font-weight:1000; font-size:18px; margin:0 0 6px;
+    }
+    .statusSub{
+      margin:0; color:var(--muted); font-size:13px; line-height:1.35;
     }
 
-    .label{
-      font-size:12px;
-      font-weight:950;
-      color: rgba(233,240,255,.70);
-      margin-bottom:6px;
+    .badge{
+      padding:10px 12px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.2px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
     }
-
-    .value{
-      font-weight:950;
-      font-size:13px;
-      color: rgba(233,240,255,.95);
-
-      /* ✅ чтобы ID/Reserve не уезжали за экран */
-      overflow-wrap:anywhere;
-      word-break:break-word;
+    .dot{
+      width:8px; height:8px; border-radius:999px; background:var(--warn);
+      box-shadow: 0 0 0 3px rgba(241,196,15,.18);
     }
+    .badge.ok .dot{ background:var(--ok); box-shadow: 0 0 0 3px rgba(46,204,113,.16); }
+    .badge.bad .dot{ background:var(--bad); box-shadow: 0 0 0 3px rgba(255,90,90,.16); }
 
-    .statusBox{
-      margin-top:12px;
+    /* “Sending USDT” animation */
+    .sending{
+      margin-top:14px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
+      background: rgba(0,0,0,.18);
       padding:14px;
-      box-sizing:border-box;
+      box-shadow:0 18px 50px rgba(0,0,0,.35);
+      display:none;
     }
-
-    .statusTitle{
-      font-weight:1000;
-      font-size:16px;
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .box{
+      flex:1;
+      min-width:220px;
+      background: rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px;
+    .sending.show{ display:block; }
+    .bar{
+      height:10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      overflow:hidden;
+      margin-top:10px;
     }
-
-    .dot{
-      width:10px; height:10px; border-radius:50%;
-      background: var(--warn);
-      box-shadow: 0 0 0 4px rgba(245,158,11,.15);
-      flex:0 0 auto;
+    .bar > i{
+      display:block;
+      height:100%;
+      width:45%;
+      background: rgba(45,91,255,.55);
+      border-radius:999px;
+      animation: slide 1.25s ease-in-out infinite;
+      filter: blur(.0px);
     }
-    .dot.ok{ background: var(--ok); box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
-    .dot.bad{ background: var(--bad); box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
-
-    .statusText{
-      margin-top:8px;
-      color: rgba(233,240,255,.80);
-      font-size:13px;
-      line-height:1.35;
+    @keyframes slide{
+      0%{ transform:translateX(-120%); }
+      50%{ transform:translateX(90%); }
+      100%{ transform:translateX(220%); }
     }
-
-    .successActions{
+    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
+    .value{ font-size:14px; font-weight:950; word-break:break-word; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
+    .statusBig{
       margin-top:12px;
-      display:none; /* показываем только при SUCCESS */
+    .dots::after{
+      content:"";
+      animation: dots 1.2s steps(3,end) infinite;
+    }
+    @keyframes dots{
+      0%{ content:""; }
+      33%{ content:"."; }
+      66%{ content:".."; }
+      100%{ content:"..."; }
     }
 
-    .successActions .btn{
-      width:100%;
-      text-align:center;
+    .hashBox{
+      margin-top:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      padding:14px;
+      display:none;
+    }
+    .hashBox.show{ display:block; }
+    .hashRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .hash{
+      flex:1 1 420px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      font-size:16px;
+      font-weight:1000;
+    }
+    .statusBig.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .statusBig.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .statusBig.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); color:#fff; }
+    .hint{ margin-top:10px; color:var(--muted); font-size:12px; line-height:1.4; }
+    .btnRow{ display:flex; justify-content:flex-end; margin-top:12px; }
+    .btn{
+      border:0;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:950;
+      background: rgba(255,255,255,.10);
+      font-size:12px;
+      word-break:break-all;
+    }
+    .copyBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .copyBtn:hover{ background: rgba(255,255,255,.09); }
+
+    .hint{
+      padding: 14px 18px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      border-top:1px solid rgba(255,255,255,.06);
     }
 
-    /* ✅ мобилка: в один столбик */
-    @media (max-width: 420px){
-      .grid2{ grid-template-columns: 1fr; }
+    @media(max-width:780px){
+      .grid{ grid-template-columns:1fr; }
+      .statusPanel{ min-height: 190px; }
+      .badge{ width:100%; justify-content:center; }
+      .statusRow{ gap:10px; }
     }
   </style>
 </head>
-
 <body>
-  <div class="page">
-    <div class="wrap">
+  <div class="wrap">
+    <div class="top">
+      <div class="title">Статус заявки</div>
+      <div class="title">Crossflag Exchange · Статус заявки</div>
+      <button class="btn" id="refreshBtn" type="button">Обновить</button>
+    </div>
 
-      <div class="topbar">
-        <div class="h1">Crossflag Exchange ·<br>Статус заявки</div>
-        <button class="btn" id="refreshBtn" type="button">Обновить</button>
-      </div>
-
-      <div class="card">
-        <div class="grid2">
-          <div class="field">
-            <div class="label">ID заявки</div>
-            <div class="value" id="orderId">—</div>
-          </div>
-          <div class="field">
-            <div class="label">Reserve ID</div>
-            <div class="value" id="reserveId">—</div>
-          </div>
+    <div class="card">
+      <div class="row">
+        <div class="box">
+      <div class="grid">
+        <div class="cell">
+          <div class="label">ID заявки</div>
+          <div class="value mono" id="oid">—</div>
         </div>
-
-        <div class="statusBox">
-          <div class="statusTitle">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusTitle">Загружаю статус…</span>
-          </div>
-          <div class="statusText" id="statusHint">Подожди пару секунд.</div>
-        </div>
-
-        <!-- ✅ кнопка только при SUCCESS -->
-        <div class="successActions" id="successActions">
-          <button class="btn secondary" id="homeBtn" type="button">На главную страницу</button>
+        <div class="box">
+        <div class="cell">
+          <div class="label">Reserve ID</div>
+          <div class="value mono" id="rid">—</div>
         </div>
       </div>
 
+      <div class="statusBig warn" id="statusBox">Загружаю статус…</div>
+      <div class="statusWrap">
+        <div class="statusPanel">
+          <div class="statusRow">
+            <div class="statusLeft">
+              <div class="icon" id="iconBox" aria-hidden="true">
+                <!-- default icon -->
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 5v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="statusTextBlock">
+                <div class="statusTitle" id="statusTitle">Обновляю статус…</div>
+                <p class="statusSub" id="statusSub">Пожалуйста, подожди. Статус обновляется автоматически.</p>
+              </div>
+            </div>
+
+            <div class="badge" id="badge">
+              <span class="dot" id="badgeDot"></span>
+              <span id="badgeText">В процессе</span>
+            </div>
+          </div>
+
+          <div class="sending" id="sendingBox">
+            <div style="font-weight:900;">Отправляем USDT на ваш кошелёк<span class="dots"></span></div>
+            <div style="color:var(--muted); font-size:12px; margin-top:6px;">
+              Это может занять несколько минут. Не закрывай мини-приложение.
+            </div>
+            <div class="bar"><i></i></div>
+          </div>
+
+          <div class="hashBox" id="hashBox">
+            <div style="font-weight:900;">USDT успешно отправлен ✅</div>
+            <div style="color:var(--muted); font-size:12px; margin-top:6px;">
+              Хэш транзакции:
+            </div>
+            <div class="hashRow" style="margin-top:10px;">
+              <div class="hash mono" id="txHash">—</div>
+              <button class="copyBtn" id="copyHashBtn" type="button">Копировать</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="hint" id="hint">
+        Страница обновляет статус автоматически. Если администратор поменяет статус в админке — он появится тут.
+        Если админ поменяет статус — он появится здесь автоматически.
+      </div>
     </div>
   </div>
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const qs = new URLSearchParams(location.search);
-  const id = (qs.get("id") || "").trim();
-  const reserveId = (qs.get("reserveId") || "").trim();
+  const p = new URLSearchParams(location.search);
+  const id = p.get("id") || "";
+  const reserveId = p.get("reserveId") || "";
 
-  const orderIdEl = document.getElementById("orderId");
-  const reserveIdEl = document.getElementById("reserveId");
-  const statusTitleEl = document.getElementById("statusTitle");
-  const statusHintEl = document.getElementById("statusHint");
-  const statusDot = document.getElementById("statusDot");
-  const successActions = document.getElementById("successActions");
+  const oidEl = document.getElementById("oid");
+  const ridEl = document.getElementById("rid");
+  const statusBox = document.getElementById("statusBox");
+  const hintEl = document.getElementById("hint");
 
-  orderIdEl.textContent = id || "—";
-  reserveIdEl.textContent = reserveId || "—";
+  oidEl.textContent = id || "—";
+  ridEl.textContent = reserveId || "—";
 
-  document.getElementById("homeBtn").onclick = () => {
-    location.href = "index.html";
-  };
-
-  function setStatus(kind, title, hint){
-    statusDot.classList.remove("ok","bad");
-    if (kind === "ok") statusDot.classList.add("ok");
-    if (kind === "bad") statusDot.classList.add("bad");
-
-    statusTitleEl.textContent = title;
-    statusHintEl.textContent = hint;
-
-    // ✅ показываем кнопку "На главную" только при SUCCESS
-    if (kind === "ok" && title.includes("Успешно")) {
-      successActions.style.display = "block";
-    } else {
-      successActions.style.display = "none";
-    }
+  function setBox(text, kind){
+    statusBox.textContent = text;
+    statusBox.classList.remove("ok","bad","warn");
+    statusBox.classList.add(kind || "warn");
   }
 
-  function mapStatus(st){
-    const s = String(st || "NEW").toUpperCase();
+  function statusText(s){
+    const m = {
+      NEW: "Активна",
+      PAID: "Оплачено",
+      ON_CHECK: "На проверке",
+      SUCCESS: "Успешно ✅",
+      FAILED: "Неуспешно ❌"
+    };
+    return m[s] || s || "—";
+  }
 
-    // Подстройка под твои статусы в Worker:
-    // NEW, PAID, ON_CHECK, SUCCESS, FAILED
-    if (s === "SUCCESS") return { kind:"ok",  title:"Успешно ✅", hint:"USDT успешно отправлен на ваш кошелёк." };
-    if (s === "FAILED")  return { kind:"bad", title:"Ошибка ❌",  hint:"Заявка отклонена. Если это ошибка — напиши в поддержку." };
-    if (s === "ON_CHECK")return { kind:"warn",title:"На проверке", hint:"Мы проверяем подтверждение оплаты." };
-    if (s === "PAID")    return { kind:"warn",title:"Оплачено",    hint:"Оплата отмечена. Ожидай проверку / подтверждение." };
-    return { kind:"warn", title:"В процессе", hint:"Заявка активна. Ожидай дальнейших действий." };
+  function statusKind(s){
+    if (s === "SUCCESS") return "ok";
+    if (s === "FAILED") return "bad";
+    return "warn"; // NEW / PAID / ON_CHECK
   }
 
   async function loadStatus(){
     if (!id || !reserveId){
-      setStatus("bad","Ошибка","Нет id или reserveId в ссылке. Вернись назад и открой статус заново.");
+      setBox("Ошибка: нет id или reserveId", "bad");
+      hintEl.textContent = "Вернись на страницу оплаты и повтори переход.";
       return;
     }
 
     try{
-      setStatus("warn","Обновляю…","Подожди пару секунд.");
+      setBox("Обновляю статус…", "warn");
+      const res = await fetch(WORKER_BASE + "/api/public/order_status?id=" + encodeURIComponent(id) + "&reserveId=" + encodeURIComponent(reserveId));
+      const text = await res.text();
+      let j;
+      try { j = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 200)); }
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      const url = WORKER_BASE + "/api/public/order_status?id=" + encodeURIComponent(id) +
-        "&reserveId=" + encodeURIComponent(reserveId);
+      const st = String(j.status || "NEW").toUpperCase();
+      setBox("Статус: " + statusText(st), statusKind(st));
 
-      const res = await fetch(url, { cache:"no-store" });
-      const j = await res.json().catch(() => null);
+      if (st === "ON_CHECK"){
+        hintEl.textContent = "Заявка на проверке. Ожидай подтверждения.";
+      } else if (st === "SUCCESS"){
+        hintEl.textContent = "Оплата подтверждена. Спасибо!";
+      } else if (st === "FAILED"){
+        hintEl.textContent = "Оплата не подтверждена. Если это ошибка — свяжись с поддержкой.";
+      } else if (st === "PAID"){
+        hintEl.textContent = "Оплата отмечена. Ожидай проверки / загрузки подтверждений.";
+      } else {
+        hintEl.textContent = "Статус обновляется автоматически.";
+  <script>
+    const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-      if (!res.ok || !j || !j.ok){
-        const msg = (j && j.error) ? j.error : ("HTTP " + res.status);
-        throw new Error(msg);
+    const p = new URLSearchParams(location.search);
+    const id = p.get("id") || "";
+    const reserveId = p.get("reserveId") || "";
+
+    const oidEl = document.getElementById("oid");
+    const ridEl = document.getElementById("rid");
+
+    const statusTitle = document.getElementById("statusTitle");
+    const statusSub = document.getElementById("statusSub");
+    const hintEl = document.getElementById("hint");
+
+    const badge = document.getElementById("badge");
+    const badgeText = document.getElementById("badgeText");
+
+    const sendingBox = document.getElementById("sendingBox");
+    const hashBox = document.getElementById("hashBox");
+    const txHashEl = document.getElementById("txHash");
+    const copyHashBtn = document.getElementById("copyHashBtn");
+
+    oidEl.textContent = id || "—";
+    ridEl.textContent = reserveId || "—";
+
+    function setBadge(kind, text){
+      badge.classList.remove("ok","bad");
+      if (kind) badge.classList.add(kind);
+      badgeText.textContent = text || "В процессе";
+    }
+
+    function showSending(show){
+      sendingBox.classList.toggle("show", !!show);
+    }
+    function showHash(show){
+      hashBox.classList.toggle("show", !!show);
+    }
+
+    function statusRu(st){
+      st = String(st||"").toUpperCase();
+      if (st === "NEW") return "Новая";
+      if (st === "ON_PAY") return "На оплате";
+      if (st === "PAID") return "Оплачено";
+      if (st === "ON_CHECK") return "На проверке";
+      if (st === "SUCCESS") return "Успешно";
+      if (st === "FAILED") return "Неуспешно";
+      return st || "—";
+    }
+
+    async function loadInfo(){
+      if (!id || !reserveId){
+        statusTitle.textContent = "Ошибка: нет id или reserveId";
+        statusSub.textContent = "Вернись на страницу оплаты и повтори переход.";
+        setBadge("bad", "Ошибка");
+        showSending(false);
+        showHash(false);
+        return;
       }
 
-      const mapped = mapStatus(j.status);
-      setStatus(mapped.kind, mapped.title, mapped.hint);
-    } catch (e){
-      setStatus("bad","Ошибка", String(e.message || e));
+      try{
+        const res = await fetch(
+          WORKER_BASE + "/api/public/order_info?id=" + encodeURIComponent(id) +
+          "&reserveId=" + encodeURIComponent(reserveId)
+        );
+
+        const txt = await res.text();
+        let j;
+        try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0, 200)); }
+        if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+        const st = String(j.status || "NEW").toUpperCase();
+        const txHash = (j.txHash && String(j.txHash).trim()) ? String(j.txHash).trim() : "";
+
+        // default
+        showSending(false);
+        showHash(false);
+
+        if (st === "NEW"){
+          statusTitle.textContent = "Заявка создана";
+          statusSub.textContent = "Ожидай, когда пользователь откроет оплату.";
+          setBadge(null, "В процессе");
+          hintEl.textContent = "Статус обновляется автоматически.";
+        } else if (st === "ON_PAY"){
+          statusTitle.textContent = "Ожидаем оплату";
+          statusSub.textContent = "Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».";
+          setBadge(null, "На оплате");
+          hintEl.textContent = "После оплаты статус изменится автоматически.";
+        } else if (st === "PAID"){
+          statusTitle.textContent = "Оплата отмечена";
+          statusSub.textContent = "Ожидай проверки и подтверждения администратором.";
+          setBadge(null, "Оплачено");
+          hintEl.textContent = "После проверки статус изменится автоматически.";
+        } else if (st === "ON_CHECK"){
+          statusTitle.textContent = "Проверяем подтверждения";
+          statusSub.textContent = "Администратор проверяет чек/видео. Обычно это занимает несколько минут.";
+          setBadge(null, "На проверке");
+          hintEl.textContent = "Не закрывай мини-приложение — статус обновится сам.";
+        } else if (st === "FAILED"){
+          statusTitle.textContent = "Платёж не подтверждён";
+          statusSub.textContent = "Проверь данные и свяжись с поддержкой, если считаешь это ошибкой.";
+          setBadge("bad", "Неуспешно");
+          hintEl.textContent = "Если нужна помощь — напиши в поддержку.";
+        } else if (st === "SUCCESS"){
+          // ВАЖНО: SUCCESS без txHash => показываем анимацию отправки
+          if (!txHash){
+            statusTitle.textContent = "Заявка подтверждена ✅";
+            statusSub.textContent = "Мы начали отправку USDT на ваш кошелёк.";
+            setBadge("ok", "Успешно");
+            showSending(true);
+            hintEl.textContent = "Как только транзакция будет отправлена — появится хэш.";
+          } else {
+            statusTitle.textContent = "USDT отправлен ✅";
+            statusSub.textContent = "Тезер успешно отправлен на ваш кошелёк.";
+            setBadge("ok", "Успешно");
+            txHashEl.textContent = txHash;
+            showHash(true);
+            hintEl.textContent = "Хэш можно скопировать и проверить в обозревателе сети.";
+          }
+        } else {
+          statusTitle.textContent = "Статус: " + statusRu(st);
+          statusSub.textContent = "Ожидай обновления статуса.";
+          setBadge(null, "В процессе");
+          hintEl.textContent = "Статус обновляется автоматически.";
+        }
+
+      } catch(e){
+        statusTitle.textContent = "Ошибка обновления";
+        statusSub.textContent = e.message || String(e);
+        setBadge("bad", "Ошибка");
+        showSending(false);
+        showHash(false);
+        hintEl.textContent = "Если ошибка повторяется — попробуй позже.";
+      }
+    } catch(e){
+      setBox("Ошибка: " + e.message, "bad");
+      hintEl.textContent = "Если ошибка повторяется — попробуй позже.";
     }
   }
 
   document.getElementById("refreshBtn").onclick = loadStatus;
+    document.getElementById("refreshBtn").onclick = loadInfo;
+
+    copyHashBtn.onclick = async () => {
+      const v = txHashEl.textContent || "";
+      try{
+        await navigator.clipboard.writeText(v);
+        copyHashBtn.textContent = "Скопировано";
+        setTimeout(() => copyHashBtn.textContent = "Копировать", 900);
+      }catch{
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = v;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        copyHashBtn.textContent = "Скопировано";
+        setTimeout(() => copyHashBtn.textContent = "Копировать", 900);
+      }
+    };
 
   loadStatus();
   setInterval(loadStatus, 3000);
 </script>
+    loadInfo();
+    setInterval(loadInfo, 3000);
+  </script>
 </body>
 </html>

@@ -10,15 +10,11 @@
       --text:#e9f0ff;
       --muted:#9fb0d4;
 
-      --btn:#2d5bff;
-      --btn2:#1f3fb3;
-
-      --ok:#2ecc71;
-      --bad:#ff5a5a;
-      --warn:#f1c40f;
-
       --shadow: 0 25px 70px rgba(0,0,0,.45);
       --radius:22px;
+
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
 
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
@@ -26,7 +22,6 @@
 
     body{
       margin:0;
-      background: radial-gradient(1200px 700px at 50% -260px declares, #1a2a55, #070b18);
       background: radial-gradient(1200px 700px at 50% -260px, #1a2a55, #070b18);
       color:var(--text);
       overflow-x:hidden;
@@ -56,37 +51,6 @@
       letter-spacing:.2px;
       line-height:1.1;
     }
-
-    .btn{
-      border:0;
-      border-radius:16px;
-      padding:12px 16px;
-      background:linear-gradient(180deg, var(--btn), var(--btn2));
-      color:#fff;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
-      white-space:nowrap;
-    }
-    .btn:hover{ filter:brightness(1.05); }
-    .btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      filter:none;
-    }
-
-    .btnGhost{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border-radius: 16px;
-      padding: 12px 16px;
-      font-weight: 900;
-      cursor:pointer;
-      box-shadow: 0 14px 40px rgba(0,0,0,.20);
-      white-space:nowrap;
-    }
-    .btnGhost:hover{ background: rgba(255,255,255,.09); }
 
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
@@ -120,7 +84,6 @@
     .value{ font-weight:900; font-size:16px; overflow-wrap:anywhere; word-break:break-word; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 
-    /* MAIN PANEL */
     .panel{
       padding:18px;
       border-top:1px solid rgba(255,255,255,.06);
@@ -178,7 +141,6 @@
       line-height:1.35;
     }
 
-    /* TIMER */
     .timer{
       border-radius:999px;
       border:1px solid rgba(255,255,255,.12);
@@ -198,9 +160,6 @@
     }
     @keyframes spin{ to{ transform:rotate(360deg); } }
 
-    .timeText{ letter-spacing:.2px; }
-
-    /* NETWORK CHOICES */
     .choices{
       margin-top:14px;
       display:grid;
@@ -214,9 +173,8 @@
       background: rgba(0,0,0,.16);
       padding:14px;
       cursor:pointer;
-      position:relative;
-      overflow:hidden;
       transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      min-width:0;
     }
     .choice:hover{
       transform: translateY(-1px);
@@ -229,6 +187,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      min-width:0;
     }
 
     .net{
@@ -244,6 +203,7 @@
       background: rgba(255,255,255,.05);
       color: rgba(233,240,255,.92);
       white-space:nowrap;
+      flex:0 0 auto;
     }
     .fee.zero{
       border-color: rgba(46,204,113,.35);
@@ -272,7 +232,6 @@
         rgba(0,0,0,.18);
     }
 
-    /* INPUT */
     .inputWrap{
       margin-top:14px;
       border-radius:18px;
@@ -325,6 +284,33 @@
       justify-content:flex-end;
     }
 
+    .btn{
+      border:0;
+      border-radius:16px;
+      padding:12px 16px;
+      background:linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      white-space:nowrap;
+    }
+    .btn:hover{ filter:brightness(1.05); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; filter:none; }
+
+    .btnGhost{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.20);
+      white-space:nowrap;
+    }
+    .btnGhost:hover{ background: rgba(255,255,255,.09); }
+
     .hint{
       padding: 14px 18px 18px;
       color: var(--muted);
@@ -350,7 +336,7 @@
       <div class="title">Crossflag Exchange · Кошелёк</div>
       <div class="timer" id="timerBox">
         <span class="ring"></span>
-        <span class="timeText">Осталось: <span id="timeLeft">05:00</span></span>
+        <span>Осталось: <span id="timeLeft">05:00</span></span>
       </div>
     </div>
 
@@ -452,30 +438,20 @@
   const id = (p.get("id") || "").trim();
   const reserveId = (p.get("reserveId") || "").trim();
 
-  // ✅ страница с реквизитами по умолчанию
+  // куда идти дальше
   const nextPage = (p.get("next") || "crossflag-buy-order.html").trim();
 
-  // Протаскиваем всё как есть дальше (id/reserveId/amountRub/rate/method и т.д.)
+  // протаскиваем всё дальше
   const passthrough = {};
   for (const [k,v] of p.entries()){
     if (k === "next") continue;
     passthrough[k] = v;
   }
 
-  const oidEl = document.getElementById("oid");
-  const ridEl = document.getElementById("rid");
-  const choices = document.getElementById("choices");
-  const inputWrap = document.getElementById("inputWrap");
-  const inLabel = document.getElementById("inLabel");
-  const walletInput = document.getElementById("walletInput");
-  const helpText = document.getElementById("helpText");
-  const continueBtn = document.getElementById("continueBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
+  document.getElementById("oid").textContent = id || "—";
+  document.getElementById("rid").textContent = reserveId || "—";
 
-  oidEl.textContent = id || "—";
-  ridEl.textContent = reserveId || "—";
-
-  // === 5 минут таймер (переживает перезагрузку) ===
+  // === таймер 5 минут (переживает перезагрузку)
   const TIMER_MS = 5 * 60 * 1000;
   const tKey = "cf_wallet_deadline_" + reserveId;
 
@@ -522,9 +498,16 @@
   tick();
   setInterval(tick, 250);
 
-  cancelBtn.onclick = doCancel;
+  document.getElementById("cancelBtn").onclick = doCancel;
 
-  // === выбор сети/биржи ===
+  // === выбор
+  const choices = document.getElementById("choices");
+  const inputWrap = document.getElementById("inputWrap");
+  const inLabel = document.getElementById("inLabel");
+  const walletInput = document.getElementById("walletInput");
+  const helpText = document.getElementById("helpText");
+  const continueBtn = document.getElementById("continueBtn");
+
   let selected = "";
 
   function setSelected(val){
@@ -539,22 +522,22 @@
 
     if (val === "BEP20"){
       inLabel.textContent = "BEP20 адрес";
-      walletInput.placeholder = "Например: 0x… (BEP20)";
+      walletInput.placeholder = "0x… (BEP20)";
       walletInput.inputMode = "text";
       helpText.textContent = "Убедись, что адрес именно BEP20 (BSC). Комиссия: 1 USDT.";
     } else if (val === "TRC20"){
       inLabel.textContent = "TRC20 адрес";
-      walletInput.placeholder = "Например: T… (TRC20)";
+      walletInput.placeholder = "T… (TRC20)";
       walletInput.inputMode = "text";
       helpText.textContent = "Убедись, что адрес именно TRC20 (Tron). Комиссия: 2 USDT.";
     } else if (val === "HTX_UID"){
       inLabel.textContent = "HTX UID";
-      walletInput.placeholder = "Введите UID (цифры)";
+      walletInput.placeholder = "UID (цифры)";
       walletInput.inputMode = "numeric";
       helpText.innerHTML = "<b>0 комиссия.</b> Введи UID аккаунта HTX.";
     } else if (val === "BYBIT_UID"){
       inLabel.textContent = "Bybit UID";
-      walletInput.placeholder = "Введите UID (цифры)";
+      walletInput.placeholder = "UID (цифры)";
       walletInput.inputMode = "numeric";
       helpText.innerHTML = "<b>0 комиссия.</b> Введи UID аккаунта Bybit.";
     }
@@ -586,7 +569,6 @@
 
   walletInput.addEventListener("input", validate);
 
-  // === сохранить в заявку и перейти дальше ===
   continueBtn.onclick = async () => {
     const walletValue = (walletInput.value || "").trim();
     if (!selected || !walletValue) return;
@@ -611,7 +593,6 @@
         throw new Error((j && j.error) ? j.error : ("HTTP " + res.status));
       }
 
-      // очистим дедлайн, чтобы таймер не мешал следующему шагу
       try{ localStorage.removeItem(tKey); }catch(e){}
 
       const np = new URLSearchParams(passthrough);

@@ -4,396 +4,246 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Crossflag Exchange · Кошелёк</title>
-
   <style>
     :root{
       --text:#e9f0ff;
       --muted:#9fb0d4;
-
       --card: rgba(15, 26, 48, 0.52);
       --border: rgba(255,255,255,.12);
-
-      --btn:#2d5bff;
-      --btn2:#1f3fb3;
-
-      --ok:#22c55e;
-      --bad:#ef4444;
-      --warn:#f59e0b;
-
-      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+      --btn:#2d5bff; --btn2:#1f3fb3;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-
-    html,body{ height:100%; }
+    html,body{height:100%}
     body{
-      margin:0;
-      color:var(--text);
-      background:#071022;
-      overflow:hidden;
+      margin:0; color:var(--text);
+      background:#071022; overflow:hidden;
     }
-
     .overlay{
-      position:fixed;
-      inset:0;
-      z-index:-1;
+      position:fixed; inset:0; z-index:-1;
       background:
-        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
-        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+        radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
       pointer-events:none;
     }
-
     .page{
       min-height:100svh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:
-        calc(16px + env(safe-area-inset-top))
-        16px
-        calc(22px + env(safe-area-inset-bottom))
-        16px;
+      display:flex; align-items:center; justify-content:center;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
       box-sizing:border-box;
     }
-
-    .wrap{ width:100%; max-width:860px; }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:12px;
+    .wrap{ width:100%; max-width:980px; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-
-    .title{
-      font-weight:1000;
-      font-size:16px;
-      letter-spacing:.2px;
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:14px;
     }
-
-    .timerPill{
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .title{ font-weight:1000; font-size:16px; }
+    .pill{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
       padding:10px 14px;
       border-radius:999px;
       font-weight:950;
-      min-width:160px;
-      justify-content:center;
-      box-shadow: 0 10px 26px rgba(0,0,0,.20);
+      font-size:13px;
+      white-space:nowrap;
     }
-    .timerDot{
-      width:10px;height:10px;border-radius:999px;
-      background: var(--ok);
-      box-shadow: 0 0 0 4px rgba(34,197,94,.16);
-    }
-    .timerPill.warn .timerDot{
-      background: var(--warn);
-      box-shadow: 0 0 0 4px rgba(245,158,11,.18);
-    }
-    .timerPill.bad .timerDot{
-      background: var(--bad);
-      box-shadow: 0 0 0 4px rgba(239,68,68,.18);
-    }
-
-    .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      overflow:hidden;
-    }
-
-    .gridTop{
+    .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:12px;
-      padding:14px;
     }
+    @media(max-width:860px){ .grid{ grid-template-columns:1fr; } }
 
-    .cell{
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      padding: 12px 14px;
-      min-width: 0;
-    }
-    .label{ color:var(--muted); font-size:12px; font-weight:900; margin-bottom:6px; }
-    .value{
-      font-weight:950;
-      font-size:14px;
-      word-break: break-word;
-      overflow-wrap:anywhere;
-    }
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      color:#cfe0ff;
-    }
-
-    .main{
-      padding:14px;
-      border-top:1px solid rgba(255,255,255,.08);
-    }
-
-    .panel{
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.10);
-      background:
-        radial-gradient(900px 240px at 18% 0%, rgba(45,91,255,.18), transparent 60%),
-        radial-gradient(900px 240px at 82% 0%, rgba(34,197,94,.12), transparent 60%),
-        rgba(255,255,255,.03);
-      padding:16px;
-      position:relative;
-      overflow:hidden;
-      animation: fadeIn .35s ease-out;
-    }
-
-    @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
-
-    .panelHead{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      margin-bottom:12px;
-    }
-    .icon{
-      width:48px; height:48px;
-      border-radius:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      flex: 0 0 auto;
-    }
-    .icon svg{ width:24px; height:24px; opacity:.95; }
-    .hTitle{ font-weight:1000; font-size:18px; margin:0 0 4px; }
-    .hSub{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
-
-    .options{
+    .choiceGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:12px;
       margin-top:12px;
     }
+    @media(max-width:860px){ .choiceGrid{ grid-template-columns:1fr; } }
 
     .opt{
       border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
       padding:14px;
       cursor:pointer;
-      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
       position:relative;
       overflow:hidden;
     }
-    .opt:hover{ transform: translateY(-1px); background: rgba(255,255,255,.05); }
+    .opt:hover{ transform: translateY(-1px); }
     .opt.active{
       border-color: rgba(45,91,255,.55);
-      box-shadow: 0 0 0 3px rgba(45,91,255,.18);
+      background: rgba(45,91,255,.10);
     }
-
-    .optTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:6px;
-    }
-    .optName{ font-weight:1000; letter-spacing:.3px; }
+    .optTitle{ font-weight:1000; letter-spacing:.2px; }
+    .optSub{ margin-top:6px; color:var(--muted); font-size:12px; line-height:1.35; }
     .tag{
-      font-size:12px;
-      font-weight:950;
-      padding:6px 10px;
+      position:absolute; right:12px; top:12px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      white-space:nowrap;
-    }
-    .tag.zero{
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.10);
-      color:#dfffea;
-    }
-    .optDesc{ color:var(--muted); font-size:12px; line-height:1.35; margin:0; }
-
-    .form{
-      margin-top:14px;
-      border-radius:18px;
+      padding:7px 10px;
+      font-weight:1000;
+      font-size:12px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+    .tag.ok{
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.30);
+      color:#d7ffe6;
+    }
+
+    .inputWrap{
+      margin-top:12px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
       padding:14px;
       display:none;
-      animation: fadeIn .25s ease-out;
+      animation: fadeIn .18s ease both;
     }
-    .form.show{ display:block; }
-
-    .fieldLabel{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:950;
-      margin-bottom:8px;
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(6px); }
+      to{ opacity:1; transform: translateY(0); }
     }
-    .input{
+    .inputWrap.show{ display:block; }
+    .label{ color:var(--muted); font-size:12px; font-weight:950; margin-bottom:8px; }
+    input{
       width:100%;
+      padding:14px 14px;
       border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
       font-weight:950;
       font-size:16px;
-      padding:12px 12px;
       outline:none;
     }
-    .input:focus{
-      border-color: rgba(45,91,255,.55);
-      box-shadow: 0 0 0 3px rgba(45,91,255,.16);
+    input::placeholder{ color: rgba(159,176,212,.65); font-weight:850; }
+
+    .status{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:950;
+      font-size:13px;
+      display:none;
     }
+    .status.show{ display:block; }
+    .status.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
 
     .actions{
       display:flex;
       justify-content:flex-end;
       gap:10px;
-      margin-top:14px;
       flex-wrap:wrap;
+      margin-top:14px;
     }
-
     .btn{
       border:0;
-      border-radius:16px;
+      border-radius:14px;
       padding:12px 16px;
       font-weight:1000;
       cursor:pointer;
-      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+      min-width:170px;
+    }
+    .btn.cancel{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      box-shadow:none;
     }
     .btn.primary{
       background: linear-gradient(180deg, var(--btn), var(--btn2));
       color:#fff;
-      min-width: 160px;
-    }
-    .btn.ghost{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      min-width: 140px;
     }
     .btn:disabled{ opacity:.7; cursor:not-allowed; }
 
-    .foot{
+    .hint{
       margin-top:12px;
+      color: rgba(233,240,255,.75);
       font-size:12px;
-      color: rgba(233,240,255,.70);
       font-weight:850;
-    }
-
-    @media(max-width:780px){
-      .gridTop{ grid-template-columns:1fr; }
-      .options{ grid-template-columns:1fr; }
+      line-height:1.45;
     }
   </style>
 </head>
-
 <body>
   <div class="overlay"></div>
 
   <div class="page">
     <div class="wrap">
-
-      <div class="topbar">
-        <div class="title">Crossflag Exchange · Кошелёк</div>
-        <div class="timerPill" id="timerPill">
-          <span class="timerDot"></span>
-          <span>Осталось: <span id="timer">05:00</span></span>
-        </div>
-      </div>
-
       <div class="card">
 
-        <div class="gridTop">
-          <div class="cell">
-            <div class="label">ID заявки</div>
-            <div class="value mono" id="oid">—</div>
+        <div class="top">
+          <div class="title">Crossflag Exchange · Кошелёк</div>
+          <div class="pill" id="timerPill">Осталось: 05:00</div>
+        </div>
+
+        <div class="hint">
+          Выбери сеть/биржу и укажи адрес (или UID). Мы отправим USDT туда после успешной проверки оплаты.
+        </div>
+
+        <div class="choiceGrid" id="choices">
+          <div class="opt" data-type="BEP20">
+            <div class="tag">Комиссия 1 USDT</div>
+            <div class="optTitle">BEP20</div>
+            <div class="optSub">Сеть BSC (BEP20). Укажи BEP20 адрес кошелька.</div>
           </div>
-          <div class="cell">
-            <div class="label">Reserve ID</div>
-            <div class="value mono" id="rid">—</div>
+
+          <div class="opt" data-type="TRC20">
+            <div class="tag">Комиссия 2 USDT</div>
+            <div class="optTitle">TRC20</div>
+            <div class="optSub">Сеть Tron (TRC20). Укажи TRC20 адрес кошелька.</div>
+          </div>
+
+          <div class="opt" data-type="HTX_UID">
+            <div class="tag ok">0 комиссия</div>
+            <div class="optTitle">HTX UID</div>
+            <div class="optSub">Без комиссии. Укажи UID аккаунта HTX.</div>
+          </div>
+
+          <div class="opt" data-type="BYBIT_UID">
+            <div class="tag ok">0 комиссия</div>
+            <div class="optTitle">Bybit UID</div>
+            <div class="optSub">Без комиссии. Укажи UID аккаунта Bybit.</div>
           </div>
         </div>
 
-        <div class="main">
-          <div class="panel">
-            <div class="panelHead">
-              <div class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 5v5l3 3"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <div class="hTitle">Куда отправлять USDT?</div>
-                <p class="hSub">
-                  Выбери сеть/биржу, затем укажи адрес/UID.<br/>
-                  Мы отправим USDT туда после успешной проверки оплаты.
-                </p>
-              </div>
-            </div>
+        <div class="inputWrap" id="inputWrap">
+          <div class="label" id="inputLabel">—</div>
+          <input id="walletInput" placeholder="—" autocomplete="off" inputmode="text" />
+          <div class="hint" id="feeHint">—</div>
+        </div>
 
-            <div class="options">
-              <div class="opt" data-type="BEP20">
-                <div class="optTop">
-                  <div class="optName">BEP20</div>
-                  <div class="tag">Комиссия 1 USDT</div>
-                </div>
-                <p class="optDesc">Сеть BSC (BEP20). Укажи BEP20 адрес кошелька.</p>
-              </div>
+        <div class="status" id="statusBox"></div>
 
-              <div class="opt" data-type="TRC20">
-                <div class="optTop">
-                  <div class="optName">TRC20</div>
-                  <div class="tag">Комиссия 2 USDT</div>
-                </div>
-                <p class="optDesc">Сеть Tron (TRC20). Укажи TRC20 адрес кошелька.</p>
-              </div>
+        <div class="actions">
+          <button class="btn cancel" id="cancelBtn" type="button">Отменить</button>
+          <button class="btn primary" id="nextBtn" type="button" disabled>Продолжить</button>
+        </div>
 
-              <div class="opt" data-type="HTX_UID">
-                <div class="optTop">
-                  <div class="optName">HTX UID</div>
-                  <div class="tag zero">0 комиссия</div>
-                </div>
-                <p class="optDesc">Без комиссии. Укажи UID аккаунта HTX.</p>
-              </div>
-
-              <div class="opt" data-type="BYBIT_UID">
-                <div class="optTop">
-                  <div class="optName">Bybit UID</div>
-                  <div class="tag zero">0 комиссия</div>
-                </div>
-                <p class="optDesc">Без комиссии. Укажи UID аккаунта Bybit.</p>
-              </div>
-            </div>
-
-            <div class="form" id="form">
-              <div class="fieldLabel" id="fieldLabel">—</div>
-              <input class="input" id="walletInput" placeholder="" autocomplete="off" />
-              <div class="actions">
-                <button class="btn ghost" id="cancelBtn" type="button">Отменить</button>
-                <button class="btn primary" id="saveBtn" type="button">Сохранить</button>
-              </div>
-            </div>
-
-            <div class="foot">
-              Таймер 5 минут: если не успеть — заявка автоматически отменится и вернёт в стакан.
-            </div>
-          </div>
+        <div class="hint">
+          Таймер 5 минут: если не успеть — заявка автоматически отменится и вернёт в стакан.
         </div>
 
       </div>
-
     </div>
   </div>
 
@@ -401,152 +251,130 @@
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
   const p = new URLSearchParams(location.search);
-
-  // ✅ id почти всегда приходит нормально
   const id = (p.get("id") || "").trim();
-
-  // ✅ reserveId может приходить под разными именами — забираем всё что похоже
   const reserveId =
     (p.get("reserveId") || "").trim() ||
     (p.get("reservedId") || "").trim() ||
-    (p.get("reserveid") || "").trim() ||
-    (p.get("reserve") || "").trim() ||
-    (p.get("rid") || "").trim();
+    (p.get("reserveid") || "").trim();
 
-  // параметры которые пробрасываем дальше
-  const passthroughKeys = ["amountRub", "rate", "method"];
+  const amountRub = (p.get("amountRub") || "").trim();
+  const rate = (p.get("rate") || "").trim();
+  const method = (p.get("method") || "").trim();
 
-  document.getElementById("oid").textContent = id || "—";
-  document.getElementById("rid").textContent = reserveId || "—";
+  const timerPill = document.getElementById("timerPill");
+  const choices = document.getElementById("choices");
+  const inputWrap = document.getElementById("inputWrap");
+  const inputLabel = document.getElementById("inputLabel");
+  const walletInput = document.getElementById("walletInput");
+  const feeHint = document.getElementById("feeHint");
+  const statusBox = document.getElementById("statusBox");
 
-  // ===== Timer 5:00 =====
-  const timerEl = document.getElementById("timer");
-  const pill = document.getElementById("timerPill");
-  let left = 5 * 60;
+  const cancelBtn = document.getElementById("cancelBtn");
+  const nextBtn = document.getElementById("nextBtn");
 
-  function renderTimer(){
-    const m = String(Math.floor(left / 60)).padStart(2,"0");
-    const s = String(left % 60).padStart(2,"0");
-    timerEl.textContent = `${m}:${s}`;
+  let selectedType = "";
+  let deadline = Date.now() + 5 * 60 * 1000;
 
-    pill.classList.remove("warn","bad");
-    if (left <= 60) pill.classList.add("bad");
-    else if (left <= 120) pill.classList.add("warn");
+  function setStatus(text, kind){
+    statusBox.textContent = text;
+    statusBox.classList.remove("ok","bad","warn");
+    statusBox.classList.add(kind || "warn");
+    statusBox.classList.add("show");
   }
 
-  async function doCancel(goTo){
+  function setTimer(){
+    const ms = deadline - Date.now();
+    if (ms <= 0){
+      timerPill.textContent = "Осталось: 00:00";
+      return;
+    }
+    const s = Math.floor(ms/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    timerPill.textContent = "Осталось: " + mm + ":" + ss;
+  }
+
+  async function cancelToBook(){
     try{
       if (id && reserveId){
         await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ id, reserveId })
         });
       }
     }catch(e){}
-    location.href = goTo || "buy.html";
+    location.href = "./buy.html";
   }
 
-  renderTimer();
-  const t = setInterval(async () => {
-    left--;
-    if (left <= 0){
-      clearInterval(t);
-      await doCancel("buy.html");
-      return;
-    }
-    renderTimer();
-  }, 1000);
+  cancelBtn.onclick = cancelToBook;
 
-  // ===== Wallet selection =====
-  const opts = Array.from(document.querySelectorAll(".opt"));
-  const form = document.getElementById("form");
-  const label = document.getElementById("fieldLabel");
-  const input = document.getElementById("walletInput");
-  const saveBtn = document.getElementById("saveBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-
-  let selectedType = "";
-
-  function setActive(type){
+  function setupInput(type){
     selectedType = type;
-    opts.forEach(o => o.classList.toggle("active", o.dataset.type === type));
-    form.classList.add("show");
+
+    inputWrap.classList.add("show");
+    walletInput.value = "";
 
     if (type === "BEP20"){
-      label.textContent = "BEP20 адрес кошелька";
-      input.placeholder = "Например: 0x...";
+      inputLabel.textContent = "BEP20 адрес";
+      walletInput.placeholder = "Например: 0x...";
+      feeHint.textContent = "Комиссия 1 USDT. Укажи адрес сети BEP20 (BSC).";
+      walletInput.inputMode = "text";
     } else if (type === "TRC20"){
-      label.textContent = "TRC20 адрес кошелька";
-      input.placeholder = "Например: T...";
+      inputLabel.textContent = "TRC20 адрес";
+      walletInput.placeholder = "Например: T...";
+      feeHint.textContent = "Комиссия 2 USDT. Укажи адрес сети TRC20 (Tron).";
+      walletInput.inputMode = "text";
     } else if (type === "HTX_UID"){
-      label.textContent = "HTX UID (цифры)";
-      input.placeholder = "Например: 12345678";
+      inputLabel.textContent = "HTX UID";
+      walletInput.placeholder = "Введи UID (только цифры)";
+      feeHint.textContent = "0 комиссия. Укажи UID аккаунта HTX.";
+      walletInput.inputMode = "numeric";
     } else if (type === "BYBIT_UID"){
-      label.textContent = "Bybit UID (цифры)";
-      input.placeholder = "Например: 12345678";
-    }
-    input.focus();
-  }
-
-  opts.forEach(o => o.addEventListener("click", () => setActive(o.dataset.type)));
-
-  cancelBtn.onclick = () => doCancel("buy.html");
-
-  function buildNextUrl(){
-    const next = new URL("crossflag-buy-order.html", location.href);
-
-    // ✅ всегда пробрасываем нормальные имена
-    next.searchParams.set("id", id);
-    next.searchParams.set("reserveId", reserveId);
-
-    for (const k of passthroughKeys){
-      const v = p.get(k);
-      if (v != null && String(v).length) next.searchParams.set(k, v);
-    }
-    return next.toString();
-  }
-
-  function validate(type, value){
-    const v = String(value || "").trim();
-    if (!v) return "Введи значение";
-
-    if (type === "HTX_UID" || type === "BYBIT_UID"){
-      if (!/^[0-9]{4,20}$/.test(v)) return "UID должен быть цифрами";
-      return "";
+      inputLabel.textContent = "Bybit UID";
+      walletInput.placeholder = "Введи UID (только цифры)";
+      feeHint.textContent = "0 комиссия. Укажи UID аккаунта Bybit.";
+      walletInput.inputMode = "numeric";
     }
 
-    if (v.length < 10) return "Слишком короткое значение";
-    return "";
+    nextBtn.disabled = true;
+    statusBox.classList.remove("show");
   }
 
-  saveBtn.onclick = async () => {
+  choices.querySelectorAll(".opt").forEach(el => {
+    el.onclick = () => {
+      choices.querySelectorAll(".opt").forEach(x => x.classList.remove("active"));
+      el.classList.add("active");
+      setupInput(el.dataset.type || "");
+    };
+  });
+
+  walletInput.addEventListener("input", () => {
+    const v = (walletInput.value || "").trim();
+    nextBtn.disabled = !(selectedType && v.length >= 3);
+  });
+
+  nextBtn.onclick = async () => {
+    const walletValue = (walletInput.value || "").trim();
+    if (!id || !reserveId){
+      setStatus("Ошибка: Missing id or reserveId", "bad");
+      return;
+    }
+    if (!selectedType || !walletValue){
+      setStatus("Выбери сеть и введи адрес/UID.", "warn");
+      return;
+    }
+
     try{
-      if (!id || !reserveId){
-        alert("Ошибка: Missing id or reserveId");
-        return;
-      }
-      if (!selectedType){
-        alert("Выбери сеть/биржу");
-        return;
-      }
-
-      const walletValue = input.value.trim();
-      const err = validate(selectedType, walletValue);
-      if (err){
-        alert(err);
-        return;
-      }
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = "Сохраняю…";
+      nextBtn.disabled = true;
+      nextBtn.textContent = "Сохраняю…";
+      setStatus("Сохраняю кошелёк…", "warn");
 
       const res = await fetch(WORKER_BASE + "/api/public/set_wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          id,
-          reserveId,            // ✅ строго reserveId
+          id, reserveId,
           walletType: selectedType,
           walletValue
         })
@@ -554,25 +382,39 @@
 
       const txt = await res.text();
       let j;
-      try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
+      try{ j = JSON.parse(txt); }catch{ throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
       if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      location.href = buildNextUrl();
+      // дальше к реквизитам
+      const qs = new URLSearchParams({
+        id, reserveId,
+        amountRub: amountRub || "",
+        rate: rate || "",
+        method: method || ""
+      });
+      location.href = "./crossflag-buy-order.html?" + qs.toString();
 
-    } catch(e){
-      alert("Ошибка: " + (e.message || String(e)));
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Сохранить";
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+      nextBtn.disabled = false;
+      nextBtn.textContent = "Продолжить";
     }
   };
 
-  // Если reserveId реально нет — просто показываем экран, но "Сохранить" блокируем
+  // таймер 5 минут
+  setTimer();
+  const t = setInterval(() => {
+    setTimer();
+    if (Date.now() >= deadline){
+      clearInterval(t);
+      cancelToBook();
+    }
+  }, 250);
+
+  // если случайно открыли без параметров — сразу в стакан
   if (!id || !reserveId){
-    form.classList.add("show");
-    label.textContent = "Ошибка: нет Reserve ID";
-    input.value = "";
-    input.placeholder = "Открой страницу из заявки заново";
-    saveBtn.disabled = true;
+    setStatus("Ошибка: Missing id or reserveId", "bad");
+    setTimeout(() => location.href = "./buy.html", 800);
   }
 </script>
 </body>

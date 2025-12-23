@@ -2,119 +2,202 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crossflag · Оплата</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Оплата</title>
+
   <style>
     :root{
-      --bg:#0b1220; --card:#0f1a30; --border:#223255; --text:#e9f0ff;
-      --muted:#9fb0d4; --ok:#9dffb8; --bad:#ffb4b4; --btn:#2563eb; --danger:#ef4444;
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --shadow: 0 25px 70px rgba(0,0,0,.45);
+      --radius:22px;
+
+      --ok:#2ecc71;
+      --bad:#ff5a5a;
+
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-    body{ margin:0; background:var(--bg); color:var(--text); }
-    .wrap{ max-width:720px; margin:0 auto; padding:18px; }
-    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-    .title{ font-size:16px; font-weight:950; }
-    .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
-    .pad{ padding:16px; }
-    .grid{ display:grid; gap:12px; grid-template-columns:1fr 1fr; }
-    .cell{ border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(255,255,255,.02); }
-    .k{ color:var(--muted); font-size:12px; margin-bottom:4px; }
-    .v{ font-weight:850; }
-    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; letter-spacing:.2px; }
-    .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .status{ font-size:12px; color:var(--muted); }
-    .status.ok{ color:var(--ok); }
-    .status.bad{ color:var(--bad); }
-    .hr{ height:1px; background:rgba(255,255,255,.08); }
-    .btns{ display:flex; gap:10px; justify-content:flex-end; padding:16px; }
-    button{
-      border:0; border-radius:14px; padding:12px 16px; font-weight:900; cursor:pointer;
-      color:white; background:var(--btn);
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background: radial-gradient(1200px 700px at 50% -260px, #1a2a55, #070b18);
+      color:var(--text);
     }
-    button.danger{ background:var(--danger); }
-    button:disabled{ opacity:.6; cursor:not-allowed; }
-    .copy{ display:flex; gap:10px; align-items:center; }
-    .copy button{ padding:8px 12px; border-radius:12px; font-weight:900; }
-    .hint{ color:var(--muted); font-size:12px; margin-top:10px; }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    .wrap{
+      max-width:980px;
+      margin:18px auto;
+      padding:
+        calc(12px + env(safe-area-inset-top))
+        16px
+        calc(28px + env(safe-area-inset-bottom))
+        16px;
+    }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+    }
+    .title{ font-weight:1000; font-size:18px; }
+
+    .btn{
+      border:0; border-radius:16px; padding:12px 16px;
+      background:linear-gradient(180deg, #2d5bff, #1f3fb3);
+      color:#fff; font-weight:900; cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      white-space:nowrap;
+    }
+    .btnGhost{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.20);
+      white-space:nowrap;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:18px; }
+    .cell{
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 14px;
+      min-width:0;
+    }
+    .label{ color:var(--muted); font-size:12px; margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:16px; overflow-wrap:anywhere; word-break:break-word; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; color:#cfe0ff; }
+
+    .panel{ padding:18px; border-top:1px solid rgba(255,255,255,.06); }
+    .panelBox{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(900px 220px at 20% 0%, rgba(45,91,255,.18), transparent 60%),
+        rgba(255,255,255,.03);
+      padding:18px;
+    }
+
+    .status{
+      margin-top:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      font-weight:950;
+      color:var(--muted);
+    }
+    .status.ok{ color:var(--ok); border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.10); }
+    .status.bad{ color:var(--bad); border-color: rgba(255,90,90,.35); background: rgba(255,90,90,.10); }
+
+    .rowLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      margin-top:10px;
+    }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:950;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .actions{ display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
+
+    @media(max-width:780px){
+      .grid{ grid-template-columns:1fr; }
+      .btn,.btnGhost{ width:100%; }
+      .actions{ justify-content:stretch; }
+    }
   </style>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="title">Crossflag Exchange · Оплата</div>
-  </div>
-
-  <div class="card">
-    <div class="pad">
-      <div class="grid">
-        <div class="cell">
-          <div class="k">Ордер</div>
-          <div class="v mono" id="oid">—</div>
-        </div>
-        <div class="cell">
-          <div class="k">Сумма к оплате (RUB)</div>
-          <div class="v" id="amount">—</div>
-        </div>
-        <div class="cell">
-          <div class="k">Курс (RUB/USDT)</div>
-          <div class="v" id="rate">—</div>
-        </div>
-        <div class="cell">
-          <div class="k">Получите (USDT)</div>
-          <div class="v" id="usdt">—</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px;" class="row">
-        <div class="status" id="state">Статус: —</div>
-        <div class="cell" style="padding:8px 12px; border-radius:999px; width:auto;">
-          <div class="k" style="margin:0;">Осталось: <span class="v mono" id="timer">—</span></div>
-        </div>
-      </div>
-
-      <div class="status bad" id="error" style="margin-top:8px; display:none;"></div>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">Crossflag Exchange · Оплата</div>
+      <button class="btnGhost" id="backBtn" type="button">Назад</button>
     </div>
 
-    <div class="hr"></div>
-
-    <div class="pad">
-      <div class="v" style="margin-bottom:10px;">Реквизиты для оплаты</div>
-
+    <div class="card">
       <div class="grid">
         <div class="cell">
-          <div class="k">Банк</div>
-          <div class="v" id="bank">—</div>
+          <div class="label">Ордер</div>
+          <div class="value mono" id="oid">—</div>
         </div>
         <div class="cell">
-          <div class="k">Реквизиты (СБП/карта)</div>
-          <div class="row">
-            <div class="v mono" id="req" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;">—</div>
-            <div class="copy">
-              <button id="copyBtn" type="button">Копировать</button>
+          <div class="label">Сумма к оплате (RUB)</div>
+          <div class="value" id="amount">—</div>
+        </div>
+        <div class="cell">
+          <div class="label">Курс (RUB/USDT)</div>
+          <div class="value" id="rate">—</div>
+        </div>
+        <div class="cell">
+          <div class="label">Получите (USDT)</div>
+          <div class="value" id="usdt">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panelBox">
+          <div class="rowLine">
+            <div style="font-weight:1000;">Статус</div>
+            <div class="pill" id="timer">—</div>
+          </div>
+          <div class="status" id="status">Загружаю реквизиты…</div>
+
+          <div style="margin-top:14px; font-weight:1000;">Реквизиты для оплаты</div>
+
+          <div class="rowLine">
+            <div>
+              <div class="label">Банк</div>
+              <div class="value" id="bank">—</div>
             </div>
+          </div>
+
+          <div class="rowLine">
+            <div style="min-width:0;">
+              <div class="label">Реквизиты (СБП/карта)</div>
+              <div class="value mono" id="req">—</div>
+            </div>
+            <button class="btnGhost" id="copyBtn" type="button">Копировать</button>
+          </div>
+
+          <div class="actions">
+            <button class="btnGhost" id="cancelBtn" type="button">Отменить ордер</button>
+            <button class="btn" id="paidBtn" type="button">Я оплатил</button>
           </div>
         </div>
       </div>
-
-      <div class="hint">Переведи точную сумму и нажми “Я оплатил”.</div>
-    </div>
-
-    <div class="btns">
-      <button class="danger" id="cancelBtn" type="button">Отменить ордер</button>
-      <button id="paidBtn" type="button">Я оплатил</button>
     </div>
   </div>
-</div>
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const qs = new URLSearchParams(location.search);
-  const id = qs.get("id") || "";
-  const amountRub = Number(qs.get("amountRub"));
-  const rate = Number(qs.get("rate"));
-  const method = String(qs.get("method") || "");
+  const p = new URLSearchParams(location.search);
+  const id = (p.get("id") || "").trim();
+  const amountRub = Number(p.get("amountRub"));
+  const rate = Number(p.get("rate"));
+  const method = (p.get("method") || "").trim();
 
   const oidEl = document.getElementById("oid");
   const amountEl = document.getElementById("amount");
@@ -122,50 +205,36 @@
   const usdtEl = document.getElementById("usdt");
   const bankEl = document.getElementById("bank");
   const reqEl = document.getElementById("req");
-  const stateEl = document.getElementById("state");
+  const statusEl = document.getElementById("status");
   const timerEl = document.getElementById("timer");
-  const errEl = document.getElementById("error");
-
-  const copyBtn = document.getElementById("copyBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-  const paidBtn = document.getElementById("paidBtn");
 
   let reserveId = "";
-  let reservedUntil = 0;
+  let expiresAt = 0;
   let timerHandle = null;
   let finished = false;
 
-  function goBackToBook(){
-    window.location.href = "./buy.html";
+  const storageKey = "cf_reserve_" + id;
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function fmtRate(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 2 }); }
+  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.classList.remove("ok","bad");
+    if (kind) statusEl.classList.add(kind);
   }
 
-  function fmtRub(n){
-    const v = Number(n);
-    if (!Number.isFinite(v)) return "—";
-    return v.toLocaleString("ru-RU") + " ₽";
+  function basicFill(){
+    oidEl.textContent = id || "—";
+    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
+    rateEl.textContent = Number.isFinite(rate) ? fmtRate(rate) : "—";
+    if (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0){
+      usdtEl.textContent = fmtUsdt(amountRub / rate);
+    } else {
+      usdtEl.textContent = "—";
+    }
   }
-  function fmtNum(n){
-    const v = Number(n);
-    if (!Number.isFinite(v)) return "—";
-    return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 });
-  }
-  function setState(text){
-    stateEl.textContent = "Статус: " + text;
-  }
-  function setStatus(text, kind=""){
-    errEl.style.display = text ? "block" : "none";
-    errEl.textContent = text || "";
-    errEl.className = "status " + (kind || "");
-  }
-
-  function reserveLocalKey(){ return "cf_reserve_" + id; }
-  function saveReserveLocal(reserveId, expiresAt){
-    localStorage.setItem(reserveLocalKey(), JSON.stringify({ reserveId, expiresAt, savedAt: Date.now() }));
-  }
-  function readReserveLocal(){
-    try{ return JSON.parse(localStorage.getItem(reserveLocalKey()) || "null"); }catch{ return null; }
-  }
-  function clearReserveLocal(){ localStorage.removeItem(reserveLocalKey()); }
 
   async function postJson(path, body){
     const res = await fetch(WORKER_BASE + path, {
@@ -173,180 +242,155 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     const text = await res.text();
     let j;
     try { j = JSON.parse(text); } catch { throw new Error("Worker вернул не JSON: " + text.slice(0, 200)); }
-
-    if (!res.ok || !j.ok) {
-      const e = new Error(j.error || ("HTTP " + res.status));
-      e.httpStatus = res.status;
-      throw e;
-    }
-
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
     return j;
   }
 
-  function updateTimer(){
-    const left = Math.max(0, reservedUntil - Date.now());
-    const sec = Math.floor(left / 1000);
-    const mm = String(Math.floor(sec / 60)).padStart(2, "0");
-    const ss = String(sec % 60).padStart(2, "0");
-    timerEl.textContent = `${mm}:${ss}`;
+  function saveReserveLocal(reserveId, expiresAt){
+    localStorage.setItem(storageKey, JSON.stringify({ reserveId, expiresAt }));
+  }
+  function loadReserveLocal(){
+    try{
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
+  }
+  function clearReserveLocal(){
+    localStorage.removeItem(storageKey);
+  }
 
-    if (left <= 0) {
-      timerEl.textContent = "00:00";
-      autoCancelDueToTimeout();
+  function goBackToBuyOrder(){
+    window.location.href =
+      "./buy-order.html?id=" + encodeURIComponent(id) +
+      "&amountRub=" + encodeURIComponent(String(amountRub)) +
+      "&rate=" + encodeURIComponent(String(rate)) +
+      "&method=" + encodeURIComponent(method);
+  }
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+
+  function updateTimer(){
+    if (!expiresAt){
+      timerEl.textContent = "—";
+      return;
     }
+    const ms = expiresAt - Date.now();
+    const s = Math.max(0, Math.floor(ms/1000));
+    const m = Math.floor(s/60);
+    const r = s%60;
+    timerEl.textContent = `${pad2(m)}:${pad2(r)}`;
+    if (ms <= 0 && !finished) autoCancelDueToTimeout();
   }
 
   async function autoCancelDueToTimeout(){
-    if (finished) return;
     finished = true;
-    if (timerHandle) clearInterval(timerHandle);
-    setState("Отменено");
-    setStatus("Время оплаты истекло. Возвращаю в стакан…", "bad");
-
+    setStatus("Время вышло. Заявка отменена.", "bad");
     try{
       if (reserveId) await postJson("/api/public/cancel_reserve", { id, reserveId });
-    }catch{}
-
+    }catch(e){}
     clearReserveLocal();
-    paidBtn.disabled = true;
-    cancelBtn.disabled = true;
-
-    setTimeout(goBackToBook, 900);
+    setTimeout(()=> location.href="buy.html", 600);
   }
 
-  async function startReserve(){
-    if (!id) {
-      setState("Ошибка");
-      setStatus("Ошибка: отсутствует id", "bad");
+  async function loadOrReserve(){
+    basicFill();
+    if (!id){
+      setStatus("Ошибка: нет id заявки.", "bad");
       return;
     }
 
-    oidEl.textContent = id;
-    amountEl.textContent = fmtRub(amountRub);
-    rateEl.textContent = fmtNum(rate);
-    const usdt = (Number(amountRub) && Number(rate)) ? (Number(amountRub) / Number(rate)) : NaN;
-    usdtEl.textContent = Number.isFinite(usdt) ? (fmtNum(usdt) + " USDT") : "—";
+    const cached = loadReserveLocal();
+    if (cached?.reserveId){
+      reserveId = String(cached.reserveId || "");
+      expiresAt = Number(cached.expiresAt || 0);
 
-    // восстановление (если страница перезагружена)
-    const cached = readReserveLocal();
-    if (cached && cached.reserveId && Number(cached.expiresAt) > Date.now()) {
       try{
-        setState("Ожидание оплаты");
-        setStatus("Восстанавливаю сделку…");
-        const j = await postJson("/api/public/reserve_offer", { id, reserveId: cached.reserveId });
-
+        // keep-alive резерва (разрешено перезагружать страницу)
+        const j = await postJson("/api/public/reserve_offer", { id, reserveId });
         reserveId = j.reserveId;
-        reservedUntil = j.expiresAt;
+        expiresAt = j.expiresAt;
 
-        bankEl.textContent = j.offer?.payBank || "—";
-        reqEl.textContent = j.offer?.payRequisite || "—";
+        bankEl.textContent = j.offer.payBank || "—";
+        reqEl.textContent = j.offer.payRequisite || "—";
 
-        saveReserveLocal(reserveId, reservedUntil);
-
-        setState("На оплате");
-        setStatus("Сделка восстановлена. Оплати и нажми “Я оплатил”.", "ok");
-        updateTimer();
-        timerHandle = setInterval(updateTimer, 1000);
-        return;
-      } catch {
-        clearReserveLocal();
+        saveReserveLocal(reserveId, expiresAt);
+        setStatus("Реквизиты выданы. Оплати и нажми “Я оплатил”.", "ok");
+      }catch(e){
+        setStatus("Ошибка: " + (e.message || e), "bad");
       }
+      return;
     }
 
-    // новый резерв (АТОМАРНО)
     try{
-      setState("Резервирую…");
-      setStatus("Запрашиваю реквизиты…");
-
+      setStatus("Резервирую заявку и загружаю реквизиты…");
       const j = await postJson("/api/public/reserve_offer", { id });
 
       reserveId = j.reserveId;
-      reservedUntil = j.expiresAt;
+      expiresAt = j.expiresAt;
 
-      bankEl.textContent = j.offer?.payBank || "—";
-      reqEl.textContent = j.offer?.payRequisite || "—";
+      bankEl.textContent = j.offer.payBank || "—";
+      reqEl.textContent = j.offer.payRequisite || "—";
 
-      saveReserveLocal(reserveId, reservedUntil);
-
-      setState("На оплате");
-      setStatus("Заявка зарезервирована. Оплати и нажми “Я оплатил”.", "ok");
-      updateTimer();
-      timerHandle = setInterval(updateTimer, 1000);
-    } catch(e){
-      // если заявка занята — уводим обратно в стакан
-      if (e.httpStatus === 409) {
-        setState("Занято");
-        setStatus("Эту заявку уже открыл другой человек. Возвращаю в стакан…", "bad");
-        setTimeout(goBackToBook, 1100);
-        return;
-      }
-      setState("Ошибка");
-      setStatus("Ошибка: " + e.message, "bad");
+      saveReserveLocal(reserveId, expiresAt);
+      setStatus("Заявка зарезервирована на 15 минут. Оплати и нажми “Я оплатил”.", "ok");
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || e), "bad");
     }
   }
 
-  copyBtn.onclick = async () => {
+  document.getElementById("copyBtn").onclick = async () => {
+    const v = reqEl.textContent || "";
     try{
-      const txt = (reqEl.textContent || "").trim();
-      if (!txt || txt === "—") return;
-      await navigator.clipboard.writeText(txt);
-      setStatus("Скопировано ✅", "ok");
-      setTimeout(() => setStatus("", ""), 1200);
-    }catch{}
-  };
-
-  cancelBtn.onclick = async () => {
-    if (finished) return;
-    finished = true;
-    if (timerHandle) clearInterval(timerHandle);
-
-    cancelBtn.disabled = true;
-    paidBtn.disabled = true;
-
-    try{
-      setState("Отменяю…");
-      await postJson("/api/public/cancel_reserve", { id, reserveId });
-      setState("Отменено");
-      setStatus("Ордер отменён. Возвращаю в стакан…", "ok");
-    } catch(e){
-      setState("Ошибка");
-      setStatus("Ошибка: " + e.message, "bad");
+      await navigator.clipboard.writeText(v);
+      alert("Скопировано");
+    }catch{
+      const ta = document.createElement("textarea");
+      ta.value = v;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      alert("Скопировано");
     }
-
-    clearReserveLocal();
-    setTimeout(goBackToBook, 900);
   };
 
-  paidBtn.onclick = async () => {
-    if (finished) return;
-    paidBtn.disabled = true;
-
+  document.getElementById("cancelBtn").onclick = async () => {
     try{
-      setState("Подтверждаю оплату…");
-      await postJson("/api/public/mark_paid", { id, reserveId });
-      setState("Оплачено");
-      setStatus("Отлично. Теперь отправь подтверждение оплаты.", "ok");
+      if (reserveId) await postJson("/api/public/cancel_reserve", { id, reserveId });
+    }catch(e){}
+    clearReserveLocal();
+    location.href = "buy.html";
+  };
 
-      const p = new URLSearchParams({
-        id,
-        reserveId,
+  document.getElementById("paidBtn").onclick = async () => {
+    if (!reserveId){
+      setStatus("Нет reserveId. Обнови страницу.", "bad");
+      return;
+    }
+    try{
+      await postJson("/api/public/mark_paid", { id, reserveId });
+      // переход на страницу подтверждения оплаты
+      const qs = new URLSearchParams({
+        id: String(id),
+        reserveId: String(reserveId),
         amountRub: String(amountRub),
         rate: String(rate),
-        method: String(method || ""),
+        method: String(method),
       });
-      window.location.href = "./buy-paid.html?" + p.toString();
-    } catch(e){
-      paidBtn.disabled = false;
-      setState("Ошибка");
-      setStatus("Ошибка: " + e.message, "bad");
+      location.href = "./buy-paid.html?" + qs.toString();
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || e), "bad");
     }
   };
 
-  startReserve();
+  document.getElementById("backBtn").onclick = goBackToBuyOrder;
+
+  loadOrReserve();
+  timerHandle = setInterval(updateTimer, 300);
 </script>
 </body>
 </html>

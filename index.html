@@ -16,10 +16,6 @@
       --buy:#16a34a;
       --sell:#ef4444;
 
-      /* NEW (не меняет дизайн, только цвета новых кнопок) */
-      --support:#2d5bff;
-      --chat:#6d28d9;
-
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
@@ -138,10 +134,6 @@
     .btn.buy{ background: var(--buy); }
     .btn.sell{ background: var(--sell); }
 
-    /* ===== NEW кнопки (по твоей просьбе) ===== */
-    .btn.support{ background: var(--support); }
-    .btn.chat{ background: var(--chat); }
-
     .footer{
       margin-top:10px;
       font-size:12px;
@@ -168,6 +160,33 @@
       backdrop-filter: blur(10px);
       cursor:pointer;
     }
+
+    /* ===== NEW: кнопки ВНЕ карточки ===== */
+    .outerActions{
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .outerBtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: rgba(233,240,255,.95);
+      font-weight:1000;
+      font-size:16px;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .outerBtn:active{ transform: translateY(1px); }
+
   </style>
 </head>
 
@@ -184,7 +203,7 @@
     <button class="playBtn" id="playBtn">▶ Включить фон</button>
   </div>
 
-  <!-- КАРТОЧКА -->
+  <!-- КАРТОЧКА + КНОПКИ СНАРУЖИ -->
   <div class="page">
     <div class="wrap">
       <div class="card">
@@ -210,14 +229,15 @@
           <button class="btn sell" onclick="location.href='sell.html'">Продать</button>
         </div>
 
-        <!-- ✅ NEW: кнопки поддержки и чата (под основной плашкой/кнопками) -->
-        <div class="buttons">
-          <button class="btn support" onclick="window.open('https://t.me/crossflag2','_blank')">Поддержка</button>
-          <button class="btn chat" onclick="window.open('https://t.me/+elo9TimbWVsyMTgy','_blank')">Чат</button>
-        </div>
-
         <div class="footer" id="updated">Обновлено: —</div>
       </div>
+
+      <!-- ✅ ВНЕ основной плашки -->
+      <div class="outerActions">
+        <button class="outerBtn" onclick="window.open('https://t.me/crossflag2','_blank')">Поддержка</button>
+        <button class="outerBtn" onclick="window.open('https://t.me/+elo9TimbWVsyMTgy','_blank')">Чат</button>
+      </div>
+
     </div>
   </div>
 

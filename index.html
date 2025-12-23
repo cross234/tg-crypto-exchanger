@@ -1,150 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crossflag Exchange</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag · Мини-обменник</title>
 
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
-      background: radial-gradient(1200px 600px at 50% -200px, #1a2a55, #070b18);
-      color: #e9f0ff;
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+
+      --buy:#16a34a;
+      --sell:#ef4444;
+
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    .container {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 24px 16px 40px;
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+      overflow:hidden;
     }
 
-    .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    /* ===== ВИДЕО ФОН ===== */
+    .bg{
+      position:fixed;
+      inset:0;
+      z-index:-3;
+      overflow:hidden;
+    }
+    .bg video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transform:scale(1.02);
     }
 
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      text-align: center;
+    /* затемнение */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-2;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.90));
+      pointer-events:none;
     }
 
-    .rate {
-      font-size: 42px;
-      font-weight: 800;
-      text-align: center;
-      margin: 10px 0 6px;
+    /* центр */
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(22px + env(safe-area-inset-bottom))
+        16px;
+      box-sizing:border-box;
     }
 
-    .sub {
-      text-align: center;
-      color: #9fb0d4;
-      font-size: 14px;
+    .wrap{ width:100%; max-width:520px; }
+
+    /* карточка */
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
-    /* === NEW BUTTONS === */
-    .links {
-      display: grid;
+    .title{
+      font-weight:1000;
+      font-size:16px;
+      margin-bottom:10px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      margin-bottom:10px;
+    }
+
+    .label{ font-weight:950; }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:950;
+      font-size:12px;
+    }
+
+    .value{
+      font-weight:1000;
+      font-size:26px;
+    }
+
+    .buttons{
+      display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 18px;
+      gap:12px;
+      margin-top:12px;
     }
 
-    .link-btn {
-      display: block;
-      text-align: center;
-      padding: 14px 12px;
-      border-radius: 14px;
-      font-weight: 700;
-      text-decoration: none;
-      color: #fff;
-      background: linear-gradient(180deg, #2d5bff, #1f3fb3);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:14px 12px;
+      font-weight:1000;
+      font-size:18px;
+      color:#fff;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+    }
+    .btn.buy{ background: var(--buy); }
+    .btn.sell{ background: var(--sell); }
+
+    .footer{
+      margin-top:10px;
+      font-size:12px;
+      color: rgba(233,240,255,.70);
+      font-weight:850;
     }
 
-    .link-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    /* кнопка запуска видео на мобиле */
+    .playOverlay{
+      position:fixed;
+      left:50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      transform:translateX(-50%);
+      z-index:20;
+      display:none;
     }
-
-    .link-btn.secondary {
-      background: linear-gradient(180deg, #1e8fff, #1565c0);
-    }
-
-    /* existing buttons / links */
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    .action {
-      display: block;
-      text-align: center;
-      padding: 16px 14px;
-      border-radius: 16px;
-      font-weight: 800;
-      text-decoration: none;
-      color: #fff;
-      background: linear-gradient(180deg, #2ecc71, #1eaa5a);
-      box-shadow: 0 14px 40px rgba(0,0,0,0.35);
-    }
-
-    .action.sell {
-      background: linear-gradient(180deg, #ff5a5a, #c0392b);
+    .playBtn{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(15,26,48,.55);
+      color:#fff;
+      font-weight:1000;
+      padding:10px 14px;
+      border-radius:999px;
+      backdrop-filter: blur(10px);
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="card">
-      <div class="title">Crossflag Exchange</div>
+  <!-- ВИДЕО -->
+  <div class="bg">
+    <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="./bg.jpg">
+      <source src="./bg.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="overlay"></div>
 
-      <div class="rate" id="bestRate">—</div>
-      <div class="sub">Лучший курс USDT / RUB</div>
+  <div class="playOverlay" id="playOverlay">
+    <button class="playBtn" id="playBtn">▶ Включить фон</button>
+  </div>
 
-      <!-- 🔽 ДОБАВЛЕННЫЕ КНОПКИ -->
-      <div class="links">
-        <a class="link-btn" href="https://t.me/crossflag2" target="_blank">
-          Поддержка
-        </a>
-        <a class="link-btn secondary" href="https://t.me/+elo9TimbWVsyMTgy" target="_blank">
-          Чат биржи
-        </a>
-      </div>
+  <!-- КАРТОЧКА -->
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+        <div class="title">Мини-обменник</div>
 
-      <!-- существующие кнопки -->
-      <div class="actions">
-        <a class="action buy" href="buy.html">Купить USDT</a>
-        <a class="action sell" href="sell.html">Продать USDT</a>
+        <div class="row">
+          <div class="label">Пара</div>
+          <div class="pill">USDT/RUB</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Купить</div>
+          <div class="value" id="buyRate">—</div>
+        </div>
+
+        <div class="row">
+          <div class="label">Продать</div>
+          <div class="value" id="sellRate">—</div>
+        </div>
+
+        <div class="buttons">
+          <button class="btn buy" onclick="location.href='buy.html'">Купить</button>
+          <button class="btn sell" onclick="location.href='sell.html'">Продать</button>
+        </div>
+
+        <div class="footer" id="updated">Обновлено: —</div>
       </div>
     </div>
   </div>
 
-  <script>
-    async function loadRate() {
-      try {
-        const r = await fetch("https://rapira-rates-proxy.kireeshka73.workers.dev/api/public/quotes");
-        const j = await r.json();
-        if (j.ok) {
-          document.getElementById("bestRate").textContent =
-            j.adjusted.buy.toFixed(2);
-        }
-      } catch (e) {
-        document.getElementById("bestRate").textContent = "—";
-      }
-    }
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-    loadRate();
-    setInterval(loadRate, 10000);
-  </script>
+  // Эти id должны уже быть в твоём index (как раньше):
+  // buyRateEl  -> элемент, где показывается "Купить"
+  // sellRateEl -> элемент, где показывается "Продать"
+  // updatedEl  -> элемент "Обновлено: ..."
+  const buyRateEl  = document.getElementById("buyRate");
+  const sellRateEl = document.getElementById("sellRate");
+  const updatedEl  = document.getElementById("updated");
+
+  // Кнопки перехода (как было)
+  const goBuyBtn  = document.getElementById("goBuy");
+  const goSellBtn = document.getElementById("goSell");
+  if (goBuyBtn)  goBuyBtn.onclick  = () => (window.location.href = "./buy.html");
+  if (goSellBtn) goSellBtn.onclick = () => (window.location.href = "./sell.html");
+
+  function fmtRate(n){
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "—";
+    return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  const buyEl = document.getElementById("buyRate");
+  const sellEl = document.getElementById("sellRate");
+  const updatedEl = document.getElementById("updated");
+
+  function fmt(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return "—";
+    return v.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  }
+
+  function bestBuyRate(offers){
+    // Для покупателя выгоднее МЕНЬШЕ
+    let best = Infinity;
+    for (const o of (offers || [])){
+  function bestBuy(offers){
+    let m = Infinity;
+    for (const o of offers){
+      const r = Number(o.rate);
+      if (Number.isFinite(r) && r > 0) best = Math.min(best, r);
+      if (Number.isFinite(r) && r > 0) m = Math.min(m, r);
+    }
+    return best === Infinity ? null : best;
+    return m === Infinity ? null : m;
+  }
+
+  function bestSellRate(offers){
+    // Для продавца выгоднее БОЛЬШЕ
+    let best = -Infinity;
+    for (const o of (offers || [])){
+  function bestSell(offers){
+    let m = -Infinity;
+    for (const o of offers){
+      const r = Number(o.rate);
+      if (Number.isFinite(r) && r > 0) best = Math.max(best, r);
+      if (Number.isFinite(r) && r > 0) m = Math.max(m, r);
+    }
+    return best === -Infinity ? null : best;
+    return m === -Infinity ? null : m;
+  }
+
+  async function loadRatesFromOrders(){
+  async function loadRates(){
+    try{
+      const [bRes, sRes] = await Promise.all([
+        fetch(WORKER_BASE + "/api/public/buy_offers", { cache: "no-store" }),
+        fetch(WORKER_BASE + "/api/public/sell_offers", { cache: "no-store" }),
+      const [b,s] = await Promise.all([
+        fetch(WORKER_BASE + "/api/public/buy_offers").then(r=>r.json()),
+        fetch(WORKER_BASE + "/api/public/sell_offers").then(r=>r.json())
+      ]);
+
+      const b = await bRes.json();
+      const s = await sRes.json();
+
+      const buyBest  = (b && b.ok) ? bestBuyRate(b.offers || []) : null;
+      const sellBest = (s && s.ok) ? bestSellRate(s.offers || []) : null;
+      buyEl.textContent  = b.ok ? fmt(bestBuy(b.offers||[])) : "—";
+      sellEl.textContent = s.ok ? fmt(bestSell(s.offers||[])) : "—";
+
+      if (buyRateEl)  buyRateEl.textContent  = (buyBest  == null) ? "—" : fmtRate(buyBest);
+      if (sellRateEl) sellRateEl.textContent = (sellBest == null) ? "—" : fmtRate(sellBest);
+
+      if (updatedEl){
+        const d = new Date();
+        updatedEl.textContent = "Обновлено: " + d.toLocaleString("ru-RU");
+      }
+      updatedEl.textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
+    }catch(e){
+      // Не ломаем интерфейс — просто показываем, что обновление не получилось
+      if (updatedEl){
+        const d = new Date();
+        updatedEl.textContent = "Обновлено: " + d.toLocaleString("ru-RU");
+      }
+      updatedEl.textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
+    }
+  }
+
+  loadRatesFromOrders();
+  setInterval(loadRatesFromOrders, 10000);
+  loadRates();
+  setInterval(loadRates, 10000);
+
+  /* видео на мобиле */
+  const video = document.getElementById("bgVideo");
+  const overlay = document.getElementById("playOverlay");
+  const btn = document.getElementById("playBtn");
+
+  function isMobile(){
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  }
+
+  setTimeout(async ()=>{
+    try{ await video.play(); }
+    catch{ if(isMobile()) overlay.style.display="block"; }
+  },200);
+
+  btn.onclick = async ()=>{
+    await video.play();
+    overlay.style.display="none";
+  };
+</script>
 </body>
 </html>

@@ -24,11 +24,19 @@
     }
 
     html,body{ height:100%; }
+
+    /* ✅ FIX SCROLL ON MOBILE:
+       Было overflow:hidden; из-за этого на телефоне нельзя скроллить вниз.
+       Делаем вертикальный скролл, фон/оверлей остаются как были. */
     body{
       margin:0;
       color:var(--text);
       background:#071022;
-      overflow:hidden;
+
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
     .overlay{
@@ -41,8 +49,12 @@
       pointer-events:none;
     }
 
+    /* ✅ FIX:
+       min-height:100svh + центрирование иногда "запирает" контент на iOS.
+       Оставляем визуально центр, но разрешаем странице расти и скроллиться. */
     .page{
-      min-height:100svh;
+      min-height:100vh;
+      min-height:100dvh;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -52,6 +64,8 @@
         calc(22px + env(safe-area-inset-bottom))
         16px;
       box-sizing:border-box;
+
+      width:100%;
     }
 
     .wrap{ width:100%; max-width:980px; }

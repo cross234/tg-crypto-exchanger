@@ -63,7 +63,6 @@
     }
     .tab.active{ background: rgba(37,99,235,.35); border-color: rgba(37,99,235,.55); }
 
-    /* TX HASH inline UI */
     .txWrap{
       margin-top:8px;
       display:flex;
@@ -139,7 +138,6 @@
 
       <div class="divider"></div>
 
-      <!-- BUY FORM -->
       <div id="buyBlock">
         <div class="row">
           <div style="flex:1; min-width:160px;">
@@ -194,7 +192,6 @@
         </div>
       </div>
 
-      <!-- SELL FORM -->
       <div id="sellBlock" style="display:none;">
         <div class="row">
           <div style="flex:1; min-width:150px;">
@@ -311,12 +308,9 @@
 
   async function api(path, opts = {}) {
     const headers = Object.assign({}, opts.headers || {});
-
-    // 1) Telegram mini app auth (preferred)
     const initData = getInitData();
     if (initData) headers["X-Tg-Init-Data"] = initData;
 
-    // 2) Legacy token (fallback)
     const t = getToken();
     if (t) headers["X-Admin-Token"] = t;
 
@@ -338,11 +332,11 @@
   }
 
   function walletRu(t){
-    const x = String(t||"").toUpperCase();
+    const x = String(t||"").toUpperCase().replace(/\s+/g,"_");
     if (x === "BEP20") return "BEP20";
     if (x === "TRC20") return "TRC20";
-    if (x === "HTX_UID") return "HTX UID";
-    if (x === "BYBIT_UID") return "Bybit UID";
+    if (x === "HTX_UID" || x === "HTX") return "HTX UID";
+    if (x === "BYBIT_UID" || x === "BYBIT") return "Bybit UID";
     return x || "";
   }
 
@@ -373,7 +367,6 @@
       cfgStatus.className = "status bad";
     }
   }
-
   document.getElementById("saveConfig").onclick = saveConfig;
 
   // ===== BUY =====
@@ -410,8 +403,12 @@
 
   function renderCheckAndWallet(o){
     const ci = o.checkInfo || null;
-    const wType = o.walletType || (o.wallet && o.wallet.type) || "";
-    const wVal  = o.walletValue || (o.wallet && o.wallet.value) || "";
+
+    // СУПЕР-надежно достаем кошелек (только это менял)
+    const wObj = o.wallet || null;
+    const wType = (o.walletType || (wObj && wObj.type) || o.wallet_type || o.network || "").toString();
+    const wVal  = (o.walletValue || (wObj && wObj.value) || o.wallet_value || o.address || o.uid || "").toString();
+
     const txh   = (o.txHash && String(o.txHash).trim()) ? String(o.txHash).trim() : "";
 
     const checkPart = ci
@@ -483,7 +480,6 @@
         };
         td.appendChild(freezeBtn);
 
-        // Кнопки подтверждения для ON_CHECK
         if (st === "ON_CHECK") {
           const okBtn = document.createElement("button");
           okBtn.className = "btn ok";
@@ -506,7 +502,6 @@
           td.appendChild(failBtn);
         }
 
-        // TX HASH — только для SUCCESS (и если его ещё нет)
         const hasTx = (o.txHash && String(o.txHash).trim());
         if (st === "SUCCESS" && !hasTx){
           const wrap = document.createElement("div");
@@ -642,14 +637,12 @@
   document.getElementById("addSell").onclick = addSell;
   document.getElementById("refreshSell").onclick = loadSell;
 
-  // init
   async function checkAuth(){
     try{
       setAuthStatus("Проверяю доступ…");
       const headers = {};
       const initData = getInitData();
       if (initData) headers["X-Tg-Init-Data"] = initData;
-
       const t = getToken();
       if (t) headers["X-Admin-Token"] = t;
 
@@ -659,17 +652,7 @@
       try{ j = JSON.parse(text); }catch{ throw new Error("Ответ не JSON: " + text.slice(0,200)); }
       if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      if (j.via === "telegram"){
-        const u = j.tg && j.tg.user ? j.tg.user : null;
-        const name = u ? ([u.first_name, u.last_name].filter(Boolean).join(" ") || (u.username ? "@"+u.username : "") || ("id " + u.id)) : "OK";
-        setAuthStatus("Доступ: Telegram ✅ (" + name + ")", "ok");
-
-        tokenInput.disabled = true;
-        document.getElementById("saveToken").disabled = true;
-        document.getElementById("clearToken").disabled = false;
-      } else {
-        setAuthStatus("Доступ: токен ✅", "ok");
-      }
+      setAuthStatus("Доступ: токен ✅", "ok");
     }catch(e){
       setAuthStatus("Нет доступа: " + e.message, "bad");
     }

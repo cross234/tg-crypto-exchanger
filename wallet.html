@@ -32,7 +32,6 @@
       overflow:hidden;
     }
 
-    /* фон как в твоих страницах */
     .overlay{
       position:fixed;
       inset:0;
@@ -345,7 +344,7 @@
             </div>
 
             <div class="options">
-              <div class="opt" data-type="BEP20" id="optBEP20">
+              <div class="opt" data-type="BEP20">
                 <div class="optTop">
                   <div class="optName">BEP20</div>
                   <div class="tag">Комиссия 1 USDT</div>
@@ -353,7 +352,7 @@
                 <p class="optDesc">Сеть BSC (BEP20). Укажи BEP20 адрес кошелька.</p>
               </div>
 
-              <div class="opt" data-type="TRC20" id="optTRC20">
+              <div class="opt" data-type="TRC20">
                 <div class="optTop">
                   <div class="optName">TRC20</div>
                   <div class="tag">Комиссия 2 USDT</div>
@@ -361,7 +360,7 @@
                 <p class="optDesc">Сеть Tron (TRC20). Укажи TRC20 адрес кошелька.</p>
               </div>
 
-              <div class="opt" data-type="HTX_UID" id="optHTX">
+              <div class="opt" data-type="HTX_UID">
                 <div class="optTop">
                   <div class="optName">HTX UID</div>
                   <div class="tag zero">0 комиссия</div>
@@ -369,7 +368,7 @@
                 <p class="optDesc">Без комиссии. Укажи UID аккаунта HTX.</p>
               </div>
 
-              <div class="opt" data-type="BYBIT_UID" id="optBYBIT">
+              <div class="opt" data-type="BYBIT_UID">
                 <div class="optTop">
                   <div class="optName">Bybit UID</div>
                   <div class="tag zero">0 комиссия</div>
@@ -403,11 +402,18 @@
 
   const p = new URLSearchParams(location.search);
 
-  // ✅ поддерживаем оба варианта (на всякий случай)
+  // ✅ id почти всегда приходит нормально
   const id = (p.get("id") || "").trim();
-  const reserveId = (p.get("reserveId") || p.get("reservedId") || "").trim();
 
-  // параметры которые надо сохранить при переходе дальше
+  // ✅ reserveId может приходить под разными именами — забираем всё что похоже
+  const reserveId =
+    (p.get("reserveId") || "").trim() ||
+    (p.get("reservedId") || "").trim() ||
+    (p.get("reserveid") || "").trim() ||
+    (p.get("reserve") || "").trim() ||
+    (p.get("rid") || "").trim();
+
+  // параметры которые пробрасываем дальше
   const passthroughKeys = ["amountRub", "rate", "method"];
 
   document.getElementById("oid").textContent = id || "—";
@@ -416,7 +422,7 @@
   // ===== Timer 5:00 =====
   const timerEl = document.getElementById("timer");
   const pill = document.getElementById("timerPill");
-  let left = 5 * 60; // seconds
+  let left = 5 * 60;
 
   function renderTimer(){
     const m = String(Math.floor(left / 60)).padStart(2,"0");
@@ -437,7 +443,7 @@
           body: JSON.stringify({ id, reserveId })
         });
       }
-    }catch(e){ /* игнор */ }
+    }catch(e){}
     location.href = goTo || "buy.html";
   }
 
@@ -483,18 +489,17 @@
     input.focus();
   }
 
-  opts.forEach(o => {
-    o.addEventListener("click", () => setActive(o.dataset.type));
-  });
+  opts.forEach(o => o.addEventListener("click", () => setActive(o.dataset.type)));
 
   cancelBtn.onclick = () => doCancel("buy.html");
 
   function buildNextUrl(){
     const next = new URL("crossflag-buy-order.html", location.href);
-    next.searchParams.set("id", id);
-    next.searchParams.set("reserveId", reserveId); // ✅ строго reserveId
 
-    // пробрасываем что уже есть в query
+    // ✅ всегда пробрасываем нормальные имена
+    next.searchParams.set("id", id);
+    next.searchParams.set("reserveId", reserveId);
+
     for (const k of passthroughKeys){
       const v = p.get(k);
       if (v != null && String(v).length) next.searchParams.set(k, v);
@@ -511,16 +516,7 @@
       return "";
     }
 
-    // для адресов оставим мягкую проверку
-    if (type === "BEP20"){
-      if (v.length < 10) return "Слишком короткий адрес";
-      return "";
-    }
-    if (type === "TRC20"){
-      if (v.length < 10) return "Слишком короткий адрес";
-      return "";
-    }
-
+    if (v.length < 10) return "Слишком короткое значение";
     return "";
   }
 
@@ -534,6 +530,7 @@
         alert("Выбери сеть/биржу");
         return;
       }
+
       const walletValue = input.value.trim();
       const err = validate(selectedType, walletValue);
       if (err){
@@ -544,13 +541,12 @@
       saveBtn.disabled = true;
       saveBtn.textContent = "Сохраняю…";
 
-      // ✅ ВАЖНО: отправляем reserveId (не reservedId)
       const res = await fetch(WORKER_BASE + "/api/public/set_wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
-          reserveId,          // ✅ правильное поле
+          reserveId,            // ✅ строго reserveId
           walletType: selectedType,
           walletValue
         })
@@ -561,7 +557,6 @@
       try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
       if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      // переход к реквизитам
       location.href = buildNextUrl();
 
     } catch(e){
@@ -571,12 +566,10 @@
     }
   };
 
-  // если человек случайно открыл страницу без параметров — сразу в стакан
+  // Если reserveId реально нет — просто показываем экран, но "Сохранить" блокируем
   if (!id || !reserveId){
-    // не делаем авто-редирект мгновенно, чтобы он успел увидеть,
-    // но показываем нормальную ошибку без лишних запросов
     form.classList.add("show");
-    label.textContent = "Ошибка";
+    label.textContent = "Ошибка: нет Reserve ID";
     input.value = "";
     input.placeholder = "Открой страницу из заявки заново";
     saveBtn.disabled = true;

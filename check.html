@@ -3,286 +3,282 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Статус заявки</title>
+  <title>Crossflag Exchange · Статус заявки</title>
+
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1a30;
-      --border:#223255;
       --text:#e9f0ff;
       --muted:#9fb0d4;
+
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+
       --ok:#22c55e;
       --bad:#ef4444;
       --warn:#f59e0b;
+
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
     html,body{ height:100%; }
     body{
       margin:0;
-      background:var(--bg);
       color:var(--text);
-      overflow-x:hidden;
+      background:#071022;
+      overflow-x:hidden; /* ✅ чтобы ничего не тянуло страницу вбок */
     }
 
-    .wrap{
-      max-width:720px;
-      margin:0 auto;
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
       padding:
         calc(14px + env(safe-area-inset-top))
-        calc(14px + env(safe-area-inset-right))
+        14px
         calc(18px + env(safe-area-inset-bottom))
-        calc(14px + env(safe-area-inset-left));
+        14px;
       box-sizing:border-box;
     }
 
-    .top{
+    .wrap{ width:100%; max-width:520px; }
+
+    /* ===== верхняя шапка как в мини-аппе ===== */
+    .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
       margin-bottom:12px;
-      flex-wrap:wrap;
-    }
-    .title{ font-size:16px; font-weight:950; }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
-      box-sizing:border-box;
     }
 
-    .row{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .box{
-      flex:1 1 0;
-      min-width:220px;
-      background: rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:14px;
-      padding:12px;
-      box-sizing:border-box;
-      min-height:64px;
-    }
-
-    .label{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:900;
-      margin-bottom:6px;
-    }
-
-    .value{
-      font-size:14px;
-      font-weight:950;
-      word-break:break-word;
-      overflow-wrap:anywhere;
-    }
-
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      color:#cfe0ff;
-    }
-
-    .statusBig{
-      margin-top:12px;
-      padding:16px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      font-size:16px;
+    .h1{
       font-weight:1000;
-      box-sizing:border-box;
-    }
-    .statusBig.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
-    .statusBig.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
-    .statusBig.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); color:#fff; }
-
-    .hint{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
+      font-size:18px;
+      line-height:1.15;
     }
 
     .btn{
       border:0;
-      border-radius:12px;
-      padding:10px 14px;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:1000;
+      color:#fff;
       cursor:pointer;
-      font-weight:950;
-      background: rgba(255,255,255,.10);
-      color: var(--text);
+      background: rgba(45, 91, 255, .85);
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
       white-space:nowrap;
     }
-
-    .btnPrimary{
-      background: rgba(45, 91, 255, .85);
-      color:#fff;
-      box-shadow: 0 12px 26px rgba(0,0,0,.30);
+    .btn.secondary{
+      background: rgba(255,255,255,.10);
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
     }
 
-    .btnRow{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-sizing:border-box;
+    }
+
+    /* ✅ ДВА ПОЛЯ: на десктопе рядом, на телефоне — столбиком */
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+
+    .field{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding:12px;
+      box-sizing:border-box;
+      min-width:0; /* ✅ важно: позволяет тексту переноситься */
+    }
+
+    .label{
+      font-size:12px;
+      font-weight:950;
+      color: rgba(233,240,255,.70);
+      margin-bottom:6px;
+    }
+
+    .value{
+      font-weight:950;
+      font-size:13px;
+      color: rgba(233,240,255,.95);
+
+      /* ✅ чтобы ID/Reserve не уезжали за экран */
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+
+    .statusBox{
       margin-top:12px;
-      flex-wrap:wrap;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding:14px;
+      box-sizing:border-box;
     }
 
-    /* ✅ Мобилка: 2 верхние плашки строго столбиком и без "вылаза" */
-    @media (max-width: 430px){
-      .wrap{
-        padding:
-          calc(12px + env(safe-area-inset-top))
-          calc(12px + env(safe-area-inset-right))
-          calc(16px + env(safe-area-inset-bottom))
-          calc(12px + env(safe-area-inset-left));
-      }
-      .row{ flex-direction:column; }
-      .box{
-        min-width:0;
-        width:100%;
-      }
-      .btnRow{
-        justify-content:stretch;
-      }
-      .btn, .btnPrimary{
-        width:100%;
-        text-align:center;
-      }
+    .statusTitle{
+      font-weight:1000;
+      font-size:16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.15);
+      flex:0 0 auto;
+    }
+    .dot.ok{ background: var(--ok); box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .dot.bad{ background: var(--bad); box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
+
+    .statusText{
+      margin-top:8px;
+      color: rgba(233,240,255,.80);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .successActions{
+      margin-top:12px;
+      display:none; /* показываем только при SUCCESS */
+    }
+
+    .successActions .btn{
+      width:100%;
+      text-align:center;
+    }
+
+    /* ✅ мобилка: в один столбик */
+    @media (max-width: 420px){
+      .grid2{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="title">Статус заявки</div>
-      <button class="btn" id="refreshBtn" type="button">Обновить</button>
-    </div>
+  <div class="page">
+    <div class="wrap">
 
-    <div class="card">
-      <div class="row">
-        <div class="box">
-          <div class="label">ID заявки</div>
-          <div class="value mono" id="oid">—</div>
+      <div class="topbar">
+        <div class="h1">Crossflag Exchange ·<br>Статус заявки</div>
+        <button class="btn" id="refreshBtn" type="button">Обновить</button>
+      </div>
+
+      <div class="card">
+        <div class="grid2">
+          <div class="field">
+            <div class="label">ID заявки</div>
+            <div class="value" id="orderId">—</div>
+          </div>
+          <div class="field">
+            <div class="label">Reserve ID</div>
+            <div class="value" id="reserveId">—</div>
+          </div>
         </div>
-        <div class="box">
-          <div class="label">Reserve ID</div>
-          <div class="value mono" id="rid">—</div>
+
+        <div class="statusBox">
+          <div class="statusTitle">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusTitle">Загружаю статус…</span>
+          </div>
+          <div class="statusText" id="statusHint">Подожди пару секунд.</div>
+        </div>
+
+        <!-- ✅ кнопка только при SUCCESS -->
+        <div class="successActions" id="successActions">
+          <button class="btn secondary" id="homeBtn" type="button">На главную страницу</button>
         </div>
       </div>
 
-      <div class="statusBig warn" id="statusBox">Загружаю статус…</div>
-      <div class="hint" id="hint">
-        Страница обновляет статус автоматически. Если администратор поменяет статус в админке — он появится тут.
-      </div>
-
-      <!-- ✅ появляется только при SUCCESS -->
-      <div class="btnRow" id="successActions" style="display:none;">
-        <button class="btn btnPrimary" id="homeBtn" type="button">На главную страницу</button>
-      </div>
     </div>
   </div>
 
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const p = new URLSearchParams(location.search);
-  const id = p.get("id") || "";
-  const reserveId = p.get("reserveId") || "";
+  const qs = new URLSearchParams(location.search);
+  const id = (qs.get("id") || "").trim();
+  const reserveId = (qs.get("reserveId") || "").trim();
 
-  const oidEl = document.getElementById("oid");
-  const ridEl = document.getElementById("rid");
-  const statusBox = document.getElementById("statusBox");
-  const hintEl = document.getElementById("hint");
+  const orderIdEl = document.getElementById("orderId");
+  const reserveIdEl = document.getElementById("reserveId");
+  const statusTitleEl = document.getElementById("statusTitle");
+  const statusHintEl = document.getElementById("statusHint");
+  const statusDot = document.getElementById("statusDot");
   const successActions = document.getElementById("successActions");
-  const homeBtn = document.getElementById("homeBtn");
 
-  oidEl.textContent = id || "—";
-  ridEl.textContent = reserveId || "—";
+  orderIdEl.textContent = id || "—";
+  reserveIdEl.textContent = reserveId || "—";
 
-  homeBtn.onclick = () => {
-    // на GitHub Pages корректнее без слеша
+  document.getElementById("homeBtn").onclick = () => {
     location.href = "index.html";
   };
 
-  function setBox(text, kind){
-    statusBox.textContent = text;
-    statusBox.classList.remove("ok","bad","warn");
-    statusBox.classList.add(kind || "warn");
+  function setStatus(kind, title, hint){
+    statusDot.classList.remove("ok","bad");
+    if (kind === "ok") statusDot.classList.add("ok");
+    if (kind === "bad") statusDot.classList.add("bad");
+
+    statusTitleEl.textContent = title;
+    statusHintEl.textContent = hint;
+
+    // ✅ показываем кнопку "На главную" только при SUCCESS
+    if (kind === "ok" && title.includes("Успешно")) {
+      successActions.style.display = "block";
+    } else {
+      successActions.style.display = "none";
+    }
   }
 
-  function statusText(s){
-    const m = {
-      NEW: "Активна",
-      PAID: "На оплате",
-      ON_CHECK: "На проверке",
-      SUCCESS: "Успешно ✅",
-      FAILED: "Неуспешно ❌"
-    };
-    return m[s] || s || "—";
-  }
+  function mapStatus(st){
+    const s = String(st || "NEW").toUpperCase();
 
-  function statusKind(s){
-    if (s === "SUCCESS") return "ok";
-    if (s === "FAILED") return "bad";
-    return "warn";
+    // Подстройка под твои статусы в Worker:
+    // NEW, PAID, ON_CHECK, SUCCESS, FAILED
+    if (s === "SUCCESS") return { kind:"ok",  title:"Успешно ✅", hint:"USDT успешно отправлен на ваш кошелёк." };
+    if (s === "FAILED")  return { kind:"bad", title:"Ошибка ❌",  hint:"Заявка отклонена. Если это ошибка — напиши в поддержку." };
+    if (s === "ON_CHECK")return { kind:"warn",title:"На проверке", hint:"Мы проверяем подтверждение оплаты." };
+    if (s === "PAID")    return { kind:"warn",title:"Оплачено",    hint:"Оплата отмечена. Ожидай проверку / подтверждение." };
+    return { kind:"warn", title:"В процессе", hint:"Заявка активна. Ожидай дальнейших действий." };
   }
 
   async function loadStatus(){
     if (!id || !reserveId){
-      setBox("Ошибка: нет id или reserveId", "bad");
-      hintEl.textContent = "Вернись на страницу оплаты и повтори переход.";
-      successActions.style.display = "none";
+      setStatus("bad","Ошибка","Нет id или reserveId в ссылке. Вернись назад и открой статус заново.");
       return;
     }
 
     try{
-      setBox("Обновляю статус…", "warn");
+      setStatus("warn","Обновляю…","Подожди пару секунд.");
 
-      const res = await fetch(
-        WORKER_BASE + "/api/public/order_status?id=" + encodeURIComponent(id) +
-        "&reserveId=" + encodeURIComponent(reserveId),
-        { cache: "no-store" }
-      );
+      const url = WORKER_BASE + "/api/public/order_status?id=" + encodeURIComponent(id) +
+        "&reserveId=" + encodeURIComponent(reserveId);
 
-      const text = await res.text();
-      let j;
-      try { j = JSON.parse(text); } catch { throw new Error("Ответ не JSON: " + text.slice(0, 200)); }
-      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+      const res = await fetch(url, { cache:"no-store" });
+      const j = await res.json().catch(() => null);
 
-      const st = String(j.status || "NEW").toUpperCase();
-      setBox("Статус: " + statusText(st), statusKind(st));
-
-      if (st === "ON_CHECK"){
-        hintEl.textContent = "Заявка на проверке. Ожидай подтверждения.";
-        successActions.style.display = "none";
-      } else if (st === "SUCCESS"){
-        hintEl.textContent = "Оплата подтверждена. Спасибо!";
-        successActions.style.display = "flex";
-      } else if (st === "FAILED"){
-        hintEl.textContent = "Оплата не подтверждена. Если это ошибка — свяжись с поддержкой.";
-        successActions.style.display = "none";
-      } else if (st === "PAID"){
-        hintEl.textContent = "Оплата отмечена. Ожидай проверки / загрузки подтверждений.";
-        successActions.style.display = "none";
-      } else {
-        hintEl.textContent = "Статус обновляется автоматически.";
-        successActions.style.display = "none";
+      if (!res.ok || !j || !j.ok){
+        const msg = (j && j.error) ? j.error : ("HTTP " + res.status);
+        throw new Error(msg);
       }
-    } catch(e){
-      setBox("Ошибка: " + (e.message || e), "bad");
-      hintEl.textContent = "Если ошибка повторяется — попробуй позже.";
-      successActions.style.display = "none";
+
+      const mapped = mapStatus(j.status);
+      setStatus(mapped.kind, mapped.title, mapped.hint);
+    } catch (e){
+      setStatus("bad","Ошибка", String(e.message || e));
     }
   }
 

@@ -26,6 +26,7 @@
 
     body{
       margin:0;
+      background: radial-gradient(1200px 700px at 50% -260px declares, #1a2a55, #070b18);
       background: radial-gradient(1200px 700px at 50% -260px, #1a2a55, #070b18);
       color:var(--text);
       overflow-x:hidden;
@@ -447,15 +448,14 @@
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  // параметры, чтобы потом перейти дальше на оплату/реквизиты
   const p = new URLSearchParams(location.search);
   const id = (p.get("id") || "").trim();
   const reserveId = (p.get("reserveId") || "").trim();
 
-  // куда идти дальше (по умолчанию buy-order.html)
-  const nextPage = (p.get("next") || "buy-order.html").trim();
+  // ✅ страница с реквизитами по умолчанию
+  const nextPage = (p.get("next") || "crossflag-buy-order.html").trim();
 
-  // протаскиваем остальное как есть (amountRub, rate, method и т.д.)
+  // Протаскиваем всё как есть дальше (id/reserveId/amountRub/rate/method и т.д.)
   const passthrough = {};
   for (const [k,v] of p.entries()){
     if (k === "next") continue;
@@ -498,9 +498,8 @@
     return mm + ":" + ss;
   }
 
-  async function doCancel(auto=false){
+  async function doCancel(){
     if (!id || !reserveId){
-      // просто назад в стакан
       location.href = "buy.html";
       return;
     }
@@ -518,19 +517,19 @@
   function tick(){
     const left = deadline - Date.now();
     timeLeftEl.textContent = fmt(left);
-    if (left <= 0){
-      doCancel(true);
-    }
+    if (left <= 0) doCancel();
   }
   tick();
   setInterval(tick, 250);
 
-  cancelBtn.onclick = () => doCancel(false);
+  cancelBtn.onclick = doCancel;
 
   // === выбор сети/биржи ===
   let selected = "";
+
   function setSelected(val){
     selected = val;
+
     for (const el of choices.querySelectorAll(".choice")){
       const v = el.querySelector("input")?.value;
       el.classList.toggle("active", v === val);
@@ -612,9 +611,10 @@
         throw new Error((j && j.error) ? j.error : ("HTTP " + res.status));
       }
 
-      // идём дальше на оплату (buy-order / реквизиты)
+      // очистим дедлайн, чтобы таймер не мешал следующему шагу
+      try{ localStorage.removeItem(tKey); }catch(e){}
+
       const np = new URLSearchParams(passthrough);
-      // next не передаём дальше
       location.href = nextPage + "?" + np.toString();
     }catch(e){
       alert("Ошибка: " + (e.message || e));

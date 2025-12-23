@@ -25,7 +25,12 @@
       margin:0;
       color:var(--text);
       background:#071022;
-      overflow:hidden;
+
+      /* ✅ FIX: даём странице скролл на мобиле */
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
     .overlay{
@@ -39,16 +44,25 @@
     }
 
     .page{
-      min-height:100svh;
+      /* ✅ FIX: корректная высота на мобилке */
+      min-height:100vh;
+      min-height:100dvh;
+
       display:flex;
       align-items:center;
       justify-content:center;
+
       padding:
         calc(16px + env(safe-area-inset-top))
         16px
         calc(22px + env(safe-area-inset-bottom))
         16px;
       box-sizing:border-box;
+
+      /* ✅ FIX: если контента больше экрана — можно скроллить */
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
     .wrap{ width:100%; max-width:720px; }

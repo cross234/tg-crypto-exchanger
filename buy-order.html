@@ -19,15 +19,15 @@
 
     html,body{ height:100%; }
     body{
-  margin:0;
-  color:var(--text);
-  background:#071022;
+      margin:0;
+      color:var(--text);
+      background:#071022;
 
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
 
     .overlay{
       position:fixed;
@@ -200,7 +200,7 @@
         <label class="payRow">
           <div class="payLeft">
             <div class="payName">Bybit</div>
-            <div class="payHint">В разработке</div>
+            <div class="payHint">Оплата через Bybit</div>
           </div>
           <input type="radio" name="pay" value="BYBIT" />
         </label>
@@ -236,39 +236,73 @@
     return document.querySelector('input[name="pay"]:checked').value;
   }
 
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.className = "status " + (kind || "warn");
+  }
+
+  async function reserve() {
+    const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ id })
+    });
+    const j = await res.json();
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
+  async function chooseRoute(reserveId, route) {
+    const res = await fetch(WORKER_BASE + "/api/public/choose_route", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ id, reserveId, route })
+    });
+    const t = await res.text();
+    let j;
+    try { j = JSON.parse(t); } catch { throw new Error("Ответ не JSON: " + t.slice(0,200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
   nextBtn.onclick = async () => {
-    const pay = getPay();
-
-    // ✅ HTX — редирект
-    if (pay === "HTX"){
-      location.href = "https://www.htx.com/en-us/fiat-crypto/trader/?id=504959890&invite_code=2tbw9223";
-      return;
-    }
-
-    // ❌ BYBIT — заглушка
-    if (pay === "BYBIT"){
-      statusEl.textContent = "Bybit пока в разработке. Выбери Crossflag.";
-      statusEl.className = "status bad";
-      return;
-    }
-
-    // ✅ Crossflag — бронь
     try{
-      const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ id })
-      });
+      if (!id) { setStatus("Ошибка: нет id", "bad"); return; }
 
-      const j = await res.json();
-      if (!j.ok) throw new Error(j.error);
+      nextBtn.disabled = true;
+      setStatus("Подготовка…", "warn");
 
-      location.href = "./wallet.html?id=" + id + "&reserveId=" + j.reserveId +
-        "&amountRub=" + amountRub + "&rate=" + rate;
+      const pay = getPay();
+
+      // ✅ Crossflag — как было (wallet.html)
+      if (pay === "CROSSFLAG"){
+        const j = await reserve();
+        location.href = "./wallet.html?id=" + encodeURIComponent(id) +
+          "&reserveId=" + encodeURIComponent(j.reserveId) +
+          "&amountRub=" + encodeURIComponent(String(amountRub)) +
+          "&rate=" + encodeURIComponent(String(rate));
+        return;
+      }
+
+      // ✅ HTX/Bybit — резерв + статус ожидания + новая страница ожидания
+      if (pay === "HTX" || pay === "BYBIT"){
+        const j = await reserve();
+        await chooseRoute(j.reserveId, pay);
+
+        const page = (pay === "HTX") ? "htx-waiting.html" : "bybit-waiting.html";
+        location.href = "./" + page +
+          "?id=" + encodeURIComponent(id) +
+          "&reserveId=" + encodeURIComponent(j.reserveId) +
+          "&api=" + encodeURIComponent(WORKER_BASE);
+        return;
+      }
+
+      setStatus("Неизвестный способ оплаты", "bad");
+      nextBtn.disabled = false;
 
     }catch(e){
-      statusEl.textContent = "Ошибка: " + e.message;
-      statusEl.className = "status bad";
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+      nextBtn.disabled = false;
     }
   };
 </script>

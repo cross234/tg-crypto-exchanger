@@ -1,16 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Crossflag Exchange · Выбор оплаты</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Crossflag — Buy Order</title>
   <style>
     :root{
-      --text:#e9f0ff;
-      --muted:#9fb0d4;
-      --card: rgba(15, 26, 48, 0.52);
-      --border: rgba(255,255,255,.12);
+      --bg:#071022;
+      --card:#0b1633;
+      --card2:#0c1b3d;
+      --text:#e8f0ff;
+      --muted:rgba(232,240,255,.7);
+      --muted2:rgba(232,240,255,.55);
+      --accent:#2d5bff;
+      --accent2:#1f3fb3;
+      --danger:#ef4444;
+      --border:rgba(255,255,255,.12);
       --ok:#22c55e;
       --bad:#ef4444;
       --warn:#f59e0b;
@@ -18,255 +23,356 @@
     }
 
     html,body{ height:100%; }
+
+    /* ✅ FIX SCROLL ON MOBILE:
+       Было overflow:hidden; из-за этого в Telegram mini app нельзя скроллить вниз. */
     body{
       margin:0;
       color:var(--text);
-      background:#071022;
-      overflow:hidden;
+      background:var(--bg);
+
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
-    .overlay{
-      position:fixed;
-      inset:0;
-      z-index:-1;
-      background:
-        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
-        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
-      pointer-events:none;
+    /* ===== layout ===== */
+    .wrap{
+      min-height:100%;
+      padding:24px 16px 36px;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      max-width:520px;
+      margin:0 auto;
     }
 
-    .page{
-      min-height:100svh;
+    .topRow{
       display:flex;
       align-items:center;
-      justify-content:center;
-      padding:
-        calc(16px + env(safe-area-inset-top))
-        16px
-        calc(22px + env(safe-area-inset-bottom))
-        16px;
-      box-sizing:border-box;
+      gap:10px;
     }
 
-    .wrap{ width:100%; max-width:720px; }
+    .backBtn{
+      width:44px; height:44px;
+      display:grid; place-items:center;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      cursor:pointer;
+      user-select:none;
+    }
+    .backBtn:active{ transform:scale(.98); }
+
+    .titleBlock{ flex:1; }
+    .title{
+      font-size:18px;
+      font-weight:700;
+      line-height:1.2;
+    }
+    .sub{
+      margin-top:3px;
+      font-size:12px;
+      color:var(--muted);
+    }
 
     .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
+      background:linear-gradient(180deg, var(--card), var(--card2));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px 14px;
+      box-shadow:0 18px 45px rgba(0,0,0,.35);
     }
-
-    .top{
+    .row{
       display:flex;
-      align-items:center;
       justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-    }
-
-    .title{
-      font-weight:1000;
-      font-size:16px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
+      align-items:flex-start;
       gap:12px;
-      margin-bottom:12px;
+      padding:9px 0;
+      border-bottom:1px solid rgba(255,255,255,.07);
     }
-    @media(max-width:640px){
-      .grid{ grid-template-columns:1fr; }
+    .row:last-child{ border-bottom:none; padding-bottom:4px; }
+
+    .k{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .v{
+      font-size:14px;
+      font-weight:650;
+      text-align:right;
+      word-break:break-word;
     }
 
-    .box{
-      padding:12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-    }
-    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .value{ font-weight:1000; font-size:18px; word-break:break-word; }
-
-    .section{
-      padding:12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      margin-bottom:12px;
-    }
-    .sectionTitle{
-      font-weight:1000;
-      margin-bottom:10px;
-    }
-
-    .payRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      margin-bottom:10px;
-      cursor:pointer;
-    }
-    .payLeft{ display:flex; flex-direction:column; }
-    .payName{ font-weight:1000; }
-    .payHint{ font-size:12px; color:var(--muted); }
-
-    .status{
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
-      font-weight:900;
-      font-size:13px;
-    }
-    .status.ok{ background: rgba(34,197,94,.10); }
-    .status.bad{ background: rgba(239,68,68,.10); }
-    .status.warn{ background: rgba(245,158,11,.10); }
-
-    .actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:10px;
+    .hint{
       margin-top:10px;
+      font-size:12px;
+      color:var(--muted2);
+      line-height:1.35;
     }
+
     .btn{
-      border:0;
-      border-radius:14px;
-      padding:12px 16px;
-      font-weight:1000;
+      width:100%;
+      border:none;
+      border-radius:16px;
+      padding:14px 16px;
+      font-weight:800;
+      font-size:15px;
       cursor:pointer;
+      color:white;
+      background:linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow:0 14px 30px rgba(45,91,255,.25);
     }
-    .btn.cancel{
+    .btn:active{ transform:scale(.99); }
+
+    .btn2{
+      width:100%;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:#fff;
+      border-radius:16px;
+      padding:13px 16px;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      color:var(--text);
+      background:rgba(255,255,255,.06);
     }
-    .btn.next{
-      background: linear-gradient(180deg, #2d5bff, #1f3fb3);
-      color:#fff;
-      min-width:180px;
+    .btn2:active{ transform:scale(.99); }
+
+    .danger{
+      background:rgba(239,68,68,.10);
+      border:1px solid rgba(239,68,68,.35);
+      color:#ffd9d9;
+    }
+
+    .divider{
+      height:1px;
+      background:rgba(255,255,255,.09);
+      margin:6px 0;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      color:var(--muted);
+      width:max-content;
+    }
+
+    .statusDot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--warn);
+      box-shadow:0 0 0 4px rgba(245,158,11,.12);
+      flex:0 0 auto;
+    }
+
+    .copy{
+      margin-left:8px;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .copy:active{ transform:scale(.98); }
+
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* фоновые блики (как было) */
+    .bgGlow{
+      position:fixed;
+      inset:-30px;
+      pointer-events:none;
+      z-index:-1;
+      background:
+        radial-gradient(1000px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        radial-gradient(700px 480px at 20% 80%, rgba(34,197,94,.09), rgba(0,0,0,0) 60%),
+        radial-gradient(700px 480px at 80% 85%, rgba(245,158,11,.08), rgba(0,0,0,0) 60%);
+      filter: blur(0px);
     }
   </style>
 </head>
-
 <body>
-<div class="overlay"></div>
+  <div class="bgGlow"></div>
 
-<div class="page">
   <div class="wrap">
-    <div class="card">
-      <div class="top">
-        <div class="title">Crossflag Exchange · Купить</div>
-      </div>
-
-      <div class="grid">
-        <div class="box"><div class="label">ID заявки</div><div class="value" id="orderId">—</div></div>
-        <div class="box"><div class="label">Сумма (RUB)</div><div class="value" id="amountRub">—</div></div>
-        <div class="box"><div class="label">Курс</div><div class="value" id="rate">—</div></div>
-        <div class="box"><div class="label">Получите</div><div class="value" id="usdt">—</div></div>
-      </div>
-
-      <div class="section">
-        <div class="sectionTitle">Способ оплаты</div>
-
-        <label class="payRow">
-          <div class="payLeft">
-            <div class="payName">Crossflag</div>
-            <div class="payHint">Оплата на наши реквизиты</div>
-          </div>
-          <input type="radio" name="pay" value="CROSSFLAG" checked />
-        </label>
-
-        <label class="payRow">
-          <div class="payLeft">
-            <div class="payName">HTX</div>
-            <div class="payHint">Оплата через HTX</div>
-          </div>
-          <input type="radio" name="pay" value="HTX" />
-        </label>
-
-        <label class="payRow">
-          <div class="payLeft">
-            <div class="payName">Bybit</div>
-            <div class="payHint">В разработке</div>
-          </div>
-          <input type="radio" name="pay" value="BYBIT" />
-        </label>
-      </div>
-
-      <div class="status warn" id="orderStatus">Загрузка…</div>
-
-      <div class="actions">
-        <button class="btn cancel" onclick="location.href='./buy.html'">Отменить</button>
-        <button class="btn next" id="nextBtn">Продолжить</button>
+    <div class="topRow">
+      <div class="backBtn" id="backBtn" aria-label="Назад">←</div>
+      <div class="titleBlock">
+        <div class="title">Заявка на покупку</div>
+        <div class="sub" id="subLine">Загрузка…</div>
       </div>
     </div>
+
+    <div class="pill">
+      <span class="statusDot" id="statusDot"></span>
+      <span id="statusText">Статус: …</span>
+    </div>
+
+    <div class="card" id="cardOffer">
+      <div class="row">
+        <div class="k">Сумма</div>
+        <div class="v" id="amountRub">—</div>
+      </div>
+      <div class="row">
+        <div class="k">Метод</div>
+        <div class="v" id="method">—</div>
+      </div>
+      <div class="row">
+        <div class="k">Курс</div>
+        <div class="v" id="rate">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="k">Банк получателя</div>
+        <div class="v" id="payBank">—</div>
+      </div>
+      <div class="row">
+        <div class="k">Реквизиты</div>
+        <div class="v mono" id="payReqWrap">
+          <span id="payRequisite">—</span>
+          <span class="copy" id="copyBtn">Скопировать</span>
+        </div>
+      </div>
+
+      <div class="hint" id="hintPay">
+        Переведите точную сумму по реквизитам выше. После оплаты нажмите «Я оплатил».
+      </div>
+    </div>
+
+    <button class="btn" id="btnPaid">Я оплатил</button>
+    <button class="btn2 danger" id="btnCancel">Отменить</button>
+
+    <div class="hint" id="hintBottom">
+      Если вы отмените заявку, реквизиты станут доступными другим покупателям.
+    </div>
   </div>
-</div>
 
-<script>
-  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
-  const p = new URLSearchParams(location.search);
-
-  const id = p.get("id");
-  const amountRub = Number(p.get("amountRub"));
-  const rate = Number(p.get("rate"));
-
-  document.getElementById("orderId").textContent = id || "—";
-  document.getElementById("amountRub").textContent = amountRub + " ₽";
-  document.getElementById("rate").textContent = rate;
-  document.getElementById("usdt").textContent = (amountRub / rate).toFixed(6) + " USDT";
-
-  const statusEl = document.getElementById("orderStatus");
-  const nextBtn = document.getElementById("nextBtn");
-
-  function getPay(){
-    return document.querySelector('input[name="pay"]:checked').value;
-  }
-
-  nextBtn.onclick = async () => {
-    const pay = getPay();
-
-    // ✅ HTX — редирект
-    if (pay === "HTX"){
-      location.href = "https://www.htx.com/en-us/fiat-crypto/trader/?id=504959890&invite_code=2tbw9223";
-      return;
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) {
+      try { tg.expand(); } catch(e){}
+      try { tg.ready(); } catch(e){}
     }
 
-    // ❌ BYBIT — заглушка
-    if (pay === "BYBIT"){
-      statusEl.textContent = "Bybit пока в разработке. Выбери Crossflag.";
-      statusEl.className = "status bad";
-      return;
+    const qs = new URLSearchParams(location.search);
+    const id = qs.get("id") || "";
+    const reserveId = qs.get("reserveId") || qs.get("reservedId") || "";
+    const API = (qs.get("api") || "").trim();
+
+    const el = (id) => document.getElementById(id);
+
+    function setStatus(st){
+      const s = String(st||"").toUpperCase();
+      el("statusText").textContent = "Статус: " + s;
+      const dot = el("statusDot");
+      if (s === "NEW") dot.style.background = "var(--warn)";
+      if (s === "ON_PAY") dot.style.background = "var(--warn)";
+      if (s === "PAID") dot.style.background = "var(--ok)";
+      if (s === "ON_CHECK") dot.style.background = "var(--warn)";
+      if (s === "DONE") dot.style.background = "var(--ok)";
+      if (s === "CANCEL") dot.style.background = "var(--bad)";
     }
 
-    // ✅ Crossflag — бронь
-    try{
-      const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
+    function fmtRub(n){
+      const v = Number(n);
+      if (!Number.isFinite(v)) return "—";
+      return v.toLocaleString("ru-RU") + " ₽";
+    }
+
+    async function apiGet(path){
+      if (!API) throw new Error("API param missing");
+      const res = await fetch(API + path, { method:"GET" });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP "+res.status));
+      return j;
+    }
+
+    async function apiPost(path, body){
+      if (!API) throw new Error("API param missing");
+      const res = await fetch(API + path, {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ id })
+        body: JSON.stringify(body||{})
       });
-
-      const j = await res.json();
-      if (!j.ok) throw new Error(j.error);
-
-      location.href = "./wallet.html?id=" + id + "&reserveId=" + j.reserveId +
-        "&amountRub=" + amountRub + "&rate=" + rate;
-
-    }catch(e){
-      statusEl.textContent = "Ошибка: " + e.message;
-      statusEl.className = "status bad";
+      const j = await res.json().catch(()=> ({}));
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP "+res.status));
+      return j;
     }
-  };
-</script>
+
+    async function load(){
+      el("subLine").textContent = "id: " + (id||"—");
+      setStatus("ON_PAY");
+
+      try{
+        const r = await apiPost("/api/public/reserve_offer", { id, reserveId });
+        const o = r.offer || {};
+        el("amountRub").textContent = fmtRub(o.amountRub);
+        el("method").textContent = String(o.method||"—");
+        el("rate").textContent = (Number(o.rate)||0).toFixed(2);
+        el("payBank").textContent = String(o.payBank||"—");
+        el("payRequisite").textContent = String(o.payRequisite||"—");
+
+        setStatus("ON_PAY");
+      }catch(e){
+        el("hintPay").textContent = "Ошибка загрузки: " + (e.message || e);
+      }
+    }
+
+    el("copyBtn").addEventListener("click", async () => {
+      const t = el("payRequisite").textContent || "";
+      try {
+        await navigator.clipboard.writeText(t);
+        el("copyBtn").textContent = "Скопировано";
+        setTimeout(()=> el("copyBtn").textContent = "Скопировать", 1200);
+      } catch(e) {
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = t;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          el("copyBtn").textContent = "Скопировано";
+          setTimeout(()=> el("copyBtn").textContent = "Скопировать", 1200);
+        } catch(_) {}
+      }
+    });
+
+    el("btnPaid").addEventListener("click", async () => {
+      try{
+        await apiPost("/api/public/mark_paid", { id, reserveId });
+        location.href = "buy-paid.html?id=" + encodeURIComponent(id) + "&reserveId=" + encodeURIComponent(reserveId) + "&api=" + encodeURIComponent(API);
+      }catch(e){
+        alert(e.message || e);
+      }
+    });
+
+    el("btnCancel").addEventListener("click", async () => {
+      if (!confirm("Отменить заявку?")) return;
+      try{
+        await apiPost("/api/public/cancel_reserve", { id, reserveId });
+        location.href = "buy.html?api=" + encodeURIComponent(API);
+      }catch(e){
+        alert(e.message || e);
+      }
+    });
+
+    el("backBtn").addEventListener("click", () => {
+      history.back();
+    });
+
+    load();
+  </script>
 </body>
 </html>

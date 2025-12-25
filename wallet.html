@@ -416,6 +416,34 @@
     setStatus("Ошибка: Missing id or reserveId", "bad");
     setTimeout(() => location.href = "./buy.html", 800);
   }
+
+  // ===== hide keyboard on outside tap (Telegram Mini App safe) =====
+(function () {
+  const input = document.getElementById("walletInput");
+  if (!input) return;
+
+  // Клик / тап в любое место, кроме input → скрыть клавиатуру
+  function hideKeyboardIfOutside(e) {
+    if (e.target !== input && !input.contains(e.target)) {
+      input.blur();
+    }
+  }
+
+  // mobile
+  document.addEventListener("touchstart", hideKeyboardIfOutside, { passive: true });
+
+  // desktop / эмуляторы
+  document.addEventListener("mousedown", hideKeyboardIfOutside);
+
+  // Enter / Done на клавиатуре тоже скрывает
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      input.blur();
+    }
+  });
+})();
+
 </script>
 </body>
 </html>

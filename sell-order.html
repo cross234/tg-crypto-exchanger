@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Продать</title>
+
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
+
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(22px + env(safe-area-inset-bottom))
+        16px;
+      box-sizing:border-box;
+    }
+
+    .wrap{ width:100%; max-width:720px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .title{
+      font-weight:1000;
+      font-size:16px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    @media(max-width:640px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .box{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:18px; word-break:break-word; }
+
+    .section{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      margin-bottom:12px;
+    }
+    .sectionTitle{
+      font-weight:1000;
+      margin-bottom:10px;
+    }
+
+    .hint{
+      color: rgba(233,240,255,.75);
+      font-size:12px;
+      font-weight:850;
+      line-height:1.45;
+      margin-top:8px;
+    }
+
+    input[type="number"]{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .payRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      margin-top:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .payLeft{ min-width:0; }
+    .payName{ font-weight:1000; }
+    .payHint{ font-size:12px; color:var(--muted); margin-top:2px; }
+    .payRow input{ transform:scale(1.1); }
+
+    .status{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:900;
+      font-size:13px;
+      white-space:pre-line;
+    }
+    .status.ok{ background: rgba(34,197,94,.10); }
+    .status.bad{ background: rgba(239,68,68,.10); }
+    .status.warn{ background: rgba(245,158,11,.10); }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .btn.cancel{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+    }
+    .btn.next{
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      min-width:180px;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; }
+  </style>
+</head>
+
+<body>
+<div class="overlay"></div>
+
+<div class="page">
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div class="title">Crossflag Exchange · Продать</div>
+      </div>
+
+      <div class="grid">
+        <div class="box"><div class="label">ID объявления</div><div class="value" id="orderId">—</div></div>
+        <div class="box"><div class="label">Мин. чек (RUB)</div><div class="value" id="minCheck">—</div></div>
+        <div class="box"><div class="label">Курс (RUB/USDT)</div><div class="value" id="rate">—</div></div>
+        <div class="box"><div class="label">Вы отдаёте (USDT)</div><div class="value" id="usdtOut">—</div></div>
+      </div>
+
+      <div class="section">
+        <div class="sectionTitle">Сумма обмена</div>
+        <input id="amountInput" type="number" inputmode="numeric" min="0" step="100" placeholder="Введите сумму в RUB" />
+        <div class="hint" id="amountHint">Минимальная сумма: —</div>
+      </div>
+
+      <div class="section">
+        <div class="sectionTitle">Способ оплаты</div>
+
+        <label class="payRow">
+          <div class="payLeft">
+            <div class="payName">Crossflag Exchange</div>
+            <div class="payHint">Сделка внутри Crossflag</div>
+          </div>
+          <input type="radio" name="pay" value="CROSSFLAG" checked />
+        </label>
+
+        <label class="payRow">
+          <div class="payLeft">
+            <div class="payName">HTX</div>
+            <div class="payHint">Сделка через HTX</div>
+          </div>
+          <input type="radio" name="pay" value="HTX" />
+        </label>
+      </div>
+
+      <div class="status warn" id="orderStatus">Введите сумму и нажмите «Продолжить».</div>
+
+      <div class="actions">
+        <button class="btn cancel" id="cancelBtn" type="button">Отменить</button>
+        <button class="btn next" id="nextBtn" type="button">Продолжить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const p = new URLSearchParams(location.search);
+
+  const id = (p.get("id") || "").trim();
+  const rate = Number(p.get("rate"));
+  const minCheckRub = Number(p.get("minCheckRub"));
+  const avgTimeMin = Number(p.get("avgTimeMin"));
+  const method = (p.get("method") || "").toUpperCase();
+
+  const orderIdEl = document.getElementById("orderId");
+  const rateEl = document.getElementById("rate");
+  const minCheckEl = document.getElementById("minCheck");
+  const usdtOutEl = document.getElementById("usdtOut");
+
+  const amountInput = document.getElementById("amountInput");
+  const amountHint = document.getElementById("amountHint");
+
+  const statusEl = document.getElementById("orderStatus");
+  const nextBtn = document.getElementById("nextBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  function fmtRub(n){
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "—";
+    return num.toLocaleString("ru-RU") + " ₽";
+  }
+  function fmtRate(n){
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "—";
+    return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+  }
+  function fmtUsdt(n){
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "—";
+    return num.toFixed(6) + " USDT";
+  }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.className = "status " + (kind || "warn");
+  }
+
+  function getPay(){
+    return document.querySelector('input[name="pay"]:checked')?.value || "CROSSFLAG";
+  }
+
+  function recalc(){
+    const amountRub = Number(amountInput.value);
+    if (!Number.isFinite(rate) || rate <= 0){
+      usdtOutEl.textContent = "—";
+      setStatus("Ошибка: некорректный курс", "bad");
+      nextBtn.disabled = true;
+      return;
+    }
+
+    if (!Number.isFinite(amountRub) || amountRub <= 0){
+      usdtOutEl.textContent = "—";
+      setStatus("Введите сумму в RUB.", "warn");
+      nextBtn.disabled = true;
+      return;
+    }
+
+    if (Number.isFinite(minCheckRub) && minCheckRub > 0 && amountRub < minCheckRub){
+      usdtOutEl.textContent = fmtUsdt(amountRub / rate);
+      setStatus("Сумма меньше минимального чека. Минимум: " + fmtRub(minCheckRub), "bad");
+      nextBtn.disabled = true;
+      return;
+    }
+
+    usdtOutEl.textContent = fmtUsdt(amountRub / rate);
+    setStatus("Готово. Выберите способ оплаты и нажмите «Продолжить».", "ok");
+    nextBtn.disabled = false;
+  }
+
+  // init header
+  orderIdEl.textContent = id || "—";
+  rateEl.textContent = fmtRate(rate);
+  minCheckEl.textContent = fmtRub(minCheckRub);
+  amountHint.textContent = "Минимальная сумма: " + fmtRub(minCheckRub) + (Number.isFinite(avgTimeMin) ? (" · Время: ~" + avgTimeMin + " мин") : "");
+
+  // set min + default value
+  if (Number.isFinite(minCheckRub) && minCheckRub > 0){
+    amountInput.min = String(minCheckRub);
+    amountInput.value = String(minCheckRub);
+  }
+
+  amountInput.addEventListener("input", recalc);
+
+  cancelBtn.onclick = () => {
+    location.href = "./sell.html";
+  };
+
+  nextBtn.onclick = () => {
+    // ⚠️ Сейчас НЕ трогаем воркер, чтобы ничего не сломать.
+    // На следующем шаге подключим реальный SELL-флоу (создание ордера/резерв/статусы).
+    const amountRub = Number(amountInput.value);
+    const pay = getPay();
+
+    const qs = new URLSearchParams({
+      id,
+      rate: String(rate),
+      minCheckRub: String(minCheckRub),
+      avgTimeMin: String(avgTimeMin),
+      method: String(method),
+      amountRub: String(amountRub),
+      pay: String(pay),
+    });
+
+    // Заглушка-навигация:
+    // - Crossflag → (следующим шагом сделаем страницу "получение RUB реквизитов")
+    // - HTX → (следующим шагом подключим ожидание ссылки/статуса для SELL)
+    if (pay === "HTX"){
+      // пока просто возвращаем в стакан с параметрами (чтобы не ломать текущий флоу)
+      setStatus("HTX выбран. Следующим шагом подключим SELL-сделку через HTX.", "warn");
+      return;
+    }
+
+    setStatus("Crossflag Exchange выбран. Следующим шагом сделаем страницу реквизитов для получения RUB.", "warn");
+  };
+
+  // first calc
+  recalc();
+</script>
+</body>
+</html>

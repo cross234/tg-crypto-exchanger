@@ -9,8 +9,10 @@
     :root{
       --text:#e9f0ff;
       --muted:#9fb0d4;
+
       --card: rgba(15, 26, 48, 0.52);
       --border: rgba(255,255,255,.12);
+
       --ok:#22c55e;
       --bad:#ef4444;
       --warn:#f59e0b;
@@ -33,13 +35,15 @@
       overscroll-behavior-y: contain;
     }
 
+    /* ✅ Красивее фон/градиенты */
     .overlay{
       position:fixed;
       inset:0;
-      z-index:-1;
+      z-index:-2;
       background:
-        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
-        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+        radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        radial-gradient(900px 600px at 18% 85%, rgba(239,68,68,.10), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
       pointer-events:none;
     }
 
@@ -58,15 +62,30 @@
 
     .wrap{ width:100%; max-width:720px; }
 
+    /* ✅ Карточка со свечением */
     .card{
+      position:relative;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 14px;
       box-shadow: 0 18px 50px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
     }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-60px;
+      background:
+        radial-gradient(520px 180px at 35% 20%, rgba(45,91,255,.18), rgba(0,0,0,0) 60%),
+        radial-gradient(520px 180px at 75% 90%, rgba(239,68,68,.10), rgba(0,0,0,0) 60%);
+      filter: blur(18px);
+      pointer-events:none;
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
 
     .top{
       display:flex;
@@ -79,6 +98,7 @@
     .title{
       font-weight:1000;
       font-size:16px;
+      letter-spacing:.2px;
     }
 
     .grid{
@@ -96,17 +116,32 @@
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
     .value{ font-weight:1000; font-size:18px; word-break:break-word; }
 
     .section{
+      position:relative;
       padding:12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
       margin-bottom:12px;
+      overflow:hidden;
     }
+    .section::before{
+      content:"";
+      position:absolute;
+      inset:-40px;
+      background:
+        radial-gradient(480px 150px at 25% 20%, rgba(45,91,255,.10), rgba(0,0,0,0) 60%);
+      filter: blur(18px);
+      pointer-events:none;
+      z-index:0;
+    }
+    .section > *{ position:relative; z-index:1; }
+
     .sectionTitle{
       font-weight:1000;
       margin-bottom:10px;
@@ -130,6 +165,7 @@
       outline:none;
       font-weight:900;
       font-size:14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
 
     .payRow{
@@ -144,11 +180,17 @@
       margin-top:10px;
       cursor:pointer;
       user-select:none;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .payRow:hover{
+      transform: translateY(-1px);
+      background: rgba(0,0,0,.20);
+      border-color: rgba(255,255,255,.16);
     }
     .payLeft{ min-width:0; }
     .payName{ font-weight:1000; }
     .payHint{ font-size:12px; color:var(--muted); margin-top:2px; }
-    .payRow input{ transform:scale(1.1); }
+    .payRow input{ transform: scale(1.05); }
 
     .status{
       padding:10px 12px;
@@ -158,6 +200,7 @@
       font-weight:900;
       font-size:13px;
       white-space:pre-line;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     .status.ok{ background: rgba(34,197,94,.10); }
     .status.bad{ background: rgba(239,68,68,.10); }
@@ -176,18 +219,22 @@
       padding:12px 16px;
       font-weight:1000;
       cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
     }
     .btn.cancel{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
       color:#fff;
     }
+    .btn.cancel:hover{ background: rgba(255,255,255,.09); }
+
     .btn.next{
       background: linear-gradient(180deg, var(--btn), var(--btn2));
       color:#fff;
       min-width:180px;
     }
-    .btn:disabled{ opacity:.7; cursor:not-allowed; }
+    .btn.next:hover{ filter: brightness(1.06); }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
   </style>
 </head>
 
@@ -318,13 +365,13 @@
     nextBtn.disabled = false;
   }
 
-  // init header
   orderIdEl.textContent = id || "—";
   rateEl.textContent = fmtRate(rate);
   minCheckEl.textContent = fmtRub(minCheckRub);
-  amountHint.textContent = "Минимальная сумма: " + fmtRub(minCheckRub) + (Number.isFinite(avgTimeMin) ? (" · Время: ~" + avgTimeMin + " мин") : "");
+  amountHint.textContent =
+    "Минимальная сумма: " + fmtRub(minCheckRub) +
+    (Number.isFinite(avgTimeMin) ? (" · Время: ~" + avgTimeMin + " мин") : "");
 
-  // set min + default value
   if (Number.isFinite(minCheckRub) && minCheckRub > 0){
     amountInput.min = String(minCheckRub);
     amountInput.value = String(minCheckRub);
@@ -337,26 +384,21 @@
   };
 
   nextBtn.onclick = () => {
-    // ⚠️ Сейчас НЕ трогаем воркер, чтобы ничего не сломать.
-    // На следующем шаге подключим реальный SELL-флоу (создание ордера/резерв/статусы).
+    // ⚠️ Пока без изменения воркера: не ломаем текущий флоу.
     const amountRub = Number(amountInput.value);
     const pay = getPay();
 
     const qs = new URLSearchParams({
       id,
+      method: String(method),
       rate: String(rate),
       minCheckRub: String(minCheckRub),
       avgTimeMin: String(avgTimeMin),
-      method: String(method),
       amountRub: String(amountRub),
       pay: String(pay),
     });
 
-    // Заглушка-навигация:
-    // - Crossflag → (следующим шагом сделаем страницу "получение RUB реквизитов")
-    // - HTX → (следующим шагом подключим ожидание ссылки/статуса для SELL)
     if (pay === "HTX"){
-      // пока просто возвращаем в стакан с параметрами (чтобы не ломать текущий флоу)
       setStatus("HTX выбран. Следующим шагом подключим SELL-сделку через HTX.", "warn");
       return;
     }
@@ -364,7 +406,6 @@
     setStatus("Crossflag Exchange выбран. Следующим шагом сделаем страницу реквизитов для получения RUB.", "warn");
   };
 
-  // first calc
   recalc();
 </script>
 </body>

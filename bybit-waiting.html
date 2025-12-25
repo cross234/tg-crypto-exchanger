@@ -70,59 +70,60 @@
       position:absolute; inset:-60px;
       background: radial-gradient(420px 130px at 35% 35%, rgba(45,91,255,.18), transparent 60%),
                   radial-gradient(420px 130px at 70% 70%, rgba(245,158,11,.10), transparent 60%);
-      animation: floatGlow 2.6s ease-in-out infinite;
+      filter: blur(18px);
       pointer-events:none;
     }
-    @keyframes floatGlow{
-      0%{ transform: translateY(0px); opacity:.9; }
-      50%{ transform: translateY(10px); opacity:1; }
-      100%{ transform: translateY(0px); opacity:.9; }
+
+    .loaderRow{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
+      position:relative;
+      z-index:1;
     }
-    .loaderRow{ display:flex; align-items:center; gap:12px; }
     .spinner{
-      width:44px; height:44px; border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      display:flex; align-items:center; justify-content:center;
-    }
-    .spinner:before{
-      content:"";
-      width:22px; height:22px;
+      width:36px; height:36px;
       border-radius:999px;
       border:3px solid rgba(255,255,255,.18);
       border-top-color: rgba(45,91,255,.9);
-      animation: spin 1s linear infinite;
-      display:block;
+      animation:spin 1s linear infinite;
+      flex:0 0 auto;
+      margin-top:2px;
     }
-    @keyframes spin{ to{ transform: rotate(360deg);} }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
 
-    .h1{ font-weight:1000; font-size:18px; margin:0; }
-    .p{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.35; }
+    .h1{ margin:0; font-weight:1000; font-size:15px; }
+    .p{ margin:6px 0 0; color:var(--muted); font-size:12px; line-height:1.35; }
 
     .infoGrid{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-top:12px;
+      gap:10px;
+      margin: 10px 0 12px;
+      position:relative;
+      z-index:1;
     }
     @media(max-width:640px){ .infoGrid{ grid-template-columns:1fr; } }
+
     .box{
-      padding:12px;
-      border-radius:16px;
+      padding:10px;
+      border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
+      background: rgba(0,0,0,.14);
     }
-    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .label{ font-weight:900; font-size:12px; color:var(--muted); margin-bottom:6px; }
     .value{ font-weight:1000; font-size:14px; word-break:break-word; }
 
     .status{
-      margin-top:12px;
       padding:10px 12px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.20);
       font-weight:900;
       font-size:13px;
+      position:relative;
+      z-index:1;
     }
     .status.ok{ background: rgba(34,197,94,.10); }
     .status.bad{ background: rgba(239,68,68,.10); }
@@ -134,6 +135,8 @@
       gap:10px;
       margin-top:12px;
       flex-wrap:wrap;
+      position:relative;
+      z-index:1;
     }
     .btn{
       border:0;
@@ -216,6 +219,7 @@
   const API = (p.get("api") || "").replace(/\/+$/, "");
   const id = (p.get("id") || "").trim();
   const reserveId = (p.get("reserveId") || p.get("reservedId") || "").trim();
+  const type = String(p.get("type") || "BUY").toUpperCase(); // BUY | SELL
 
   const oidEl = document.getElementById("oid");
   const ridEl = document.getElementById("rid");
@@ -245,24 +249,38 @@
     setStatus("Ссылка готова. Можно переходить к сделке.", "ok");
   }
 
+  function openDeal(url){
+    if (!url) return;
+
+    if (tg && typeof tg.openLink === "function"){
+      try { tg.openLink(url); return; } catch(e){}
+    }
+
+    try { window.open(url, "_blank", "noopener"); }
+    catch { window.location.href = url; }
+  }
+
   goBtn.disabled = true;
 
   goBtn.addEventListener("click", () => {
     if (!dealUrl) return;
-    window.location.href = dealUrl;
+    openDeal(dealUrl);
   });
 
   cancelBtn.addEventListener("click", async () => {
     try{
       if (API && id && reserveId){
-        await fetch(API + "/api/public/cancel_reserve", {
+        const cancelPath = (type === "SELL") ? "/api/public/cancel_sell_reserve" : "/api/public/cancel_reserve";
+        await fetch(API + cancelPath, {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ id, reserveId })
         });
       }
     }catch(e){}
-    window.location.href = "./buy.html" + (API ? ("?api=" + encodeURIComponent(API)) : "");
+
+    const back = (type === "SELL") ? "./sell.html" : "./buy.html";
+    window.location.href = back + (API ? ("?api=" + encodeURIComponent(API)) : "");
   });
 
   async function poll(){
@@ -273,7 +291,9 @@
 
     try{
       const url = API + "/api/public/order_info?id=" + encodeURIComponent(id) +
-                  "&reserveId=" + encodeURIComponent(reserveId);
+                  "&reserveId=" + encodeURIComponent(reserveId) +
+                  "&type=" + encodeURIComponent(type);
+
       const res = await fetch(url, { method:"GET" });
       const j = await res.json();
 
@@ -287,7 +307,7 @@
         return;
       }
 
-      if (st === "BYBIT_WAITING" || st === "ON_PAY" || st === "NEW") {
+      if (st === "BYBIT_WAITING" || st === "HTX_WAITING" || st === "ON_PAY" || st === "NEW" || st === "RESERVED") {
         setStatus("Ожидаем ссылку на сделку…", "warn");
       } else if (st === "CANCEL") {
         setStatus("Заявка отменена.", "bad");

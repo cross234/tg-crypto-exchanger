@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Кошелёк</title>
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+      --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+      --btn:#2d5bff; --btn2:#1f3fb3;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      background:#071022; overflow:hidden;
+    }
+    .overlay{
+      position:fixed; inset:0; z-index:-1;
+      background:
+        radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
+      pointer-events:none;
+    }
+    .page{
+      min-height:100svh;
+      display:flex; align-items:center; justify-content:center;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
+      box-sizing:border-box;
+    }
+    .wrap{ width:100%; max-width:980px; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:14px;
+    }
+    .title{ font-weight:1000; font-size:16px; }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:950;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media(max-width:860px){ .grid{ grid-template-columns:1fr; } }
+
+    .choiceGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    @media(max-width:860px){ .choiceGrid{ grid-template-columns:1fr; } }
+
+    .opt{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding:14px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .opt:hover{ transform: translateY(-1px); }
+    .opt.active{
+      border-color: rgba(45,91,255,.55);
+      background: rgba(45,91,255,.10);
+    }
+    .optTitle{ font-weight:1000; letter-spacing:.2px; }
+    .optSub{ margin-top:6px; color:var(--muted); font-size:12px; line-height:1.35; }
+    .tag{
+      position:absolute; right:12px; top:12px;
+      border-radius:999px;
+      padding:7px 10px;
+      font-weight:1000;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+    .tag.ok{
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.30);
+      color:#d7ffe6;
+    }
+
+    .inputWrap{
+      margin-top:12px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      padding:14px;
+      display:none;
+      animation: fadeIn .18s ease both;
+    }
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(6px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+    .inputWrap.show{ display:block; }
+    .label{ color:var(--muted); font-size:12px; font-weight:950; margin-bottom:8px; }
+    input{
+      width:100%;
+      padding:14px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      font-weight:950;
+      font-size:16px;
+      outline:none;
+    }
+    input::placeholder{ color: rgba(159,176,212,.65); font-weight:850; }
+
+    .status{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:950;
+      font-size:13px;
+      display:none;
+    }
+    .status.show{ display:block; }
+    .status.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+      min-width:170px;
+    }
+    .btn.cancel{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      box-shadow:none;
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; }
+
+    .hint{
+      margin-top:12px;
+      color: rgba(233,240,255,.75);
+      font-size:12px;
+      font-weight:850;
+      line-height:1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+
+        <div class="top">
+          <div class="title">Crossflag Exchange · Кошелёк</div>
+          <div class="pill" id="timerPill">Осталось: 05:00</div>
+        </div>
+
+        <div class="hint">
+          Выбери сеть/биржу и укажи адрес (или UID). Мы отправим USDT туда после успешной проверки оплаты.
+        </div>
+
+        <div class="choiceGrid" id="choices">
+          <div class="opt" data-type="BEP20">
+            <div class="tag">Комиссия 1 USDT</div>
+            <div class="optTitle">BEP20</div>
+            <div class="optSub">Сеть BSC (BEP20). Укажи BEP20 адрес кошелька.</div>
+          </div>
+
+          <div class="opt" data-type="TRC20">
+            <div class="tag">Комиссия 2 USDT</div>
+            <div class="optTitle">TRC20</div>
+            <div class="optSub">Сеть Tron (TRC20). Укажи TRC20 адрес кошелька.</div>
+          </div>
+
+          <div class="opt" data-type="HTX_UID">
+            <div class="tag ok">0 комиссия</div>
+            <div class="optTitle">HTX UID</div>
+            <div class="optSub">Без комиссии. Укажи UID аккаунта HTX.</div>
+          </div>
+
+          <div class="opt" data-type="BYBIT_UID">
+            <div class="tag ok">0 комиссия</div>
+            <div class="optTitle">Bybit UID</div>
+            <div class="optSub">Без комиссии. Укажи UID аккаунта Bybit.</div>
+          </div>
+        </div>
+
+        <div class="inputWrap" id="inputWrap">
+          <div class="label" id="inputLabel">—</div>
+          <input id="walletInput" placeholder="—" autocomplete="off" inputmode="text" />
+          <div class="hint" id="feeHint">—</div>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+
+        <div class="actions">
+          <button class="btn cancel" id="cancelBtn" type="button">Отменить</button>
+          <button class="btn primary" id="nextBtn" type="button" disabled>Продолжить</button>
+        </div>
+
+        <div class="hint">
+          Таймер 5 минут: если не успеть — заявка автоматически отменится и вернёт в стакан.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
+  const p = new URLSearchParams(location.search);
+  const id = (p.get("id") || "").trim();
+  const reserveId =
+    (p.get("reserveId") || "").trim() ||
+    (p.get("reservedId") || "").trim() ||
+    (p.get("reserveid") || "").trim();
+
+  const amountRub = (p.get("amountRub") || "").trim();
+  const rate = (p.get("rate") || "").trim();
+  const method = (p.get("method") || "").trim();
+
+  const timerPill = document.getElementById("timerPill");
+  const choices = document.getElementById("choices");
+  const inputWrap = document.getElementById("inputWrap");
+  const inputLabel = document.getElementById("inputLabel");
+  const walletInput = document.getElementById("walletInput");
+  const feeHint = document.getElementById("feeHint");
+  const statusBox = document.getElementById("statusBox");
+
+  const cancelBtn = document.getElementById("cancelBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  let selectedType = "";
+  let deadline = Date.now() + 5 * 60 * 1000;
+
+  function setStatus(text, kind){
+    statusBox.textContent = text;
+    statusBox.classList.remove("ok","bad","warn");
+    statusBox.classList.add(kind || "warn");
+    statusBox.classList.add("show");
+  }
+
+  function setTimer(){
+    const ms = deadline - Date.now();
+    if (ms <= 0){
+      timerPill.textContent = "Осталось: 00:00";
+      return;
+    }
+    const s = Math.floor(ms/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    timerPill.textContent = "Осталось: " + mm + ":" + ss;
+  }
+
+  async function cancelToBook(){
+    try{
+      if (id && reserveId){
+        await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ id, reserveId })
+        });
+      }
+    }catch(e){}
+    location.href = "./buy.html";
+  }
+
+  cancelBtn.onclick = cancelToBook;
+
+  function setupInput(type){
+    selectedType = type;
+
+    inputWrap.classList.add("show");
+    walletInput.value = "";
+
+    if (type === "BEP20"){
+      inputLabel.textContent = "BEP20 адрес";
+      walletInput.placeholder = "Например: 0x...";
+      feeHint.textContent = "Комиссия 1 USDT. Укажи адрес сети BEP20 (BSC).";
+      walletInput.inputMode = "text";
+    } else if (type === "TRC20"){
+      inputLabel.textContent = "TRC20 адрес";
+      walletInput.placeholder = "Например: T...";
+      feeHint.textContent = "Комиссия 2 USDT. Укажи адрес сети TRC20 (Tron).";
+      walletInput.inputMode = "text";
+    } else if (type === "HTX_UID"){
+      inputLabel.textContent = "HTX UID";
+      walletInput.placeholder = "Введи UID (только цифры)";
+      feeHint.textContent = "0 комиссия. Укажи UID аккаунта HTX.";
+      walletInput.inputMode = "numeric";
+    } else if (type === "BYBIT_UID"){
+      inputLabel.textContent = "Bybit UID";
+      walletInput.placeholder = "Введи UID (только цифры)";
+      feeHint.textContent = "0 комиссия. Укажи UID аккаунта Bybit.";
+      walletInput.inputMode = "numeric";
+    }
+
+    nextBtn.disabled = true;
+    statusBox.classList.remove("show");
+  }
+
+  choices.querySelectorAll(".opt").forEach(el => {
+    el.onclick = () => {
+      choices.querySelectorAll(".opt").forEach(x => x.classList.remove("active"));
+      el.classList.add("active");
+      setupInput(el.dataset.type || "");
+    };
+  });
+
+  walletInput.addEventListener("input", () => {
+    const v = (walletInput.value || "").trim();
+    nextBtn.disabled = !(selectedType && v.length >= 3);
+  });
+
+  nextBtn.onclick = async () => {
+    const walletValue = (walletInput.value || "").trim();
+    if (!id || !reserveId){
+      setStatus("Ошибка: Missing id or reserveId", "bad");
+      return;
+    }
+    if (!selectedType || !walletValue){
+      setStatus("Выбери сеть и введи адрес/UID.", "warn");
+      return;
+    }
+
+    try{
+      nextBtn.disabled = true;
+      nextBtn.textContent = "Сохраняю…";
+      setStatus("Сохраняю кошелёк…", "warn");
+
+      const res = await fetch(WORKER_BASE + "/api/public/set_wallet", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          id, reserveId,
+          walletType: selectedType,
+          walletValue
+        })
+      });
+
+      const txt = await res.text();
+      let j;
+      try{ j = JSON.parse(txt); }catch{ throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      // дальше к реквизитам
+      const qs = new URLSearchParams({
+        id, reserveId,
+        amountRub: amountRub || "",
+        rate: rate || "",
+        method: method || ""
+      });
+      location.href = "./crossflag-buy-order.html?" + qs.toString();
+
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+      nextBtn.disabled = false;
+      nextBtn.textContent = "Продолжить";
+    }
+  };
+
+  // таймер 5 минут
+  setTimer();
+  const t = setInterval(() => {
+    setTimer();
+    if (Date.now() >= deadline){
+      clearInterval(t);
+      cancelToBook();
+    }
+  }, 250);
+
+  // если случайно открыли без параметров — сразу в стакан
+  if (!id || !reserveId){
+    setStatus("Ошибка: Missing id or reserveId", "bad");
+    setTimeout(() => location.href = "./buy.html", 800);
+  }
+</script>
+</body>
+</html>

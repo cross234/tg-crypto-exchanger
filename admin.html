@@ -96,7 +96,10 @@
   <div class="wrap">
     <div class="top">
       <div class="title">Админка обменника</div>
-      <div class="small">Worker: <span id="w"></span></div>
+      <div class="row" style="gap:10px; align-items:center;">
+        <div class="small">Worker: <span id="w"></span></div>
+        <button class="miniBtn" id="openDealLink" type="button">Ссылки сделок</button>
+      </div>
     </div>
 
     <div class="grid">
@@ -246,6 +249,17 @@
 <script>
   const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
   document.getElementById("w").textContent = WORKER_BASE;
+
+  // ✅ Переход в deal-link.html без повторного ввода токена
+  document.getElementById("openDealLink").onclick = () => {
+    try {
+      localStorage.setItem("worker_base", WORKER_BASE);
+      sessionStorage.setItem("deal_link_return", location.href);
+      location.href = "./deal-link.html?wb=" + encodeURIComponent(WORKER_BASE);
+    } catch {
+      location.href = "./deal-link.html?wb=" + encodeURIComponent(WORKER_BASE);
+    }
+  };
 
   const tokenInput = document.getElementById("token");
   const authStatus = document.getElementById("authStatus");

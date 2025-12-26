@@ -360,4 +360,232 @@
 
           <div class="txBox" id="txBox" style="padding:0 12px 12px;">
             <div class="section" style="margin:0;">
-              <div class="sectionTitle">TX Hash</
+              <div class="sectionTitle">TX Hash</div>
+              <input id="txHash" placeholder="Вставь хэш транзакции" />
+              <div class="actions">
+                <button class="btn" id="sendHashBtn" type="button" disabled>Отправить хэш</button>
+              </div>
+              <div class="hint">
+                После отправки хэша заявка уйдёт на проверку.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
+  // фиксированные кошельки/UID (как ты написал)
+  const DESTS = [
+    { type:"HTX_UID",  label:"HTX UID",  value:"504959890" },
+    { type:"BYBIT_UID",label:"BYBIT UID",value:"510517445" },
+    { type:"BEP20",    label:"BEP20",    value:"0x77e9d8f23851a1cf40a0c3b493166b33a92bc075" },
+    { type:"TRC20",    label:"TRC20",    value:"TXd3MJh3XJvMABXLTkauhp2ZarhJD8HuZb" }
+  ];
+
+  const p = new URLSearchParams(location.search);
+  const offerId = (p.get("offerId") || "").trim();
+  const amountRub = Number(p.get("amountRub"));
+  const rate = Number(p.get("rate"));
+
+  const amountEl = document.getElementById("amount");
+  const rateEl = document.getElementById("rate");
+  const usdtEl = document.getElementById("usdt");
+  const offerEl = document.getElementById("offer");
+
+  const payMethod = document.getElementById("payMethod");
+  const numLabel = document.getElementById("numLabel");
+  const number = document.getElementById("number");
+  const bank = document.getElementById("bank");
+  const fio = document.getElementById("fio");
+
+  const statusBox = document.getElementById("statusBox");
+  const continueBtn = document.getElementById("continueBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+
+  const sheet = document.getElementById("sheet");
+  const destGrid = document.getElementById("destGrid");
+  const backToFormBtn = document.getElementById("backToFormBtn");
+  const iPaidBtn = document.getElementById("iPaidBtn");
+
+  const txBox = document.getElementById("txBox");
+  const txHash = document.getElementById("txHash");
+  const sendHashBtn = document.getElementById("sendHashBtn");
+  const sendHashBtnEl = sendHashBtn;
+
+  let selectedDest = null;
+
+  // после init создаём dealId/secret
+  let dealId = null;
+  let secret = null;
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function fmtRate(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 2 }) + " RUB/USDT"; }
+  function fmtUsdt(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT"; }
+
+  function setStatus(text, kind){
+    statusBox.textContent = text;
+    statusBox.className = "status show " + (kind || "warn");
+  }
+
+  function setLoading(btn, on){
+    if (!btn) return;
+    if (on){
+      btn.classList.add("loading");
+      btn.dataset._txt = btn.textContent;
+      btn.textContent = "Отправка…";
+      btn.disabled = true;
+    }else{
+      btn.classList.remove("loading");
+      btn.textContent = btn.dataset._txt || btn.textContent;
+      btn.disabled = false;
+    }
+  }
+
+  function validateForm(){
+    const m = (payMethod.value || "SBP").toUpperCase();
+    numLabel.textContent = (m === "SBP") ? "Номер СБП" : "Номер карты";
+
+    const n = (number.value || "").trim();
+    const b = (bank.value || "").trim();
+    const f = (fio.value || "").trim();
+
+    const ok = !!(offerId && Number.isFinite(amountRub) && amountRub > 0 && Number.isFinite(rate) && rate > 0 && n && b && f);
+    continueBtn.disabled = !ok;
+
+    if (!offerId) setStatus("Ошибка: нет offerId", "bad");
+    else if (!Number.isFinite(amountRub) || amountRub<=0) setStatus("Ошибка: нет суммы", "bad");
+    else if (!Number.isFinite(rate) || rate<=0) setStatus("Ошибка: нет курса", "bad");
+    else if (!ok) setStatus("Заполни реквизиты…", "warn");
+    else setStatus("Готово ✅ Нажми “Продолжить”", "ok");
+  }
+
+  function buildDestCards(){
+    destGrid.innerHTML = "";
+    for (const d of DESTS){
+      const el = document.createElement("div");
+      el.className = "dest";
+      el.dataset.type = d.type;
+      el.innerHTML = `
+        <div class="destName">${d.label}</div>
+        <div class="destVal">${d.value}</div>
+      `;
+      el.onclick = () => {
+        document.querySelectorAll(".dest").forEach(x => x.classList.remove("active"));
+        el.classList.add("active");
+        selectedDest = d;
+        iPaidBtn.disabled = false;
+      };
+      destGrid.appendChild(el);
+    }
+  }
+
+  async function apiJson(path, method, body){
+    const res = await fetch(WORKER_BASE + path, {
+      method,
+      headers: { "Content-Type":"application/json" },
+      body: body ? JSON.stringify(body) : null
+    });
+    const text = await res.text();
+    let j;
+    try{ j = JSON.parse(text); }catch{ throw new Error("Ответ не JSON: " + text.slice(0,200)); }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j;
+  }
+
+  cancelBtn.onclick = () => location.href = "./sell.html";
+  backToFormBtn.onclick = () => {
+    sheet.classList.remove("show");
+    txBox.classList.remove("show");
+    txHash.value = "";
+  };
+
+  continueBtn.onclick = async () => {
+    // просто открываем sheet (создание сделки сделаем при “Я оплатил”, чтобы не плодить записи)
+    sheet.classList.add("show");
+    buildDestCards();
+    iPaidBtn.disabled = true;
+    selectedDest = null;
+  };
+
+  iPaidBtn.onclick = async () => {
+    try{
+      if (!selectedDest) return;
+
+      // 1) создаём sell-сделку (Crossflag)
+      setLoading(iPaidBtn, true);
+      const payload = {
+        offerId,
+        amountRub,
+        rate,
+        pay: {
+          method: String(payMethod.value || "SBP").toUpperCase(),
+          number: String(number.value || "").trim(),
+          bank: String(bank.value || "").trim(),
+          fio: String(fio.value || "").trim()
+        },
+        cryptoDest: selectedDest
+      };
+
+      const j = await apiJson("/api/public/sell_crossflag_init", "POST", payload);
+
+      dealId = j.dealId;
+      secret = j.secret;
+
+      // 2) показываем поле TX hash
+      txBox.classList.add("show");
+      txHash.focus();
+
+      setStatus("Сделка создана ✅\nВставь TX hash и нажми “Отправить хэш”.", "ok");
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+    }finally{
+      setLoading(iPaidBtn, false);
+    }
+  };
+
+  txHash.addEventListener("input", () => {
+    const v = (txHash.value || "").trim();
+    sendHashBtn.disabled = !(v.length >= 6 && dealId && secret);
+  });
+
+  sendHashBtn.onclick = async () => {
+    try{
+      const v = (txHash.value || "").trim();
+      if (!v) return;
+
+      setLoading(sendHashBtnEl, true);
+
+      await apiJson("/api/public/sell_submit_hash", "POST", {
+        dealId, secret,
+        txHash: v
+      });
+
+      // переход в ожидание проверки
+      const qs = new URLSearchParams({ dealId, secret });
+      location.href = "./sell-check.html?" + qs.toString();
+    }catch(e){
+      setStatus("Ошибка: " + (e.message || String(e)), "bad");
+      setLoading(sendHashBtnEl, false);
+    }
+  };
+
+  payMethod.onchange = validateForm;
+  number.addEventListener("input", validateForm);
+  bank.addEventListener("input", validateForm);
+  fio.addEventListener("input", validateForm);
+
+  // init header
+  amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
+  rateEl.textContent = (Number.isFinite(rate) && rate>0) ? fmtRate(rate) : "—";
+  usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate>0) ? fmtUsdt(amountRub / rate) : "—";
+  offerEl.textContent = offerId ? offerId : "—";
+
+  validateForm();
+</script>
+</body>
+</html>

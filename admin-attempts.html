@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Админка · Логи сделок</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f1a30; --border:#223255;
+      --text:#e9f0ff; --muted:#9fb0d4;
+      --btn:#2563eb; --warn:#f59e0b; --danger:#ef4444; --ok:#22c55e;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:1200px; margin:0 auto; padding:18px; }
+    .top{
+      display:flex; justify-content:space-between; gap:10px; align-items:center;
+      flex-wrap:wrap; margin-bottom:12px;
+    }
+    .title{ font-weight:950; font-size:18px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .small{ color:var(--muted); font-size:12px; }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+
+    input, select, textarea{
+      width:100%;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#0b1430;
+      color:var(--text);
+      padding:10px 10px;
+      outline:none;
+      font-weight:800;
+      font-size:13px;
+    }
+    textarea{ min-height:70px; resize:vertical; }
+
+    .btn{
+      border:0; border-radius:10px;
+      padding:10px 12px;
+      background:var(--btn);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn:disabled{ opacity:.65; cursor:not-allowed; }
+    .btnGhost{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px 12px;
+      background:transparent;
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btnOk{ background:var(--ok); }
+    .btnBad{ background:var(--danger); }
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+      margin-left:8px;
+    }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media(max-width:900px){ .grid2{ grid-template-columns:1fr; } }
+
+    .list{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media(max-width:1100px){ .list{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media(max-width:720px){ .list{ grid-template-columns:1fr; } }
+
+    .item{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      background: rgba(255,255,255,.03);
+    }
+    .itemTitle{ font-weight:950; font-size:14px; }
+    .kv{ margin-top:6px; color:var(--muted); font-size:12px; line-height:1.35; word-break:break-word; }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace; }
+    details summary{ cursor:pointer; color:var(--muted); font-weight:900; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">Логи сделок <span class="pill" id="cntPill">0</span></div>
+        <div class="small">Worker: <span id="w"></span></div>
+      </div>
+      <div class="row">
+        <button class="btnGhost" id="backBtn">Назад в админку</button>
+        <button class="btn" id="refreshBtn">Обновить</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <div class="small" style="margin-bottom:6px;">Фильтр</div>
+          <select id="flowFilter">
+            <option value="ALL">Все</option>
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+        </div>
+        <div>
+          <div class="small" style="margin-bottom:6px;">Поиск (username / dealId / offerId / шаг)</div>
+          <input id="q" placeholder="например: SELL или 504959890 или txHash" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="title" style="font-size:16px;">SELL сделки на проверке</div>
+      <div class="small" style="margin-top:6px;">Тут можно нажать “УСПЕХ / НЕУСПЕХ”.</div>
+      <div id="sellDeals"></div>
+    </div>
+
+    <div class="card">
+      <div class="title" style="font-size:16px;">Попытки / события</div>
+      <div class="small" style="margin-top:6px;">Сюда падают все события BUY/SELL, которые доходят до сервера.</div>
+      <div style="margin-top:10px;" class="list" id="attempts"></div>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE =
+    localStorage.getItem("worker_base") ||
+    "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
+  document.getElementById("w").textContent = WORKER_BASE;
+
+  const tokenInput = localStorage.getItem("admin_token") || "";
+
+  function adminHeaders(){
+    return {
+      "Content-Type":"application/json",
+      "X-Admin-Token": tokenInput
+    };
+  }
+
+  document.getElementById("backBtn").onclick = () => {
+    const ret = sessionStorage.getItem("admin_attempts_return");
+    location.href = ret || "./admin.html";
+  };
+
+  const flowFilter = document.getElementById("flowFilter");
+  const qEl = document.getElementById("q");
+  const attemptsEl = document.getElementById("attempts");
+  const sellDealsEl = document.getElementById("sellDeals");
+  const cntPill = document.getElementById("cntPill");
+
+  function esc(s){
+    return String(s||"").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function fmtTs(ts){
+    try{
+      const d = new Date(Number(ts||0));
+      if(!Number.isFinite(d.getTime())) return "—";
+      return d.toLocaleString("ru-RU");
+    }catch(e){ return "—"; }
+  }
+
+  async function loadAttempts(){
+    const res = await fetch(WORKER_BASE + "/api/admin/attempts", { headers: adminHeaders() });
+    const j = await res.json().catch(()=> ({}));
+    if(!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j.attempts || [];
+  }
+
+  async function loadSellDeals(){
+    const res = await fetch(WORKER_BASE + "/api/admin/sell_deals", { headers: adminHeaders() });
+    const j = await res.json().catch(()=> ({}));
+    if(!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+    return j.deals || [];
+  }
+
+  async function patchSellDeal(dealId, payload){
+    const res = await fetch(WORKER_BASE + "/api/admin/sell_deals/" + encodeURIComponent(dealId), {
+      method:"PATCH",
+      headers: adminHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const j = await res.json().catch(()=> ({}));
+    if(!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+  }
+
+  function renderSellDeals(deals){
+    const onCheck = (deals || []).filter(d => String(d.status||"").toUpperCase()==="ON_CHECK");
+    if(onCheck.length === 0){
+      sellDealsEl.innerHTML = `<div class="small" style="margin-top:10px;">Нет сделок на проверке.</div>`;
+      return;
+    }
+
+    sellDealsEl.innerHTML = onCheck.map(d => {
+      const tg = d.tgUser || {};
+      const who = tg.username ? ("@" + tg.username) : (tg.id ? ("id:" + tg.id) : "—");
+      const req = d.requisites || {};
+      const payout = d.payout || {};
+      return `
+        <div class="item" style="margin-top:10px;">
+          <div class="itemTitle">SELL · ${esc(d.dealId)} <span class="pill">ON_CHECK</span></div>
+          <div class="kv">
+            <b>Пользователь:</b> ${esc(who)}<br/>
+            <b>Сумма:</b> ${esc(d.amountRub)} ₽ · <b>Курс:</b> ${esc(d.rate)}<br/>
+            <b>Реквизиты:</b> ${esc(req.payType)} · ${esc(req.bank)} · ${esc(req.requisite)} · ${esc(req.fio)}<br/>
+            <b>Крипта:</b> ${esc(payout.type)} · <span class="mono">${esc(payout.value)}</span><br/>
+            <b>TxHash:</b> <span class="mono">${esc(d.txHash || "—")}</span><br/>
+            <b>Создано:</b> ${esc(fmtTs(d.createdAt))}
+          </div>
+
+          <div class="grid2" style="margin-top:10px;">
+            <div>
+              <div class="small" style="margin-bottom:6px;">nextUrl (на будущее)</div>
+              <input data-nexturl="${esc(d.dealId)}" placeholder="например: ./sell-success.html?..." />
+            </div>
+            <div class="row" style="justify-content:flex-end;">
+              <button class="btn btnOk" data-ok="${esc(d.dealId)}">УСПЕХ</button>
+              <button class="btn btnBad" data-bad="${esc(d.dealId)}">НЕУСПЕХ</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    sellDealsEl.querySelectorAll("button[data-ok]").forEach(btn=>{
+      btn.onclick = async () => {
+        const dealId = btn.getAttribute("data-ok");
+        const nextInput = sellDealsEl.querySelector(`input[data-nexturl="${CSS.escape(dealId)}"]`);
+        const nextUrl = (nextInput?.value || "").trim();
+        btn.disabled = true;
+        try{
+          await patchSellDeal(dealId, { status:"SUCCESS", nextUrl: nextUrl || null });
+          await refresh();
+        }catch(e){
+          alert("Ошибка: " + (e.message || String(e)));
+        }finally{
+          btn.disabled = false;
+        }
+      };
+    });
+
+    sellDealsEl.querySelectorAll("button[data-bad]").forEach(btn=>{
+      btn.onclick = async () => {
+        const dealId = btn.getAttribute("data-bad");
+        btn.disabled = true;
+        try{
+          await patchSellDeal(dealId, { status:"FAILED" });
+          await refresh();
+        }catch(e){
+          alert("Ошибка: " + (e.message || String(e)));
+        }finally{
+          btn.disabled = false;
+        }
+      };
+    });
+  }
+
+  function renderAttempts(items){
+    const flow = flowFilter.value;
+    const q = (qEl.value || "").trim().toLowerCase();
+
+    let arr = (items || []);
+    if(flow !== "ALL") arr = arr.filter(x => String(x.flow||"").toUpperCase() === flow);
+
+    if(q){
+      arr = arr.filter(x => {
+        const tg = x.tgUser || {};
+        const s = [
+          x.flow, x.step, x.attemptId, x.dealId, x.offerId,
+          tg.username, tg.id,
+          JSON.stringify(x.data||{})
+        ].join(" ").toLowerCase();
+        return s.includes(q);
+      });
+    }
+
+    cntPill.textContent = String(arr.length);
+
+    attemptsEl.innerHTML = arr.map(x => {
+      const tg = x.tgUser || {};
+      const who = tg.username ? ("@" + tg.username) : (tg.id ? ("id:" + tg.id) : "—");
+      return `
+        <div class="item">
+          <div class="itemTitle">${esc(x.flow || "—")} · ${esc(x.step || "—")}</div>
+          <div class="kv">
+            <b>Время:</b> ${esc(fmtTs(x.ts))}<br/>
+            <b>Пользователь:</b> ${esc(who)}<br/>
+            <b>Session:</b> <span class="mono">${esc(x.sessionId || "—")}</span><br/>
+            <b>offerId:</b> ${esc(x.offerId || "—")}<br/>
+            <b>dealId:</b> ${esc(x.dealId || "—")}
+          </div>
+          <details style="margin-top:8px;">
+            <summary>Данные</summary>
+            <div class="kv mono">${esc(JSON.stringify(x.data || {}, null, 2))}</div>
+          </details>
+        </div>
+      `;
+    }).join("");
+  }
+
+  async function refresh(){
+    const [attempts, deals] = await Promise.all([loadAttempts(), loadSellDeals()]);
+    renderSellDeals(deals);
+    renderAttempts(attempts);
+  }
+
+  document.getElementById("refreshBtn").onclick = refresh;
+  flowFilter.onchange = refresh;
+  qEl.oninput = () => { /* не дёргаем сервер */ };
+
+  refresh().catch(e => alert("Ошибка: " + (e.message || String(e))));
+</script>
+</body>
+</html>

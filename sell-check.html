@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag · Продажа · Проверка</title>
+
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .overlay{
+      position:fixed; inset:0; z-index:-2;
+      background:
+        radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        radial-gradient(900px 600px at 85% 85%, rgba(245,158,11,.10), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
+      box-sizing:border-box;
+    }
+    .wrap{ width:100%; max-width:720px; }
+
+    .card{
+      position:relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-60px;
+      background:
+        radial-gradient(520px 180px at 35% 20%, rgba(45,91,255,.18), rgba(0,0,0,0) 60%),
+        radial-gradient(520px 180px at 75% 90%, rgba(245,158,11,.12), rgba(0,0,0,0) 60%);
+      filter: blur(18px);
+      pointer-events:none;
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .title{
+      font-weight:1000;
+      font-size:16px;
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: rgba(245,158,11,.95);
+      box-shadow: 0 0 0 0 rgba(245,158,11,.35);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%{ box-shadow: 0 0 0 0 rgba(245,158,11,.35); transform: scale(1); }
+      60%{ box-shadow: 0 0 0 12px rgba(245,158,11,0); transform: scale(1.05); }
+      100%{ box-shadow: 0 0 0 0 rgba(245,158,11,0); transform: scale(1); }
+    }
+
+    .status{
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:950;
+      font-size:13px;
+      white-space:pre-line;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .btnGhost{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px 18px;
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      min-width: 190px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+        <div class="title"><span class="dot"></span>Проверяем сделку…</div>
+
+        <div class="status warn" id="box">Ожидайте проверку.</div>
+
+        <div class="actions">
+          <button class="btnGhost" id="toSell" type="button">← В стакан</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+  const p = new URLSearchParams(location.search);
+  const dealId = (p.get("dealId") || "").trim();
+  const secret = (p.get("secret") || "").trim();
+  const box = document.getElementById("box");
+
+  document.getElementById("toSell").onclick = () => location.href = "./sell.html";
+
+  function setBox(text, kind){
+    box.textContent = text;
+    box.className = "status " + (kind || "warn");
+  }
+
+  async function poll(){
+    if (!dealId || !secret){
+      setBox("Ошибка: нет dealId/secret", "bad");
+      return;
+    }
+    try{
+      const res = await fetch(WORKER_BASE + "/api/public/sell_info?dealId=" + encodeURIComponent(dealId) + "&secret=" + encodeURIComponent(secret));
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      const st = String(j.status || "").toUpperCase();
+      if (st === "ON_CHECK" || st === "WAIT_CHECK"){
+        setBox("Заявка отправлена ✅\nОжидайте проверку.", "warn");
+        return;
+      }
+      if (st === "SUCCESS"){
+        setBox("Успешно ✅\nПереходим дальше…", "ok");
+        setTimeout(() => {
+          location.href = "./sell-next.html?dealId=" + encodeURIComponent(dealId);
+        }, 600);
+        return;
+      }
+      if (st === "FAILED"){
+        setBox("Неуспешно ❌\nОбратитесь в поддержку или создайте новую сделку.", "bad");
+        return;
+      }
+
+      setBox("Статус: " + st, "warn");
+    }catch(e){
+      setBox("Ошибка: " + (e.message || String(e)), "bad");
+    }
+  }
+
+  poll();
+  setInterval(poll, 5000);
+</script>
+</body>
+</html>

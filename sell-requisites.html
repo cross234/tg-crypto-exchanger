@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag · Продажа · Реквизиты</title>
+
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .overlay{
+      position:fixed; inset:0; z-index:-2;
+      background:
+        radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        radial-gradient(900px 600px at 85% 85%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100svh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
+      box-sizing:border-box;
+    }
+    .wrap{ width:100%; max-width:980px; }
+
+    .card{
+      position:relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-60px;
+      background:
+        radial-gradient(520px 180px at 35% 20%, rgba(45,91,255,.18), rgba(0,0,0,0) 60%),
+        radial-gradient(520px 180px at 75% 90%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%);
+      filter: blur(18px);
+      pointer-events:none;
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .title{ font-weight:1000; font-size:16px; }
+    .back{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:950;
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:10px;
+      margin-bottom:12px;
+    }
+    @media(max-width:900px){ .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media(max-width:520px){ .grid{ grid-template-columns: 1fr; } }
+
+    .cell{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+    .label{ color:var(--muted); font-size:12px; font-weight:950; margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:16px; word-break:break-word; overflow-wrap:anywhere; }
+
+    .section{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      margin-bottom:12px;
+    }
+    .sectionTitle{ font-weight:1000; margin-bottom:10px; }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    @media(max-width:700px){ .row{ grid-template-columns:1fr; } }
+
+    select, input{
+      width:100%;
+      max-width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+      font-weight:1000;
+      font-size:15px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    input::placeholder{ color: rgba(159,176,212,.65); font-weight:900; }
+
+    .hint{
+      color: rgba(233,240,255,.78);
+      font-size:12px;
+      font-weight:850;
+      line-height:1.45;
+    }
+
+    .status{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:950;
+      font-size:13px;
+      white-space:pre-line;
+      display:none;
+    }
+    .status.show{ display:block; }
+    .status.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 18px;
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+      min-width: 190px;
+      position:relative;
+    }
+    .btnGhost{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px 18px;
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      min-width: 190px;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
+
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    .loading{ pointer-events:none; opacity:.88; }
+    .loading::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      right:12px;
+      width:16px;
+      height:16px;
+      margin-top:-8px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(255,255,255,.95);
+      animation: spin .9s linear infinite;
+    }
+
+    /* “плашка” выбора кошелька */
+    .sheet{
+      display:none;
+      margin-top:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      overflow:hidden;
+    }
+    .sheet.show{ display:block; animation: fadeIn .18s ease both; }
+    @keyframes fadeIn{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform: translateY(0);} }
+
+    .sheetHead{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .sheetTitle{ font-weight:1000; }
+    .mini{ color:var(--muted); font-weight:900; font-size:12px; }
+
+    .destGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      padding:12px;
+    }
+    @media(max-width:700px){ .destGrid{ grid-template-columns:1fr; } }
+
+    .dest{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:12px;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      overflow:hidden;
+    }
+    .dest:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .dest.active{ border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.08); }
+    .destName{ font-weight:1000; margin-bottom:6px; }
+    .destVal{ font-weight:950; font-size:13px; color: rgba(233,240,255,.88); word-break:break-all; }
+
+    .txBox{ display:none; margin-top:12px; }
+    .txBox.show{ display:block; }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+        <div class="top">
+          <div class="title">Продажа · Реквизиты для выплаты</div>
+          <a class="back" href="./sell.html">← Назад</a>
+        </div>
+
+        <div class="grid">
+          <div class="cell">
+            <div class="label">Сумма (RUB)</div>
+            <div class="value" id="amount">—</div>
+          </div>
+          <div class="cell">
+            <div class="label">Курс</div>
+            <div class="value" id="rate">—</div>
+          </div>
+          <div class="cell">
+            <div class="label">К выплате (USDT)</div>
+            <div class="value" id="usdt">—</div>
+          </div>
+          <div class="cell">
+            <div class="label">Объявление</div>
+            <div class="value" id="offer">—</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="sectionTitle">Реквизиты для оплаты (куда вам переведут RUB)</div>
+
+          <div class="row">
+            <div>
+              <div class="label">Способ</div>
+              <select id="payMethod">
+                <option value="SBP">СБП</option>
+                <option value="CARD">Карта</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="label" id="numLabel">Номер СБП</div>
+              <input id="number" placeholder="+7..." inputmode="text" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <div class="label">Банк</div>
+              <input id="bank" placeholder="Например: Т-Банк" />
+            </div>
+            <div>
+              <div class="label">ФИО получателя</div>
+              <input id="fio" placeholder="Иванов Иван Иванович" />
+            </div>
+          </div>
+
+          <div class="hint">
+            После заполнения реквизитов появится выбор, куда удобнее перевести крипту за продажу.
+          </div>
+
+          <div class="status show warn" id="statusBox">Заполни реквизиты…</div>
+
+          <div class="actions">
+            <button class="btnGhost" id="cancelBtn" type="button">Отменить</button>
+            <button class="btn" id="continueBtn" type="button" disabled>Продолжить</button>
+          </div>
+        </div>
+
+        <!-- sheet: выбор куда переводить крипту -->
+        <div class="sheet" id="sheet">
+          <div class="sheetHead">
+            <div>
+              <div class="sheetTitle">Куда удобнее переводить крипту? ✅</div>
+              <div class="mini">Выбери один вариант</div>
+            </div>
+            <div class="mini">После “Я оплатил” попросим TX hash</div>
+          </div>
+
+          <div class="destGrid" id="destGrid"></div>
+
+          <div class="actions" style="padding:0 12px 12px;">
+            <button class="btnGhost" id="backToFormBtn" type="button">← Назад</button>
+            <button class="btn" id="iPaidBtn" type="button" disabled>Я оплатил</button>
+          </div>
+
+          <div class="txBox" id="txBox" style="padding:0 12px 12px;">
+            <div class="section" style="margin:0;">
+              <div class="sectionTitle">TX Hash</

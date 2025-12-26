@@ -3,23 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Crossflag Exchange · Продать</title>
+  <title>Crossflag · Продажа · Сумма</title>
 
   <style>
     :root{
       --text:#e9f0ff;
       --muted:#9fb0d4;
-
       --card: rgba(15, 26, 48, 0.52);
       --border: rgba(255,255,255,.12);
-
       --ok:#22c55e;
       --bad:#ef4444;
       --warn:#f59e0b;
-
       --btn:#2d5bff;
       --btn2:#1f3fb3;
-
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
@@ -28,21 +24,17 @@
       margin:0;
       color:var(--text);
       background:#071022;
-
       overflow-y:auto;
       overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
     }
 
-    /* ✅ Красивее фон/градиенты */
     .overlay{
-      position:fixed;
-      inset:0;
-      z-index:-2;
+      position:fixed; inset:0; z-index:-2;
       background:
         radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
-        radial-gradient(900px 600px at 18% 85%, rgba(239,68,68,.10), rgba(0,0,0,0) 60%),
+        radial-gradient(900px 600px at 85% 85%, rgba(239,68,68,.10), rgba(0,0,0,0) 60%),
         linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
       pointer-events:none;
     }
@@ -52,22 +44,16 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:
-        calc(16px + env(safe-area-inset-top))
-        16px
-        calc(22px + env(safe-area-inset-bottom))
-        16px;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
       box-sizing:border-box;
     }
+    .wrap{ width:100%; max-width:820px; }
 
-    .wrap{ width:100%; max-width:720px; }
-
-    /* ✅ Карточка со свечением */
     .card{
       position:relative;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 14px;
       box-shadow: 0 18px 50px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
@@ -93,23 +79,28 @@
       justify-content:space-between;
       gap:10px;
       margin-bottom:12px;
+      flex-wrap:wrap;
     }
-
-    .title{
-      font-weight:1000;
-      font-size:16px;
-      letter-spacing:.2px;
+    .title{ font-weight:1000; font-size:16px; }
+    .back{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:950;
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      text-decoration:none;
+      white-space:nowrap;
     }
 
     .grid{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap:12px;
       margin-bottom:12px;
     }
-    @media(max-width:640px){
-      .grid{ grid-template-columns:1fr; }
-    }
+    @media(max-width:700px){ .grid{ grid-template-columns:1fr; } }
 
     .box{
       padding:12px;
@@ -119,294 +110,262 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .value{ font-weight:1000; font-size:18px; word-break:break-word; }
+    .value{ font-weight:1000; font-size:18px; word-break:break-word; overflow-wrap:anywhere; }
 
     .section{
-      position:relative;
       padding:12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
       margin-bottom:12px;
-      overflow:hidden;
     }
-    .section::before{
-      content:"";
-      position:absolute;
-      inset:-40px;
-      background:
-        radial-gradient(480px 150px at 25% 20%, rgba(45,91,255,.10), rgba(0,0,0,0) 60%);
-      filter: blur(18px);
-      pointer-events:none;
-      z-index:0;
-    }
-    .section > *{ position:relative; z-index:1; }
+    .sectionTitle{ font-weight:1000; margin-bottom:10px; }
 
-    .sectionTitle{
-      font-weight:1000;
-      margin-bottom:10px;
-    }
-
-    .hint{
-      color: rgba(233,240,255,.75);
-      font-size:12px;
-      font-weight:850;
-      line-height:1.45;
-      margin-top:8px;
-    }
-
-    input[type="number"]{
+    input{
       width:100%;
+      padding:12px 12px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
+      background: rgba(0,0,0,.18);
       color:var(--text);
-      padding:12px 12px;
       outline:none;
-      font-weight:900;
-      font-size:14px;
+      font-weight:1000;
+      font-size:16px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
+    input::placeholder{ color: rgba(159,176,212,.65); font-weight:900; }
 
-    .payRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px;
-      border-radius:14px;
+    .payGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media(max-width:640px){ .payGrid{ grid-template-columns:1fr; } }
+
+    .opt{
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.16);
-      margin-top:10px;
+      border-radius:16px;
+      padding:14px;
       cursor:pointer;
       user-select:none;
-      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
-    .payRow:hover{
-      transform: translateY(-1px);
-      background: rgba(0,0,0,.20);
-      border-color: rgba(255,255,255,.16);
-    }
-    .payLeft{ min-width:0; }
-    .payName{ font-weight:1000; }
-    .payHint{ font-size:12px; color:var(--muted); margin-top:2px; }
-    .payRow input{ transform: scale(1.05); }
+    .opt:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
+    .opt.active{ border-color: rgba(45,91,255,.55); background: rgba(45,91,255,.12); }
+    .optTitle{ font-weight:1000; }
+    .optSub{ margin-top:6px; color:var(--muted); font-weight:900; font-size:12px; line-height:1.35; }
 
     .status{
-      padding:10px 12px;
+      margin-top:10px;
+      padding:12px 14px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.20);
-      font-weight:900;
+      font-weight:950;
       font-size:13px;
       white-space:pre-line;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      display:none;
     }
-    .status.ok{ background: rgba(34,197,94,.10); }
-    .status.bad{ background: rgba(239,68,68,.10); }
-    .status.warn{ background: rgba(245,158,11,.10); }
+    .status.show{ display:block; }
+    .status.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
 
     .actions{
       display:flex;
-      justify-content:flex-end;
       gap:10px;
-      margin-top:10px;
+      justify-content:flex-end;
       flex-wrap:wrap;
+      margin-top:12px;
     }
     .btn{
       border:0;
       border-radius:14px;
-      padding:12px 16px;
+      padding:12px 18px;
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
       font-weight:1000;
       cursor:pointer;
       box-shadow: 0 10px 26px rgba(0,0,0,.30);
+      min-width: 190px;
     }
-    .btn.cancel{
+    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
+    .btnGhost{
       border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px 18px;
       background: rgba(255,255,255,.06);
       color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      min-width: 190px;
     }
-    .btn.cancel:hover{ background: rgba(255,255,255,.09); }
-
-    .btn.next{
-      background: linear-gradient(180deg, var(--btn), var(--btn2));
-      color:#fff;
-      min-width:180px;
-    }
-    .btn.next:hover{ filter: brightness(1.06); }
-    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
   </style>
 </head>
 
 <body>
-<div class="overlay"></div>
+  <div class="overlay"></div>
 
-<div class="page">
-  <div class="wrap">
-    <div class="card">
-      <div class="top">
-        <div class="title">Crossflag Exchange · Продать</div>
-      </div>
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+        <div class="top">
+          <div class="title">Продажа USDT · Выбор суммы</div>
+          <a class="back" href="./sell.html">← Назад</a>
+        </div>
 
-      <div class="grid">
-        <div class="box"><div class="label">ID объявления</div><div class="value" id="orderId">—</div></div>
-        <div class="box"><div class="label">Мин. чек (RUB)</div><div class="value" id="minCheck">—</div></div>
-        <div class="box"><div class="label">Курс (RUB/USDT)</div><div class="value" id="rate">—</div></div>
-        <div class="box"><div class="label">Вы отдаёте (USDT)</div><div class="value" id="usdtOut">—</div></div>
-      </div>
-
-      <div class="section">
-        <div class="sectionTitle">Сумма обмена</div>
-        <input id="amountInput" type="number" inputmode="numeric" min="0" step="100" placeholder="Введите сумму в RUB" />
-        <div class="hint" id="amountHint">Минимальная сумма: —</div>
-      </div>
-
-      <div class="section">
-        <div class="sectionTitle">Способ оплаты</div>
-
-        <label class="payRow">
-          <div class="payLeft">
-            <div class="payName">Crossflag Exchange</div>
-            <div class="payHint">Сделка внутри Crossflag</div>
+        <div class="grid">
+          <div class="box">
+            <div class="label">Курс</div>
+            <div class="value" id="rate">—</div>
           </div>
-          <input type="radio" name="pay" value="CROSSFLAG" checked />
-        </label>
-
-        <label class="payRow">
-          <div class="payLeft">
-            <div class="payName">HTX</div>
-            <div class="payHint">Сделка через HTX</div>
+          <div class="box">
+            <div class="label">Мин. чек</div>
+            <div class="value" id="minRub">—</div>
           </div>
-          <input type="radio" name="pay" value="HTX" />
-        </label>
-      </div>
+        </div>
 
-      <div class="status warn" id="orderStatus">Введите сумму и нажмите «Продолжить».</div>
+        <div class="section">
+          <div class="sectionTitle">Сумма (RUB)</div>
+          <input id="amountInput" placeholder="Введи сумму…" inputmode="numeric" />
+          <div class="status show warn" id="hintBox">—</div>
+        </div>
 
-      <div class="actions">
-        <button class="btn cancel" id="cancelBtn" type="button">Отменить</button>
-        <button class="btn next" id="nextBtn" type="button">Продолжить</button>
+        <div class="section">
+          <div class="sectionTitle">Способ оплаты</div>
+          <div class="payGrid" id="payGrid">
+            <div class="opt active" data-pay="CROSSFLAG">
+              <div class="optTitle">Crossflag Exchange</div>
+              <div class="optSub">Вы вводите реквизиты и получаете выплату от нас.</div>
+            </div>
+            <div class="opt" data-pay="HTX">
+              <div class="optTitle">HTX</div>
+              <div class="optSub">Продажа через HTX (в разработке, добавим следующим шагом).</div>
+            </div>
+          </div>
+
+          <div class="status" id="statusBox"></div>
+
+          <div class="actions">
+            <button class="btnGhost" id="cancelBtn" type="button">Отменить</button>
+            <button class="btn" id="nextBtn" type="button" disabled>Продолжить</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-</div>
 
 <script>
-  const p = new URLSearchParams(location.search);
+  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
-  const id = (p.get("id") || "").trim();
+  const p = new URLSearchParams(location.search);
+  const offerId = (p.get("id") || "").trim();
   const rate = Number(p.get("rate"));
   const minCheckRub = Number(p.get("minCheckRub"));
   const avgTimeMin = Number(p.get("avgTimeMin"));
-  const method = (p.get("method") || "").toUpperCase();
 
-  const orderIdEl = document.getElementById("orderId");
   const rateEl = document.getElementById("rate");
-  const minCheckEl = document.getElementById("minCheck");
-  const usdtOutEl = document.getElementById("usdtOut");
-
+  const minEl = document.getElementById("minRub");
   const amountInput = document.getElementById("amountInput");
-  const amountHint = document.getElementById("amountHint");
-
-  const statusEl = document.getElementById("orderStatus");
+  const hintBox = document.getElementById("hintBox");
+  const statusBox = document.getElementById("statusBox");
   const nextBtn = document.getElementById("nextBtn");
   const cancelBtn = document.getElementById("cancelBtn");
 
-  function fmtRub(n){
-    const num = Number(n);
-    if (!Number.isFinite(num)) return "—";
-    return num.toLocaleString("ru-RU") + " ₽";
-  }
-  function fmtRate(n){
-    const num = Number(n);
-    if (!Number.isFinite(num)) return "—";
-    return num.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
-  }
-  function fmtUsdt(n){
-    const num = Number(n);
-    if (!Number.isFinite(num)) return "—";
-    return num.toFixed(6) + " USDT";
-  }
+  let pay = "CROSSFLAG";
+
+  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
+  function fmtRate(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 2 }) + " RUB/USDT"; }
 
   function setStatus(text, kind){
-    statusEl.textContent = text;
-    statusEl.className = "status " + (kind || "warn");
+    statusBox.textContent = text;
+    statusBox.className = "status show " + (kind || "warn");
+  }
+  function setHint(text, kind){
+    hintBox.textContent = text;
+    hintBox.className = "status show " + (kind || "warn");
   }
 
-  function getPay(){
-    return document.querySelector('input[name="pay"]:checked')?.value || "CROSSFLAG";
+  function parseAmount(){
+    const raw = (amountInput.value || "").replace(/[^\d]/g,"");
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : 0;
   }
 
-  function recalc(){
-    const amountRub = Number(amountInput.value);
+  function validate(){
+    const a = parseAmount();
+    if (!offerId){
+      setHint("Ошибка: нет id объявления.", "bad");
+      nextBtn.disabled = true;
+      return;
+    }
     if (!Number.isFinite(rate) || rate <= 0){
-      usdtOutEl.textContent = "—";
-      setStatus("Ошибка: некорректный курс", "bad");
+      setHint("Ошибка: нет курса.", "bad");
+      nextBtn.disabled = true;
+      return;
+    }
+    if (!Number.isFinite(minCheckRub) || minCheckRub <= 0){
+      setHint("Ошибка: нет мин. чека.", "bad");
       nextBtn.disabled = true;
       return;
     }
 
-    if (!Number.isFinite(amountRub) || amountRub <= 0){
-      usdtOutEl.textContent = "—";
-      setStatus("Введите сумму в RUB.", "warn");
+    if (!a){
+      setHint("Введи сумму продажи (RUB).", "warn");
+      nextBtn.disabled = true;
+      return;
+    }
+    if (a < minCheckRub){
+      setHint("Минимальная сумма: " + fmtRub(minCheckRub), "warn");
       nextBtn.disabled = true;
       return;
     }
 
-    if (Number.isFinite(minCheckRub) && minCheckRub > 0 && amountRub < minCheckRub){
-      usdtOutEl.textContent = fmtUsdt(amountRub / rate);
-      setStatus("Сумма меньше минимального чека. Минимум: " + fmtRub(minCheckRub), "bad");
-      nextBtn.disabled = true;
-      return;
-    }
-
-    usdtOutEl.textContent = fmtUsdt(amountRub / rate);
-    setStatus("Готово. Выберите способ оплаты и нажмите «Продолжить».", "ok");
+    const usdt = a / rate;
+    setHint("Вы получите ~ " + usdt.toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT", "ok");
     nextBtn.disabled = false;
   }
 
-  orderIdEl.textContent = id || "—";
-  rateEl.textContent = fmtRate(rate);
-  minCheckEl.textContent = fmtRub(minCheckRub);
-  amountHint.textContent =
-    "Минимальная сумма: " + fmtRub(minCheckRub) +
-    (Number.isFinite(avgTimeMin) ? (" · Время: ~" + avgTimeMin + " мин") : "");
+  document.getElementById("payGrid").addEventListener("click", (e) => {
+    const el = e.target.closest(".opt[data-pay]");
+    if (!el) return;
+    document.querySelectorAll(".opt[data-pay]").forEach(x => x.classList.remove("active"));
+    el.classList.add("active");
+    pay = el.getAttribute("data-pay") || "CROSSFLAG";
+    statusBox.className = "status";
+  });
 
-  if (Number.isFinite(minCheckRub) && minCheckRub > 0){
-    amountInput.min = String(minCheckRub);
-    amountInput.value = String(minCheckRub);
-  }
+  amountInput.addEventListener("input", validate);
 
-  amountInput.addEventListener("input", recalc);
-
-  cancelBtn.onclick = () => {
-    location.href = "./sell.html";
-  };
+  cancelBtn.onclick = () => location.href = "./sell.html";
 
   nextBtn.onclick = () => {
-    // ⚠️ Пока без изменения воркера: не ломаем текущий флоу.
-    const amountRub = Number(amountInput.value);
-    const pay = getPay();
-
-    const qs = new URLSearchParams({
-      id,
-      method: String(method),
-      rate: String(rate),
-      minCheckRub: String(minCheckRub),
-      avgTimeMin: String(avgTimeMin),
-      amountRub: String(amountRub),
-      pay: String(pay),
-    });
-
+    const a = parseAmount();
     if (pay === "HTX"){
-      setStatus("HTX выбран. Следующим шагом подключим SELL-сделку через HTX.", "warn");
+      setStatus("HTX-ветка будет добавлена следующим шагом.\nВыбери Crossflag Exchange, чтобы продолжить сейчас.", "warn");
       return;
     }
 
-    setStatus("Crossflag Exchange выбран. Следующим шагом сделаем страницу реквизитов для получения RUB.", "warn");
+    // Crossflag flow
+    const qs = new URLSearchParams({
+      offerId,
+      amountRub: String(a),
+      rate: String(rate),
+      minCheckRub: String(minCheckRub),
+      avgTimeMin: String(avgTimeMin || 0),
+      pay: "CROSSFLAG"
+    });
+    location.href = "./sell-requisites.html?" + qs.toString();
   };
 
-  recalc();
+  // init
+  rateEl.textContent = (Number.isFinite(rate) && rate>0) ? fmtRate(rate) : "—";
+  minEl.textContent = (Number.isFinite(minCheckRub) && minCheckRub>0) ? fmtRub(minCheckRub) : "—";
+  validate();
 </script>
 </body>
 </html>

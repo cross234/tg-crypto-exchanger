@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Crossflag · Продажа · Проверка</title>
-
+  <title>P2P · Продать · Проверка</title>
   <style>
     :root{
       --text:#e9f0ff;
@@ -18,44 +17,32 @@
       --btn2:#1f3fb3;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-
-    html,body{ height:100%; }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{height:100%}
     body{
-      margin:0;
-      color:var(--text);
-      background:#071022;
-      overflow-y:auto;
-      overflow-x:hidden;
+      margin:0; color:var(--text); background:#071022;
+      overflow-y:auto; overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior-y: contain;
     }
-
     .overlay{
       position:fixed; inset:0; z-index:-2;
       background:
         radial-gradient(1100px 700px at 50% -220px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
-        radial-gradient(900px 600px at 85% 85%, rgba(245,158,11,.10), rgba(0,0,0,0) 60%),
+        radial-gradient(900px 600px at 85% 85%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%),
         linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
       pointer-events:none;
     }
-
-    .page{
-      min-height:100svh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
-      box-sizing:border-box;
+    .wrap{
+      max-width:820px; margin:0 auto;
+      padding: calc(18px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
     }
-    .wrap{ width:100%; max-width:720px; }
-
     .card{
       position:relative;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       overflow:hidden;
@@ -66,53 +53,50 @@
       inset:-60px;
       background:
         radial-gradient(520px 180px at 35% 20%, rgba(45,91,255,.18), rgba(0,0,0,0) 60%),
-        radial-gradient(520px 180px at 75% 90%, rgba(245,158,11,.12), rgba(0,0,0,0) 60%);
+        radial-gradient(520px 180px at 75% 90%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%);
       filter: blur(18px);
       pointer-events:none;
       z-index:0;
     }
     .card > *{ position:relative; z-index:1; }
 
-    .title{
-      font-weight:1000;
-      font-size:16px;
-      margin-bottom:10px;
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .title{ font-weight:1000; font-size:16px; letter-spacing:.2px; display:flex; align-items:center; gap:10px; }
+    .hint{ margin-top:10px; color:rgba(233,240,255,.78); font-size:12px; font-weight:850; line-height:1.45; }
+
+    .spinner{
+      width:22px; height:22px; border-radius:999px;
+      border:2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(255,255,255,.95);
+      animation: spin .9s linear infinite;
+      flex:0 0 auto;
     }
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background: rgba(245,158,11,.95);
-      box-shadow: 0 0 0 0 rgba(245,158,11,.35);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    @keyframes pulse{
-      0%{ box-shadow: 0 0 0 0 rgba(245,158,11,.35); transform: scale(1); }
-      60%{ box-shadow: 0 0 0 12px rgba(245,158,11,0); transform: scale(1.05); }
-      100%{ box-shadow: 0 0 0 0 rgba(245,158,11,0); transform: scale(1); }
-    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
 
     .status{
+      margin-top:12px;
+      border-radius:14px;
       padding:12px 14px;
-      border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.20);
       font-weight:950;
       font-size:13px;
       white-space:pre-line;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     .ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
     .bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
     .warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
 
-    .actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      margin-top:12px;
+    .btnRow{ margin-top:14px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 18px;
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+      min-width:190px;
     }
     .btnGhost{
       border:1px solid rgba(255,255,255,.14);
@@ -122,77 +106,88 @@
       color:#fff;
       font-weight:1000;
       cursor:pointer;
-      min-width: 190px;
+      box-shadow:none;
+      min-width:190px;
     }
   </style>
 </head>
-
 <body>
   <div class="overlay"></div>
 
-  <div class="page">
-    <div class="wrap">
-      <div class="card">
-        <div class="title"><span class="dot"></span>Проверяем сделку…</div>
+  <div class="wrap">
+    <div class="card">
+      <div class="title"><span class="spinner"></span> Проверяем продажу</div>
+      <div class="hint">
+        Подождите, администратор проверит транзакцию. Не закрывайте страницу.
+      </div>
 
-        <div class="status warn" id="box">Ожидайте проверку.</div>
+      <div class="status warn" id="status">Статус: ожидание проверки…</div>
 
-        <div class="actions">
-          <button class="btnGhost" id="toSell" type="button">← В стакан</button>
-        </div>
+      <div class="btnRow">
+        <button class="btnGhost" id="toSell" type="button">В стакан</button>
       </div>
     </div>
   </div>
 
 <script>
-  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+  const WORKER_BASE =
+    localStorage.getItem("worker_base") ||
+    "https://rapira-rates-proxy.kireeshka73.workers.dev";
+
   const p = new URLSearchParams(location.search);
   const dealId = (p.get("dealId") || "").trim();
   const secret = (p.get("secret") || "").trim();
-  const box = document.getElementById("box");
 
+  const statusEl = document.getElementById("status");
   document.getElementById("toSell").onclick = () => location.href = "./sell.html";
 
-  function setBox(text, kind){
-    box.textContent = text;
-    box.className = "status " + (kind || "warn");
+  function setStatus(text, kind){
+    statusEl.textContent = text;
+    statusEl.className = "status " + (kind || "warn");
   }
 
-  async function poll(){
-    if (!dealId || !secret){
-      setBox("Ошибка: нет dealId/secret", "bad");
+  async function tick(){
+    if(!dealId || !secret){
+      setStatus("Ошибка: нет dealId/secret", "bad");
       return;
     }
     try{
-      const res = await fetch(WORKER_BASE + "/api/public/sell_info?dealId=" + encodeURIComponent(dealId) + "&secret=" + encodeURIComponent(secret));
-      const j = await res.json();
-      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+      const url = WORKER_BASE + "/api/public/sell_status?dealId=" +
+        encodeURIComponent(dealId) + "&secret=" + encodeURIComponent(secret);
 
-      const st = String(j.status || "").toUpperCase();
-      if (st === "ON_CHECK" || st === "WAIT_CHECK"){
-        setBox("Заявка отправлена ✅\nОжидайте проверку.", "warn");
-        return;
-      }
-      if (st === "SUCCESS"){
-        setBox("Успешно ✅\nПереходим дальше…", "ok");
-        setTimeout(() => {
-          location.href = "./sell-next.html?dealId=" + encodeURIComponent(dealId);
-        }, 600);
-        return;
-      }
-      if (st === "FAILED"){
-        setBox("Неуспешно ❌\nОбратитесь в поддержку или создайте новую сделку.", "bad");
+      const res = await fetch(url);
+      const j = await res.json().catch(()=> ({}));
+      if(!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      const st = String(j.status || "ON_CHECK").toUpperCase();
+
+      if(st === "ON_CHECK"){
+        setStatus("Статус: на проверке…", "warn");
         return;
       }
 
-      setBox("Статус: " + st, "warn");
+      if(st === "SUCCESS"){
+        setStatus("Статус: успешно ✅", "ok");
+        if(j.nextUrl){
+          // редирект на следующую страницу (мы сделаем позже)
+          location.href = j.nextUrl;
+        }
+        return;
+      }
+
+      if(st === "FAILED"){
+        setStatus("Статус: отклонено ❌\nВернитесь в стакан и создайте сделку заново.", "bad");
+        return;
+      }
+
+      setStatus("Статус: " + st, "warn");
     }catch(e){
-      setBox("Ошибка: " + (e.message || String(e)), "bad");
+      setStatus("Ошибка проверки: " + (e.message || String(e)), "bad");
     }
   }
 
-  poll();
-  setInterval(poll, 5000);
+  tick();
+  setInterval(tick, 3000);
 </script>
 </body>
 </html>

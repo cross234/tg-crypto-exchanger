@@ -3,33 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Crossflag · Продажа · Сумма</title>
-
+  <title>P2P · Продать · Оформление</title>
   <style>
     :root{
       --text:#e9f0ff;
       --muted:#9fb0d4;
       --card: rgba(15, 26, 48, 0.52);
       --border: rgba(255,255,255,.12);
-      --ok:#22c55e;
-      --bad:#ef4444;
-      --warn:#f59e0b;
       --btn:#2d5bff;
       --btn2:#1f3fb3;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
-
-    html,body{ height:100%; }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{height:100%}
     body{
-      margin:0;
-      color:var(--text);
-      background:#071022;
-      overflow-y:auto;
-      overflow-x:hidden;
+      margin:0; color:var(--text); background:#071022;
+      overflow-y:auto; overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior-y: contain;
     }
-
     .overlay{
       position:fixed; inset:0; z-index:-2;
       background:
@@ -38,24 +29,17 @@
         linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
       pointer-events:none;
     }
-
-    .page{
-      min-height:100svh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: calc(16px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
-      box-sizing:border-box;
+    .wrap{
+      max-width:980px; margin:0 auto;
+      padding: calc(18px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom)) 16px;
     }
-    .wrap{ width:100%; max-width:820px; }
-
     .card{
       position:relative;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       overflow:hidden;
@@ -74,94 +58,76 @@
     .card > *{ position:relative; z-index:1; }
 
     .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:12px;
-      flex-wrap:wrap;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:12px; flex-wrap:wrap;
     }
-    .title{ font-weight:1000; font-size:16px; }
-    .back{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      font-weight:950;
-      padding:10px 12px;
-      border-radius:999px;
-      cursor:pointer;
-      text-decoration:none;
-      white-space:nowrap;
-    }
+    .title{ font-weight:1000; font-size:16px; letter-spacing:.2px; }
+    .hint{ color:rgba(233,240,255,.78); font-size:12px; font-weight:850; line-height:1.45; }
 
     .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-bottom:12px;
+      display:grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:10px; margin-top:12px;
     }
-    @media(max-width:700px){ .grid{ grid-template-columns:1fr; } }
+    @media(max-width:900px){ .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media(max-width:520px){ .grid{ grid-template-columns: 1fr; } }
 
-    .box{
+    .cell{
       padding:12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.04);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      overflow:hidden;
     }
-    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
-    .value{ font-weight:1000; font-size:18px; word-break:break-word; overflow-wrap:anywhere; }
+    .label{ color:var(--muted); font-size:12px; font-weight:950; margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:16px; overflow-wrap:anywhere; }
 
-    .section{
+    .block{
+      margin-top:12px;
       padding:12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
-      margin-bottom:12px;
     }
-    .sectionTitle{ font-weight:1000; margin-bottom:10px; }
 
     input{
       width:100%;
-      padding:12px 12px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
-      color:var(--text);
+      color: var(--text);
+      padding:12px 12px;
       outline:none;
-      font-weight:1000;
-      font-size:16px;
+      font-weight:900;
+      font-size:14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
-    input::placeholder{ color: rgba(159,176,212,.65); font-weight:900; }
 
-    .payGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media(max-width:640px){ .payGrid{ grid-template-columns:1fr; } }
-
-    .opt{
+    .radios{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .radio{
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      border-radius:16px;
-      padding:14px;
+      background: rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:10px 14px;
       cursor:pointer;
       user-select:none;
-      transition: transform .12s ease, border-color .12s ease, background .12s ease;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      font-weight:950;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
-    .opt:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.18); }
-    .opt.active{ border-color: rgba(45,91,255,.55); background: rgba(45,91,255,.12); }
-    .optTitle{ font-weight:1000; }
-    .optSub{ margin-top:6px; color:var(--muted); font-weight:900; font-size:12px; line-height:1.35; }
+    .radio input{ width:auto; }
+    .radio.active{
+      border-color: rgba(45,91,255,.55);
+      background: rgba(45,91,255,.12);
+    }
 
     .status{
-      margin-top:10px;
-      padding:12px 14px;
+      margin-top:12px;
       border-radius:14px;
+      padding:12px 14px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.20);
       font-weight:950;
@@ -174,13 +140,7 @@
     .status.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
     .status.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
 
-    .actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
+    .btnRow{ margin-top:14px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
     .btn{
       border:0;
       border-radius:14px;
@@ -190,9 +150,8 @@
       font-weight:1000;
       cursor:pointer;
       box-shadow: 0 10px 26px rgba(0,0,0,.30);
-      min-width: 190px;
+      min-width:190px;
     }
-    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
     .btnGhost{
       border:1px solid rgba(255,255,255,.14);
       border-radius:14px;
@@ -201,171 +160,181 @@
       color:#fff;
       font-weight:1000;
       cursor:pointer;
-      min-width: 190px;
+      box-shadow:none;
+      min-width:190px;
     }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
   </style>
 </head>
-
 <body>
   <div class="overlay"></div>
 
-  <div class="page">
-    <div class="wrap">
-      <div class="card">
-        <div class="top">
-          <div class="title">Продажа USDT · Выбор суммы</div>
-          <a class="back" href="./sell.html">← Назад</a>
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div class="title">P2P · Продать · Оформление</div>
+        <button class="btnGhost" id="backBtn" type="button">Назад</button>
+      </div>
+
+      <div class="grid">
+        <div class="cell">
+          <div class="label">Оффер</div>
+          <div class="value" id="offerId">—</div>
+        </div>
+        <div class="cell">
+          <div class="label">Курс</div>
+          <div class="value" id="rate">—</div>
+        </div>
+        <div class="cell">
+          <div class="label">Мин. чек</div>
+          <div class="value" id="minCheck">—</div>
+        </div>
+        <div class="cell">
+          <div class="label">Среднее время</div>
+          <div class="value" id="avgTime">—</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="hint">
+          Укажите сумму продажи. Минимум — как в объявлении.
+        </div>
+        <div style="margin-top:10px;">
+          <div class="label">Сумма (RUB)</div>
+          <input id="amountInput" type="number" inputmode="numeric" placeholder="Например: 5000" />
         </div>
 
-        <div class="grid">
-          <div class="box">
-            <div class="label">Курс</div>
-            <div class="value" id="rate">—</div>
-          </div>
-          <div class="box">
-            <div class="label">Мин. чек</div>
-            <div class="value" id="minRub">—</div>
-          </div>
+        <div class="radios" id="payRadios" style="margin-top:12px;">
+          <label class="radio active">
+            <input type="radio" name="pay" value="CROSSFLAG" checked />
+            Crossflag Exchange
+          </label>
+          <label class="radio">
+            <input type="radio" name="pay" value="HTX" />
+            HTX
+          </label>
         </div>
 
-        <div class="section">
-          <div class="sectionTitle">Сумма (RUB)</div>
-          <input id="amountInput" placeholder="Введи сумму…" inputmode="numeric" />
-          <div class="status show warn" id="hintBox">—</div>
+        <div class="status" id="status"></div>
+
+        <div class="btnRow">
+          <button class="btn" id="nextBtn" type="button">Продолжить</button>
         </div>
-
-        <div class="section">
-          <div class="sectionTitle">Способ оплаты</div>
-          <div class="payGrid" id="payGrid">
-            <div class="opt active" data-pay="CROSSFLAG">
-              <div class="optTitle">Crossflag Exchange</div>
-              <div class="optSub">Вы вводите реквизиты и получаете выплату от нас.</div>
-            </div>
-            <div class="opt" data-pay="HTX">
-              <div class="optTitle">HTX</div>
-              <div class="optSub">Продажа через HTX (в разработке, добавим следующим шагом).</div>
-            </div>
-          </div>
-
-          <div class="status" id="statusBox"></div>
-
-          <div class="actions">
-            <button class="btnGhost" id="cancelBtn" type="button">Отменить</button>
-            <button class="btn" id="nextBtn" type="button" disabled>Продолжить</button>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
 
 <script>
-  const WORKER_BASE = "https://rapira-rates-proxy.kireeshka73.workers.dev";
+  const WORKER_BASE =
+    localStorage.getItem("worker_base") ||
+    "https://rapira-rates-proxy.kireeshka73.workers.dev";
 
   const p = new URLSearchParams(location.search);
   const offerId = (p.get("id") || "").trim();
   const rate = Number(p.get("rate"));
   const minCheckRub = Number(p.get("minCheckRub"));
   const avgTimeMin = Number(p.get("avgTimeMin"));
+  const method = String(p.get("method") || "").toUpperCase();
 
+  const offerIdEl = document.getElementById("offerId");
   const rateEl = document.getElementById("rate");
-  const minEl = document.getElementById("minRub");
+  const minCheckEl = document.getElementById("minCheck");
+  const avgTimeEl = document.getElementById("avgTime");
   const amountInput = document.getElementById("amountInput");
-  const hintBox = document.getElementById("hintBox");
-  const statusBox = document.getElementById("statusBox");
+  const statusEl = document.getElementById("status");
   const nextBtn = document.getElementById("nextBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-
-  let pay = "CROSSFLAG";
-
-  function fmtRub(n){ return Number(n).toLocaleString("ru-RU") + " ₽"; }
-  function fmtRate(n){ return Number(n).toLocaleString("ru-RU", { maximumFractionDigits: 2 }) + " RUB/USDT"; }
 
   function setStatus(text, kind){
-    statusBox.textContent = text;
-    statusBox.className = "status show " + (kind || "warn");
-  }
-  function setHint(text, kind){
-    hintBox.textContent = text;
-    hintBox.className = "status show " + (kind || "warn");
+    statusEl.textContent = text;
+    statusEl.className = "status show " + (kind || "warn");
   }
 
-  function parseAmount(){
-    const raw = (amountInput.value || "").replace(/[^\d]/g,"");
-    const v = Number(raw);
-    return Number.isFinite(v) ? v : 0;
+  function getPay(){
+    const el = document.querySelector('input[name="pay"]:checked');
+    return el ? el.value : "CROSSFLAG";
   }
 
-  function validate(){
-    const a = parseAmount();
-    if (!offerId){
-      setHint("Ошибка: нет id объявления.", "bad");
-      nextBtn.disabled = true;
-      return;
-    }
-    if (!Number.isFinite(rate) || rate <= 0){
-      setHint("Ошибка: нет курса.", "bad");
-      nextBtn.disabled = true;
-      return;
-    }
-    if (!Number.isFinite(minCheckRub) || minCheckRub <= 0){
-      setHint("Ошибка: нет мин. чека.", "bad");
-      nextBtn.disabled = true;
-      return;
-    }
-
-    if (!a){
-      setHint("Введи сумму продажи (RUB).", "warn");
-      nextBtn.disabled = true;
-      return;
-    }
-    if (a < minCheckRub){
-      setHint("Минимальная сумма: " + fmtRub(minCheckRub), "warn");
-      nextBtn.disabled = true;
-      return;
-    }
-
-    const usdt = a / rate;
-    setHint("Вы получите ~ " + usdt.toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT", "ok");
-    nextBtn.disabled = false;
+  function getTgUser(){
+    try { return window.Telegram?.WebApp?.initDataUnsafe?.user || null; } catch(e){ return null; }
+  }
+  function getSessionId(){
+    try{
+      const k="cf_session_id";
+      let v=localStorage.getItem(k);
+      if(!v){ v=Math.random().toString(16).slice(2)+Date.now().toString(16); localStorage.setItem(k,v); }
+      return v;
+    }catch(e){ return null; }
   }
 
-  document.getElementById("payGrid").addEventListener("click", (e) => {
-    const el = e.target.closest(".opt[data-pay]");
-    if (!el) return;
-    document.querySelectorAll(".opt[data-pay]").forEach(x => x.classList.remove("active"));
-    el.classList.add("active");
-    pay = el.getAttribute("data-pay") || "CROSSFLAG";
-    statusBox.className = "status";
+  async function logAttempt(step, data){
+    try{
+      await fetch(WORKER_BASE + "/api/public/log_attempt", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          flow:"SELL",
+          step,
+          sessionId: getSessionId(),
+          tgUser: getTgUser(),
+          data: data || {}
+        })
+      });
+    }catch(e){}
+  }
+
+  // radio styling
+  const radiosWrap = document.getElementById("payRadios");
+  radiosWrap.addEventListener("click", (e)=>{
+    const lbl = e.target.closest(".radio");
+    if(!lbl) return;
+    const inp = lbl.querySelector("input");
+    if(inp) inp.checked = true;
+    radiosWrap.querySelectorAll(".radio").forEach(x=>x.classList.remove("active"));
+    lbl.classList.add("active");
   });
 
-  amountInput.addEventListener("input", validate);
+  document.getElementById("backBtn").onclick = () => location.href = "./sell.html";
 
-  cancelBtn.onclick = () => location.href = "./sell.html";
+  // init
+  offerIdEl.textContent = offerId || "—";
+  rateEl.textContent = Number.isFinite(rate) ? rate.toLocaleString("ru-RU") : "—";
+  minCheckEl.textContent = Number.isFinite(minCheckRub) ? (minCheckRub.toLocaleString("ru-RU") + " ₽") : "—";
+  avgTimeEl.textContent = Number.isFinite(avgTimeMin) ? (avgTimeMin + " мин") : "—";
 
-  nextBtn.onclick = () => {
-    const a = parseAmount();
-    if (pay === "HTX"){
-      setStatus("HTX-ветка будет добавлена следующим шагом.\nВыбери Crossflag Exchange, чтобы продолжить сейчас.", "warn");
+  if (Number.isFinite(minCheckRub) && minCheckRub > 0) {
+    amountInput.value = String(minCheckRub);
+    amountInput.min = String(minCheckRub);
+  }
+
+  logAttempt("OPEN_SELL_ORDER", { offerId, rate, minCheckRub, avgTimeMin, method });
+
+  nextBtn.onclick = async () => {
+    const amountRub = Number(amountInput.value);
+    if(!offerId) { setStatus("Ошибка: нет offerId", "bad"); return; }
+    if(!Number.isFinite(amountRub) || amountRub <= 0){ setStatus("Введите сумму", "bad"); return; }
+    if(Number.isFinite(minCheckRub) && minCheckRub > 0 && amountRub < minCheckRub){
+      setStatus("Сумма меньше минимального чека: " + minCheckRub + " ₽", "bad");
       return;
     }
 
-    // Crossflag flow
-    const qs = new URLSearchParams({
-      offerId,
-      amountRub: String(a),
-      rate: String(rate),
-      minCheckRub: String(minCheckRub),
-      avgTimeMin: String(avgTimeMin || 0),
-      pay: "CROSSFLAG"
-    });
-    location.href = "./sell-requisites.html?" + qs.toString();
-  };
+    const pay = getPay();
+    await logAttempt("CLICK_NEXT", { pay, offerId, amountRub });
 
-  // init
-  rateEl.textContent = (Number.isFinite(rate) && rate>0) ? fmtRate(rate) : "—";
-  minEl.textContent = (Number.isFinite(minCheckRub) && minCheckRub>0) ? fmtRub(minCheckRub) : "—";
-  validate();
+    if(pay === "CROSSFLAG"){
+      const qs = new URLSearchParams({
+        offerId,
+        amountRub: String(amountRub),
+        rate: String(rate || ""),
+        minCheckRub: String(minCheckRub || ""),
+        avgTimeMin: String(avgTimeMin || ""),
+        method: String(method || "")
+      });
+      location.href = "./sell-crossflag.html?" + qs.toString();
+      return;
+    }
+
+    setStatus("Оплата через HTX для продажи будет подключена позже.", "warn");
+  };
 </script>
 </body>
 </html>

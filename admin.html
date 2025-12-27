@@ -270,9 +270,9 @@
     try {
       localStorage.setItem("worker_base", WORKER_BASE);
       sessionStorage.setItem("deals_log_return", location.href);
-      location.href = "./deals-log.html?wb=" + encodeURIComponent(WORKER_BASE);
+      location.href = "./admin-attempts.html?wb=" + encodeURIComponent(WORKER_BASE);
     } catch {
-      location.href = "./deals-log.html?wb=" + encodeURIComponent(WORKER_BASE);
+      location.href = "./admin-attempts.html?wb=" + encodeURIComponent(WORKER_BASE);
     }
   };
 

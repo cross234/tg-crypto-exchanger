@@ -701,9 +701,17 @@ let _clockOffset = 0; // client - server (ms), positive = client ahead
 
 function serverNow(){ return Date.now() - _clockOffset; }
 
-function calcClockOffset(httpRes){
+function syncClock(serverTime, httpRes){
   try{
-    const sd = httpRes.headers.get("Date");
+    const st = Number(serverTime || 0);
+    if (Number.isFinite(st) && st > 0){
+      _clockOffset = Date.now() - st;
+      return;
+    }
+  }catch(_){}
+
+  try{
+    const sd = httpRes && httpRes.headers ? httpRes.headers.get("Date") : "";
     if (!sd) return;
     const st = new Date(sd).getTime();
     if (!Number.isFinite(st)) return;
@@ -734,7 +742,7 @@ async function loadRequisitesAndKeepAlive(){
     }
     if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-    calcClockOffset(res);
+        syncClock(j.serverTime, res);
 
     const offer = j.offer || {};
     currentOffer = offer;
@@ -781,6 +789,7 @@ async function loadRequisitesAndKeepAlive(){
     }
 
     setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
+        setTtl(lastExpiresAt);
 
 
     if (ttlTimer) clearInterval(ttlTimer);
@@ -811,8 +820,11 @@ async function loadRequisitesAndKeepAlive(){
           setStatus("Бронь больше недоступна (кто-то уже открыл эту заявку). Вернись в стакан.", "bad");
           return;
         }
-        if (ka.ok && jj && jj.ok && (jj.expiresAt || jj.offer?.expiresAt)){
-          lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
+                if (ka.ok && jj && jj.ok){
+          syncClock(jj.serverTime, ka);
+          if (jj.expiresAt || jj.offer?.expiresAt){
+            lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
+          }
         }
       }catch(e){}
     }, 20000);

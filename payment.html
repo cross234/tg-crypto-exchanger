@@ -550,28 +550,25 @@
           ? fmtUsdt(amountRub / rate)
           : "—";
     
-      // DEBUG: показать инфо прямо на странице
-      const _rawExp = j.expiresAt ?? j.offer?.expiresAt ?? 0;
-      const _dbg = "DEBUG: expiresAt=" + JSON.stringify(_rawExp)
-        + " | type=" + typeof _rawExp
-        + " | normExpiry=" + normExpiry(_rawExp)
-        + " | Date.now=" + Date.now()
-        + " | keys=" + Object.keys(j).join(",");
-      setStatus(_dbg, "warn");
-      ttlPill.textContent = "DBG: raw=" + String(_rawExp);
+      lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || 0);
 
-      lastExpiresAt = normExpiry(_rawExp);
-      // НЕ отменяем автоматически пока дебажим
+      if (lastExpiresAt && Date.now() >= lastExpiresAt){
+        setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+        ttlPill.textContent = "Истекло";
+        return;
+      }
+
+      setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
 
       if (ttlTimer) clearInterval(ttlTimer);
       ttlTimer = setInterval(() => {
         if (!lastExpiresAt) return;
         setTtl(lastExpiresAt);
-        // DEBUG: НЕ отменяем пока дебажим
-        // if (Date.now() > lastExpiresAt){
-        //   clearInterval(ttlTimer);
-        //   cancelToBook();
-        // }
+        if (Date.now() > lastExpiresAt){
+          clearInterval(ttlTimer);
+          setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+          ttlPill.textContent = "Истекло";
+        }
       }, 1000);
 
       if (keepAliveTimer) clearInterval(keepAliveTimer);

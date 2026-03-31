@@ -619,29 +619,27 @@ async function loadRequisitesAndKeepAlive(){
     rateEl.textContent = fmtRate(rate);
     usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
   
-    // DEBUG: показать инфо прямо на странице
-    const _rawExp = j.expiresAt ?? j.offer?.expiresAt ?? offer.expiresAt ?? null;
-    const _dbg = "DEBUG: expiresAt=" + JSON.stringify(_rawExp)
-      + " | type=" + typeof _rawExp
-      + " | normExpiry=" + normExpiry(_rawExp)
-      + " | Date.now=" + Date.now()
-      + " | keys=" + Object.keys(j).join(",");
-    setStatus(_dbg, "warn");
-    ttlPill.textContent = "DBG: raw=" + String(_rawExp);
+    lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || offer.expiresAt || 0);
 
-    lastExpiresAt = normExpiry(_rawExp);
-    // НЕ отменяем автоматически пока дебажим — убираем автоотмену
+    if (lastExpiresAt && Date.now() >= lastExpiresAt){
+      // бронь уже просрочена — показываем предупреждение, но НЕ отменяем мгновенно
+      setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+      ttlPill.textContent = "Истекло";
+      return; // не запускаем таймер и keepAlive
+    }
+
+    setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
 
 
     if (ttlTimer) clearInterval(ttlTimer);
     ttlTimer = setInterval(() => {
       if (!lastExpiresAt) return;
       setTtl(lastExpiresAt);
-      // DEBUG: НЕ отменяем пока дебажим
-      // if (Date.now() > lastExpiresAt){
-      //   clearInterval(ttlTimer);
-      //   cancelWithReason("Истекло время");
-      // }
+      if (Date.now() > lastExpiresAt){
+        clearInterval(ttlTimer);
+        setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+        ttlPill.textContent = "Истекло";
+      }
     }, 1000);
 
     if (keepAliveTimer) clearInterval(keepAliveTimer);

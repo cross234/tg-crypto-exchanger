@@ -459,7 +459,7 @@ function normExpiry(v){
 }
 
 function setTtl(expiresAt){
-  const ms = normExpiry(expiresAt) - Date.now();
+  const ms = normExpiry(expiresAt) - serverNow();
   if (!Number.isFinite(ms) || ms <= 0){
     ttlPill.textContent = "Осталось: 00:00";
     return;
@@ -560,6 +560,19 @@ copyBtn.onclick = async () => {
 let keepAliveTimer = null;
 let ttlTimer = null;
 let lastExpiresAt = 0;
+let _clockOffset = 0; // client - server (ms), positive = client ahead
+
+function serverNow(){ return Date.now() - _clockOffset; }
+
+function calcClockOffset(httpRes){
+  try{
+    const sd = httpRes.headers.get("Date");
+    if (!sd) return;
+    const st = new Date(sd).getTime();
+    if (!Number.isFinite(st)) return;
+    _clockOffset = Date.now() - st;
+  }catch(_){}
+}
 
 async function loadRequisitesAndKeepAlive(){
   if (!id || !reserveId){
@@ -583,6 +596,8 @@ async function loadRequisitesAndKeepAlive(){
       throw new Error("Заявка уже занята другим пользователем или бронь истекла. Вернись в стакан и выбери другую.");
     }
     if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+    calcClockOffset(res);
 
     const offer = j.offer || {};
     currentOffer = offer;
@@ -621,7 +636,7 @@ async function loadRequisitesAndKeepAlive(){
   
     lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || offer.expiresAt || 0);
 
-    if (lastExpiresAt && Date.now() >= lastExpiresAt){
+    if (lastExpiresAt && serverNow() >= lastExpiresAt){
       // бронь уже просрочена — показываем предупреждение, но НЕ отменяем мгновенно
       setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
       ttlPill.textContent = "Истекло";
@@ -635,7 +650,7 @@ async function loadRequisitesAndKeepAlive(){
     ttlTimer = setInterval(() => {
       if (!lastExpiresAt) return;
       setTtl(lastExpiresAt);
-      if (Date.now() > lastExpiresAt){
+      if (serverNow() > lastExpiresAt){
         clearInterval(ttlTimer);
         setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
         ttlPill.textContent = "Истекло";

@@ -409,7 +409,7 @@
   }
 
   function setTtl(expiresAt){
-    const ms = normExpiry(expiresAt) - Date.now();
+    const ms = normExpiry(expiresAt) - serverNow();
     if (!Number.isFinite(ms) || ms <= 0){
       ttlPill.textContent = "Осталось: 00:00";
       return;
@@ -509,6 +509,19 @@
   let keepAliveTimer = null;
   let ttlTimer = null;
   let lastExpiresAt = 0;
+  let _clockOffset = 0;
+
+  function serverNow(){ return Date.now() - _clockOffset; }
+
+  function calcClockOffset(httpRes){
+    try{
+      const sd = httpRes.headers.get("Date");
+      if (!sd) return;
+      const st = new Date(sd).getTime();
+      if (!Number.isFinite(st)) return;
+      _clockOffset = Date.now() - st;
+    }catch(_){}
+  }
 
   async function loadRequisitesAndKeepAlive(){
     if (!id || !reserveId){
@@ -529,6 +542,8 @@
       let j;
       try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
       if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+      calcClockOffset(res);
 
       const offer = j.offer || {};
       payBankEl.textContent = offer.payBank || "—";
@@ -552,7 +567,7 @@
     
       lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || 0);
 
-      if (lastExpiresAt && Date.now() >= lastExpiresAt){
+      if (lastExpiresAt && serverNow() >= lastExpiresAt){
         setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
         ttlPill.textContent = "Истекло";
         return;
@@ -564,7 +579,7 @@
       ttlTimer = setInterval(() => {
         if (!lastExpiresAt) return;
         setTtl(lastExpiresAt);
-        if (Date.now() > lastExpiresAt){
+        if (serverNow() > lastExpiresAt){
           clearInterval(ttlTimer);
           setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
           ttlPill.textContent = "Истекло";

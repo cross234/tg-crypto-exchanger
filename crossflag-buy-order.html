@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag Exchange · Оплата</title>
+
+  <style>
+    :root{
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+
+      --card: rgba(15, 26, 48, 0.52);
+      --border: rgba(255,255,255,.12);
+
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+
+      --btn:#2d5bff;
+      --btn2:#1f3fb3;
+
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      color:var(--text);
+      background:#071022;
+
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      background:
+        radial-gradient(900px 600px at 50% 20%, rgba(60,120,255,.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.82), rgba(7,16,34,.92));
+      pointer-events:none;
+    }
+
+    .page{
+      min-height:100vh;
+      min-height:100dvh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        16px
+        calc(22px + env(safe-area-inset-bottom))
+        16px;
+      box-sizing:border-box;
+
+      width:100%;
+    }
+
+    .wrap{ width:100%; max-width:980px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .title{ font-weight:1000; font-size:16px; }
+
+    .btnTop{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:1000;
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    @media(max-width:860px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .box{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      min-width:0;
+    }
+    .label{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .value{ font-weight:1000; font-size:18px; word-break:break-word; overflow-wrap:anywhere; }
+
+    .statusWrap{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      margin-bottom:12px;
+    }
+    .statusHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .statusTitle{ font-weight:1000; }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:950;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .statusLine{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-weight:900;
+      font-size:13px;
+    }
+    .statusLine.ok{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .statusLine.bad{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .statusLine.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); }
+
+    .payTitle{ font-weight:1000; margin:12px 0 10px; }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      margin-bottom:10px;
+      min-width:0;
+    }
+
+    .rowLeft{ min-width:0; }
+    .rowLabel{ font-weight:950; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .rowValue{
+      font-weight:1000;
+      font-size:16px;
+      word-break:break-word;
+      overflow-wrap:anywhere;
+      min-width:0;
+    }
+
+    .copyBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .copyBtn:hover{ background: rgba(255,255,255,.09); }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+    }
+    .btn.cancel{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      min-width:170px;
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:#fff;
+      min-width:170px;
+    }
+    .btn:disabled{ opacity:.7; cursor:not-allowed; }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="page">
+    <div class="wrap">
+      <div class="card">
+
+        <div class="top">
+          <div class="title">Crossflag Exchange · Оплата</div>
+          <button class="btnTop" type="button" id="backBtn">Назад</button>
+        </div>
+
+        <div class="grid">
+          <div class="box">
+            <div class="label">Ордер</div>
+            <div class="value" id="orderId">—</div>
+          </div>
+          <div class="box">
+            <div class="label">Сумма к оплате (RUB)</div>
+            <div class="value" id="amountRub">—</div>
+          </div>
+          <div class="box">
+            <div class="label">Курс (RUB/USDT)</div>
+            <div class="value" id="rate">—</div>
+          </div>
+          <div class="box">
+            <div class="label">Получите (USDT)</div>
+            <div class="value" id="usdt">—</div>
+          </div>
+        </div>
+
+
+        <div class="statusWrap">
+          <div class="statusHead">
+            <div class="statusTitle">Статус</div>
+            <div class="pill" id="ttlPill">Осталось: —</div>
+          </div>
+          <div class="statusLine warn" id="statusLine">Загрузка…</div>
+        </div>
+
+        <div class="payTitle">Реквизиты для оплаты</div>
+
+        <div class="row">
+          <div class="rowLeft">
+            <div class="rowLabel">Банк</div>
+            <div class="rowValue" id="payBank">—</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rowLeft" style="flex:1; min-width:0;">
+            <div class="rowLabel">Реквизиты</div>
+            <div class="rowValue" id="payReq">—</div>
+          </div>
+          <button class="copyBtn" id="copyBtn" type="button">Копировать</button>
+        </div>
+
+        <div class="row" id="qrWrap" style="display:none; align-items:flex-start; gap:12px;">
+          <div class="rowLeft" style="flex:1; min-width:0;">
+            <div class="rowLabel">QR для оплаты</div>
+            <div class="rowValue muted" style="font-size:13px; line-height:1.35;">
+              Отсканируйте QR-код камерой или в приложении банка, затем нажмите «Я оплатил».
+            </div>
+          </div>
+          <div style="width:132px; height:132px; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.12); display:flex; align-items:center; justify-content:center;">
+            <img id="qrImg" alt="QR" style="width:132px; height:132px; object-fit:cover; display:block;" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn cancel" id="cancelBtn" type="button">Отменить ордер</button>
+          <button class="btn primary" id="paidBtn" type="button">Я оплатил</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes cancelModalIn{
+      from{ opacity:0; transform:translate(-50%,-48%) scale(.95); }
+      to{   opacity:1; transform:translate(-50%,-50%) scale(1); }
+    }
+    .crBtn{
+      display:flex; align-items:center; gap:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      color:#e9f0ff;
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      text-align:left;
+      width:100%;
+      transition: background .15s, border-color .15s, transform .12s;
+    }
+    .crBtn:hover{ background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.22); transform:translateX(3px); }
+    .crBtn:active{ transform:translateX(1px) scale(.99); }
+    .crBtn .crIcon{ font-size:18px; flex-shrink:0; width:28px; text-align:center; }
+    .crBtn .crText{ flex:1; }
+    .crBtn .crArrow{ opacity:.35; font-size:13px; flex-shrink:0; }
+  </style>
+
+  <!-- Cancel reason modal -->
+  <div id="cancelModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.78); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); align-items:center; justify-content:center;">
+    <div style="
+      background: linear-gradient(160deg, #0c1628 0%, #101e36 100%);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      padding: 22px 18px 18px;
+      max-width: 390px;
+      width: 92%;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      box-shadow: 0 32px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(239,68,68,.08);
+      animation: cancelModalIn .22s cubic-bezier(.34,1.4,.64,1) both;
+    ">
+      <div style="text-align:center; margin-bottom:18px;">
+        <div style="font-size:30px; margin-bottom:8px; line-height:1;">❌</div>
+        <div style="font-weight:900; font-size:17px; color:#e9f0ff; letter-spacing:-.01em;">Причина отмены</div>
+        <div style="font-size:12px; color:rgba(159,176,212,.65); margin-top:4px; font-weight:700;">Выберите причину для отмены ордера</div>
+      </div>
+
+      <div id="cancelReasons" style="display:flex; flex-direction:column; gap:7px;">
+        <button class="cancelReasonBtn crBtn" data-reason="Красные реквизиты">
+          <span class="crIcon">🔴</span><span class="crText">Красные реквизиты</span><span class="crArrow">›</span>
+        </button>
+        <button class="cancelReasonBtn crBtn" data-reason="Недостаточный баланс">
+          <span class="crIcon">💸</span><span class="crText">Недостаточный баланс</span><span class="crArrow">›</span>
+        </button>
+        <button class="cancelReasonBtn crBtn" data-reason="Нет нужного банка">
+          <span class="crIcon">🏦</span><span class="crText">Нет нужного банка</span><span class="crArrow">›</span>
+        </button>
+        <button class="cancelReasonBtn crBtn" data-reason="Неверные реквизиты">
+          <span class="crIcon">⚠️</span><span class="crText">Неверные реквизиты</span><span class="crArrow">›</span>
+        </button>
+        <button class="cancelReasonBtn crBtn" data-reason="2 получателя на одном реквизите">
+          <span class="crIcon">👥</span><span class="crText">2 получателя на одном реквизите</span><span class="crArrow">›</span>
+        </button>
+        <button class="cancelReasonBtn crBtn" data-reason="Не хочу">
+          <span class="crIcon">🚫</span><span class="crText">Не хочу</span><span class="crArrow">›</span>
+        </button>
+      </div>
+
+      <button id="cancelModalClose" type="button" style="margin-top:12px; width:100%; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:rgba(233,240,255,.4); border-radius:14px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; transition:background .15s;">Назад</button>
+    </div>
+  </div>
+
+<script>
+/* ===== AUTH / API HEADERS (FIX) ===== */
+const API_BASE =
+  new URLSearchParams(location.search).get('wb') ||
+  new URLSearchParams(location.search).get('api') ||
+  localStorage.getItem('WORKER_BASE') ||
+  'https://api.crossflag.org';
+
+const USER_TOKEN =
+  localStorage.getItem('CF_USER_TOKEN') ||
+  localStorage.getItem('user_token') ||
+  localStorage.getItem('crossflag_user_token') ||
+  localStorage.getItem('USER_TOKEN') ||
+  localStorage.getItem('userToken') ||
+  localStorage.getItem('cf_user_token') ||
+  '';
+
+const AUTH_HEADERS = USER_TOKEN
+  ? { 'Authorization': 'Bearer ' + USER_TOKEN }
+  : {};
+
+// ✅ WORKER_BASE as before
+const WORKER_BASE = String(
+  localStorage.getItem("worker_base") ||
+  localStorage.getItem("WORKER_BASE") ||
+  "https://api.crossflag.org"
+).replace(/\/+$/, "");
+
+const p = new URLSearchParams(location.search);
+const id = (p.get("id") || "").trim();
+const reserveId =
+  (p.get("reserveId") || "").trim() ||
+  (p.get("reservedId") || "").trim() ||
+  (p.get("reserveid") || "").trim() ||
+  (p.get("rid") || "").trim();
+
+let amountRub = Number(p.get("amountRub"));
+let rate = Number(p.get("rate"));
+const methodUrl = (p.get("method") || "").toUpperCase();
+
+const orderIdEl = document.getElementById("orderId");
+const amountRubEl = document.getElementById("amountRub");
+const rateEl = document.getElementById("rate");
+const usdtEl = document.getElementById("usdt");
+
+const statusLine = document.getElementById("statusLine");
+const ttlPill = document.getElementById("ttlPill");
+
+const payBankEl = document.getElementById("payBank");
+const payReqEl = document.getElementById("payReq");
+const copyBtn = document.getElementById("copyBtn");
+
+const cancelBtn = document.getElementById("cancelBtn");
+const paidBtn = document.getElementById("paidBtn");
+
+let currentOffer = null;
+
+function fmtRub(n){
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return v.toLocaleString("ru-RU") + " ₽";
+}
+function fmtRate(n){
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return v.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+}
+function fmtUsdt(n){
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT";
+}
+function setStatus(text, kind){
+  statusLine.textContent = text;
+  statusLine.classList.remove("ok","bad","warn");
+  statusLine.classList.add(kind || "warn");
+}
+
+// normalise expiresAt: accept seconds, ms or ISO-string
+function normExpiry(v){
+  if (!v) return 0;
+  let n = Number(v);
+  if (!Number.isFinite(n)){
+    n = new Date(v).getTime();
+    if (!Number.isFinite(n)) return 0;
+  }
+  if (n > 0 && n < 1e12) n *= 1000;
+  return n;
+}
+
+function setTtl(expiresAt){
+  const ms = normExpiry(expiresAt) - Date.now();
+  if (!Number.isFinite(ms) || ms <= 0){
+    ttlPill.textContent = "Осталось: 00:00";
+    return;
+  }
+  const s = Math.floor(ms / 1000);
+  const mm = String(Math.floor(s / 60)).padStart(2,"0");
+  const ss = String(s % 60).padStart(2,"0");
+  ttlPill.textContent = "Осталось: " + mm + ":" + ss;
+}
+
+orderIdEl.textContent = id || "—";
+amountRubEl.textContent = fmtRub(amountRub);
+rateEl.textContent = fmtRate(rate);
+usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
+
+const cancelModal = document.getElementById("cancelModal");
+const cancelModalClose = document.getElementById("cancelModalClose");
+
+async function cancelWithReason(reason){
+  cancelModal.style.display = "none";
+  try{
+    if (id && reserveId){
+      await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+        body: JSON.stringify({ id, reserveId, cancelReason: reason })
+      });
+    }
+  } catch(e){}
+  location.href = "./buy.html";
+}
+
+cancelBtn.onclick = () => { cancelModal.style.display = "flex"; };
+cancelModalClose.onclick = () => { cancelModal.style.display = "none"; };
+document.querySelectorAll(".cancelReasonBtn").forEach(btn => {
+  btn.onclick = () => cancelWithReason(btn.getAttribute("data-reason"));
+});
+
+// ✅ NEW: QR -> сразу mark_paid -> check.html (без доказательств)
+paidBtn.onclick = async () => {
+  try{
+    const m = String((currentOffer && currentOffer.method) || methodUrl || "").toUpperCase();
+
+    if (m === "QR"){
+      paidBtn.disabled = true;
+      setStatus("Отмечаю оплату…", "warn");
+
+      const res = await fetch(WORKER_BASE + "/api/public/mark_paid", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+        body: JSON.stringify({ id, reserveId })
+      });
+
+      const j = await res.json().catch(()=>null);
+      if (!res.ok || !j || !j.ok) throw new Error(j?.error || ("HTTP " + res.status));
+
+      // ✅ QR: отдельный экран ожидания начисления исполнителю
+      location.href = "./qr_executor_wait.html?id=" + encodeURIComponent(id) + "&reserveId=" + encodeURIComponent(reserveId);
+      return;
+    }
+
+    // ✅ НЕ QR — старое поведение: на buy-paid (доказательства)
+    const qs = new URLSearchParams({
+      id,
+      reserveId,
+      amountRub: String(amountRub || ""),
+      rate: String(rate || ""),
+      method: String(m || ""),
+      checkOnly: (currentOffer && currentOffer.checkOnly) ? "1" : "",
+      sourceKind: (currentOffer && currentOffer.sourceKind) || ""
+    });
+    location.href = "./buy-paid.html?" + qs.toString();
+  }catch(e){
+    paidBtn.disabled = false;
+    setStatus("Ошибка: " + (e.message || String(e)), "bad");
+  }
+};
+
+copyBtn.onclick = async () => {
+  const v = (payReqEl.textContent || "").trim();
+  if (!v || v === "—") return;
+  try{
+    await navigator.clipboard.writeText(v);
+    copyBtn.textContent = "Скопировано";
+    setTimeout(()=> copyBtn.textContent="Копировать", 900);
+  }catch{
+    const ta = document.createElement("textarea");
+    ta.value = v;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    copyBtn.textContent = "Скопировано";
+    setTimeout(()=> copyBtn.textContent="Копировать", 900);
+  }
+};
+
+let keepAliveTimer = null;
+let ttlTimer = null;
+let lastExpiresAt = 0;
+
+async function loadRequisitesAndKeepAlive(){
+  if (!id || !reserveId){
+    setStatus("Ошибка: Missing id or reserveId", "bad");
+    return;
+  }
+
+  try{
+    setStatus("Загружаю реквизиты…", "warn");
+
+    const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+      body: JSON.stringify({ id, reserveId })
+    });
+
+    const txt = await res.text();
+    let j;
+    try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
+    if (!res.ok && res.status === 409) {
+      throw new Error("Заявка уже занята другим пользователем или бронь истекла. Вернись в стакан и выбери другую.");
+    }
+    if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
+
+    const offer = j.offer || {};
+    currentOffer = offer;
+
+    payBankEl.textContent = offer.payBank || "—";
+    payReqEl.textContent = offer.payRequisite || "—";
+
+    // QR: show QR image
+    try{
+      const mm = String(offer.method || "").toUpperCase();
+      const qrWrap = document.getElementById("qrWrap");
+      const qrImg = document.getElementById("qrImg");
+      if (mm === "QR" && offer.payRequisite) {
+        qrWrap.style.display = "flex";
+        const data = encodeURIComponent(String(offer.payRequisite));
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${data}`;
+      } else {
+        qrWrap.style.display = "none";
+        if (qrImg) qrImg.removeAttribute("src");
+      }
+    } catch {}
+
+    // fallback amount/rate
+    if (!(Number.isFinite(amountRub) && amountRub > 0)){
+      const v = Number(offer.amountRub || 0);
+      if (Number.isFinite(v) && v > 0) amountRub = v;
+    }
+    if (!(Number.isFinite(rate) && rate > 0)){
+      const v = Number(offer.rate || 0);
+      if (Number.isFinite(v) && v > 0) rate = v;
+    }
+
+    amountRubEl.textContent = fmtRub(amountRub);
+    rateEl.textContent = fmtRate(rate);
+    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
+  
+    // DEBUG: показать инфо прямо на странице
+    const _rawExp = j.expiresAt ?? j.offer?.expiresAt ?? offer.expiresAt ?? null;
+    const _dbg = "DEBUG: expiresAt=" + JSON.stringify(_rawExp)
+      + " | type=" + typeof _rawExp
+      + " | normExpiry=" + normExpiry(_rawExp)
+      + " | Date.now=" + Date.now()
+      + " | keys=" + Object.keys(j).join(",");
+    setStatus(_dbg, "warn");
+    ttlPill.textContent = "DBG: raw=" + String(_rawExp);
+
+    lastExpiresAt = normExpiry(_rawExp);
+    // НЕ отменяем автоматически пока дебажим — убираем автоотмену
+
+
+    if (ttlTimer) clearInterval(ttlTimer);
+    ttlTimer = setInterval(() => {
+      if (!lastExpiresAt) return;
+      setTtl(lastExpiresAt);
+      // DEBUG: НЕ отменяем пока дебажим
+      // if (Date.now() > lastExpiresAt){
+      //   clearInterval(ttlTimer);
+      //   cancelWithReason("Истекло время");
+      // }
+    }, 1000);
+
+    if (keepAliveTimer) clearInterval(keepAliveTimer);
+    keepAliveTimer = setInterval(async () => {
+      try{
+        const ka = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+          body: JSON.stringify({ id, reserveId })
+        });
+        const t = await ka.text();
+        let jj;
+        try { jj = JSON.parse(t); } catch { return; }
+        if (!ka.ok && ka.status === 409){
+          // бронь больше не наша
+          clearInterval(keepAliveTimer);
+          setStatus("Бронь больше недоступна (кто-то уже открыл эту заявку). Вернись в стакан.", "bad");
+          return;
+        }
+        if (ka.ok && jj && jj.ok && (jj.expiresAt || jj.offer?.expiresAt)){
+          lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
+        }
+      }catch(e){}
+    }, 20000);
+
+  } catch(e){
+    setStatus("Ошибка: " + (e.message || String(e)), "bad");
+  }
+}
+
+loadRequisitesAndKeepAlive();
+</script>
+
+<script>
+const backBtn = document.getElementById("backBtn");
+if (backBtn){
+  backBtn.onclick = async () => {
+    try{
+      if (id && reserveId){
+        await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+          body: JSON.stringify({ id, reserveId })
+        });
+      }
+    }catch(e){}
+
+    try{
+      const KEY = "cf_active_deals";
+      const deals = JSON.parse(localStorage.getItem(KEY) || "[]");
+      const next = (Array.isArray(deals) ? deals : []).filter(d => !(d && d.type === "BUY" && d.id === id));
+      localStorage.setItem(KEY, JSON.stringify(next));
+    }catch(e){}
+
+    location.href = "./buy-order.html";
+  };
+}
+</script>
+
+<script src="./resume-helper.js"></script>
+<script>
+(function(){
+  if (!window.CrossflagResume) return;
+  function save(){
+    try{
+      const p = new URLSearchParams(location.search);
+      const id = String(p.get("id") || "").trim();
+      const reserveId = String(
+        p.get("reserveId") ||
+        p.get("reserveid") ||
+        p.get("reservedId") ||
+        p.get("rid") ||
+        ""
+      ).trim();
+      if (!id || !reserveId) return;
+      window.CrossflagResume.upsertBuy({
+        id,
+        reserveId,
+        url: location.pathname + location.search + location.hash
+      });
+    }catch(_){}
+  }
+  save();
+  window.addEventListener("pagehide", save);
+  window.addEventListener("beforeunload", save);
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "hidden") save();
+  });
+})();
+</script>
+</body>
+</html>

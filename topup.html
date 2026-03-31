@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Crossflag · Пополнить</title>
+
+  <style>
+    :root{
+      --bg:#071022;
+      --text:#e9f0ff;
+      --muted:#9fb0d4;
+      --card: rgba(15, 26, 48, 0.55);
+      --card2: rgba(15, 26, 48, 0.42);
+      --border: rgba(255,255,255,.12);
+      --blue:#2d5bff;
+      --blue2:#1f3fb3;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 22px;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      color:var(--text);
+      background:var(--bg);
+      overflow-x:hidden;
+      overflow-y:auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .overlay{
+      position:fixed; inset:0; z-index:-2;
+      background:
+        radial-gradient(900px 600px at 50% -140px, rgba(45,91,255,.22), rgba(0,0,0,0) 65%),
+        radial-gradient(900px 600px at 85% 90%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(7,16,34,.84), rgba(7,16,34,.94));
+      pointer-events:none;
+    }
+
+    .wrap{
+      max-width: 520px;
+      margin:0 auto;
+      padding: calc(10px + env(safe-area-inset-top)) 14px calc(22px + env(safe-area-inset-bottom)) 14px;
+    }
+
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;
+    }
+    .topLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .backBtn{
+      width:34px;height:34px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
+      color: rgba(233,240,255,.92); display:flex; align-items:center; justify-content:center;
+      cursor:pointer; box-shadow: 0 12px 30px rgba(0,0,0,.22); flex:0 0 auto;
+    }
+    .backBtn:active{ transform: translateY(1px); }
+    .titleBlock{ min-width:0; }
+    .titleRow{ display:flex; align-items:center; gap:8px; font-weight:1000; letter-spacing:.2px; white-space:nowrap; }
+    .sub{ margin-top:2px; font-size:12px; font-weight:850; color: rgba(233,240,255,.65); }
+
+    .card{
+      border-radius: var(--radius); border: 1px solid var(--border);
+      background: var(--card); box-shadow: var(--shadow); padding: 14px;
+      overflow:hidden; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); position:relative;
+    }
+    .card::before{
+      content:""; position:absolute; inset:-60px;
+      background: radial-gradient(520px 220px at 30% 20%, rgba(45,91,255,.16), rgba(0,0,0,0) 60%),
+                  radial-gradient(520px 220px at 70% 90%, rgba(34,197,94,.10), rgba(0,0,0,0) 60%);
+      filter: blur(18px); pointer-events:none; z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .sectionTitle{
+      font-weight:1000; font-size:16px; margin:0 0 10px 0;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 10px;
+      border-radius: 16px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
+      font-weight:950; font-size:12px; color: rgba(233,240,255,.92); white-space:nowrap;
+    }
+    .coin{
+      width:22px;height:22px;border-radius:999px; display:inline-flex; align-items:center;justify-content:center;
+      font-weight:1000; border:1px solid rgba(255,255,255,.14); background: rgba(45,91,255,.18);
+    }
+
+    .warnBox{
+      margin-top:10px; border-radius: 18px; border: 1px solid rgba(245,158,11,.30);
+      background: rgba(245,158,11,.10); padding: 12px; color: rgba(233,240,255,.92);
+    }
+    .warnBox .t{ font-weight:1000; font-size:13px; line-height:1.25; }
+    .warnBox .s{ margin-top:6px; font-weight:900; font-size:12px; color: rgba(233,240,255,.78); line-height:1.35; }
+
+    .inputGroup{
+      margin-top:14px;
+    }
+    .inputGroup label{
+      display:block; font-weight:950; font-size:13px; color:rgba(233,240,255,.7); margin-bottom:6px;
+    }
+    .inputGroup input{
+      width:100%; padding:14px; border-radius:16px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
+      color:#fff; font-size:18px; font-weight:800; outline:none;
+    }
+    .inputGroup input:focus{ border-color:rgba(45,91,255,.5); }
+    .inputGroup input::placeholder{ color:rgba(255,255,255,.25); }
+
+    .btnPrimary{
+      margin-top:14px; width:100%; padding:14px; border:none; border-radius:16px;
+      background: linear-gradient(180deg, rgba(45,91,255,.85), rgba(31,63,179,.72));
+      color:#fff; font-size:16px; font-weight:1000; cursor:pointer;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+    }
+    .btnPrimary:disabled{ opacity:.4; cursor:not-allowed; }
+    .btnPrimary:active:not(:disabled){ transform: translateY(1px); }
+
+    .resultBox{
+      margin-top:14px; border-radius:18px; border:1px solid rgba(34,197,94,.25);
+      background:rgba(34,197,94,.08); padding:14px;
+    }
+    .resultLabel{ font-weight:950; font-size:12px; color:rgba(233,240,255,.6); margin-bottom:4px; }
+    .resultValue{ font-size:22px; font-weight:1000; letter-spacing:.3px; word-break:break-all; }
+    .resultValue.amount{ color:var(--ok); font-size:26px; }
+
+    .addrBlock{
+      margin-top:12px; border-radius:18px; border:1px solid rgba(255,255,255,.10);
+      background:rgba(15,26,48,.42); padding:12px;
+    }
+    .addrLabel{ font-size:12px; font-weight:950; color:rgba(233,240,255,.7); }
+    .addrText{ margin-top:6px; font-size:14px; font-weight:1000; letter-spacing:.2px; word-break:break-all; }
+
+    .copyRow{
+      margin-top:10px; display:flex; gap:8px;
+    }
+    .copyBtn{
+      flex:1; padding:12px; border:none; border-radius:14px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      color:#fff; font-weight:900; font-size:13px; cursor:pointer;
+    }
+    .copyBtn:active{ transform:translateY(1px); }
+    .copyBtn.primary{ background:linear-gradient(180deg, rgba(45,91,255,.85), rgba(31,63,179,.72)); border:none; }
+
+    .statusBox{
+      margin-top:14px; padding:14px; border-radius:18px; text-align:center;
+    }
+    .statusBox.waiting{
+      border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.08);
+    }
+    .statusBox.success{
+      border:1px solid rgba(34,197,94,.3); background:rgba(34,197,94,.08);
+    }
+    .statusText{ font-weight:1000; font-size:14px; }
+    .statusSub{ font-weight:900; font-size:12px; color:rgba(233,240,255,.6); margin-top:4px; }
+
+    .timerText{ font-weight:800; font-size:13px; color:rgba(233,240,255,.5); margin-top:6px; }
+
+    .qrWrap{ margin-top:12px; display:flex; justify-content:center; }
+    .qrCard{
+      width:min(280px,100%); border-radius:22px; border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20); padding:12px; box-shadow:0 18px 60px rgba(0,0,0,.4); text-align:center;
+    }
+    .qrImgBox{
+      width:220px; height:220px; margin:0 auto; border-radius:18px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px;
+    }
+    .qrPaper{
+      width:100%; height:100%; border-radius:14px; background:#fff;
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .qrPaper img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+    .err{ margin-top:10px; font-weight:950; font-size:12px; color:rgba(239,68,68,.92); display:none; line-height:1.35; }
+    .err.show{ display:block; }
+
+    .toast{
+      position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom));
+      transform:translateX(-50%); z-index:9999;
+      background:rgba(0,0,0,.50); border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(12px); color:#fff; padding:10px 12px; border-radius:16px;
+      font-weight:950; font-size:12px; box-shadow:0 18px 60px rgba(0,0,0,.55);
+      opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+    .gate{
+      position:fixed; inset:0; z-index:9998; display:none;
+      align-items:center; justify-content:center; padding:16px;
+      background:rgba(0,0,0,.58); backdrop-filter:blur(12px);
+    }
+    .gate.show{ display:flex; }
+    .gateCard{
+      width:min(520px,100%); border-radius:22px; border:1px solid rgba(255,255,255,.14);
+      background:rgba(8,15,30,.88); box-shadow:0 18px 60px rgba(0,0,0,.65); padding:14px;
+    }
+    .gateTitle{ font-weight:1000; font-size:16px; }
+    .gateText{ margin-top:8px; font-weight:900; font-size:12px; color:rgba(233,240,255,.78); line-height:1.45; }
+    .gateBtns{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .gBtn{ border:0; border-radius:14px; padding:12px 16px; font-weight:1000; cursor:pointer; box-shadow:0 10px 26px rgba(0,0,0,.3); }
+    .gBtn.primary{ background:linear-gradient(180deg,rgba(45,91,255,.85),rgba(31,63,179,.72)); color:#fff; min-width:190px; }
+    .gBtn.ghost{ border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; min-width:160px; }
+
+    @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.5;} }
+    .pulse{ animation:pulse 1.5s infinite; }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <div class="gate" id="authGate" aria-hidden="true">
+    <div class="gateCard">
+      <div class="gateTitle">Вход обязателен</div>
+      <div class="gateText">Чтобы пополнить кошелёк, нужно войти в аккаунт.</div>
+      <div class="gateBtns">
+        <button class="gBtn ghost" id="gateClose" type="button">Закрыть</button>
+        <button class="gBtn primary" id="gateGoAuth" type="button">Войти / Регистрация</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="topLeft">
+        <button class="backBtn" id="backBtn" type="button" aria-label="Назад">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 6 9 12l6 6" stroke="rgba(233,240,255,.9)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="titleBlock">
+          <div class="titleRow"><span>Пополнить</span></div>
+          <div class="sub">USDT · TRC20 (TRON)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Enter amount -->
+    <div class="card" id="step1">
+      <div class="sectionTitle">
+        <span>Пополнение баланса</span>
+        <span class="pill"><span class="coin">$</span> USDT</span>
+      </div>
+
+      <div class="warnBox">
+        <div class="t">Отправляй только USDT в сети TRC20</div>
+        <div class="s">Активы других сетей или токены могут быть безвозвратно утрачены.</div>
+      </div>
+
+      <div class="inputGroup">
+        <label for="amountInput">Сумма пополнения (USDT)</label>
+        <input type="number" id="amountInput" placeholder="Например: 500" min="1" step="1" inputmode="numeric" />
+      </div>
+
+      <div class="err" id="errStep1"></div>
+
+      <button class="btnPrimary" id="createDepositBtn" type="button">Получить реквизиты</button>
+    </div>
+
+    <!-- STEP 2: Show unique amount + address + waiting -->
+    <div class="card hidden" id="step2">
+      <div class="sectionTitle">
+        <span>Переведите точную сумму</span>
+        <span class="pill"><span class="coin">$</span> USDT</span>
+      </div>
+
+      <div class="resultBox">
+        <div class="resultLabel">Отправьте ровно:</div>
+        <div class="resultValue amount" id="uniqueAmount">—</div>
+        <div style="margin-top:4px; font-weight:900; font-size:11px; color:rgba(233,240,255,.5);">
+          Сумма с уникальным идентификатором — переведите именно столько
+        </div>
+      </div>
+
+      <div class="copyRow">
+        <button class="copyBtn primary" id="copyAmountBtn" type="button">Копировать сумму</button>
+      </div>
+
+      <div class="addrBlock">
+        <div class="addrLabel">Адрес USDT (TRC20)</div>
+        <div class="addrText" id="addrFull">—</div>
+      </div>
+
+      <div class="copyRow">
+        <button class="copyBtn" id="copyAddrBtn" type="button">Копировать адрес</button>
+      </div>
+
+      <div class="qrWrap">
+        <div class="qrCard">
+          <div class="qrImgBox">
+            <div class="qrPaper">
+              <img id="qrImg" alt="QR" style="display:none;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="statusBox waiting" id="statusBox">
+        <div class="statusText pulse" id="statusText">Ожидаем перевод...</div>
+        <div class="statusSub" id="statusSub">Как только транзакция появится в сети, баланс зачислится автоматически</div>
+        <div class="timerText" id="timerText"></div>
+      </div>
+
+      <div class="err" id="errStep2"></div>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div class="card hidden" id="step3">
+      <div class="statusBox success">
+        <div class="statusText">Депозит зачислен!</div>
+        <div class="statusSub" id="creditedAmount"></div>
+      </div>
+      <button class="btnPrimary" style="margin-top:14px;" onclick="location.href='./qr.html'">Вернуться в кошелёк</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Скопировано</div>
+
+<script>
+  const WORKER_BASE = "https://api.crossflag.org";
+  const AUTH_URL = "./auth.html";
+  const USER_TOKEN_KEY = "user_token";
+
+  function getUserToken(){
+    try { return (localStorage.getItem(USER_TOKEN_KEY) || "").trim(); } catch { return ""; }
+  }
+  async function authMe(){
+    const tok = getUserToken();
+    if (!tok) return null;
+    try{
+      const res = await fetch(WORKER_BASE + "/api/public/auth/me", { method:"GET", headers:{"X-User-Token":tok} });
+      const j = await res.json().catch(()=>null);
+      if (!res.ok || !j || !j.ok) return null;
+      return j.user || null;
+    }catch{ return null; }
+  }
+  function goAuth(returnUrl){
+    const back = returnUrl || (location.pathname + location.search);
+    try { sessionStorage.setItem("auth_return", back); } catch {}
+    location.href = AUTH_URL + "?return=" + encodeURIComponent(back);
+  }
+  function setGate(open){
+    const g = document.getElementById("authGate");
+    if (!g) return;
+    g.classList.toggle("show", !!open);
+  }
+
+  document.getElementById("gateGoAuth").onclick = () => goAuth(location.pathname + location.search);
+  document.getElementById("gateClose").onclick = () => setGate(false);
+  document.getElementById("backBtn").onclick = () => { location.href = "./qr.html"; };
+
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1200);
+  }
+
+  async function copyText(text){
+    try{ await navigator.clipboard.writeText(text); return true; }catch{
+      try{
+        const ta = document.createElement("textarea"); ta.value = text;
+        ta.style.cssText = "position:fixed;opacity:0;";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        const ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
+      }catch{ return false; }
+    }
+  }
+
+  let uniqueAmountUsdt = 0;
+  let depositAddress = "";
+  let pollTimer = null;
+  let expiresAt = 0;
+  let timerInterval = null;
+
+  // Step 1: Create deposit request
+  document.getElementById("createDepositBtn").onclick = async () => {
+    const btn = document.getElementById("createDepositBtn");
+    const errEl = document.getElementById("errStep1");
+    errEl.classList.remove("show");
+
+    const tok = getUserToken();
+    if (!tok){ setGate(true); return; }
+
+    const amount = Number(document.getElementById("amountInput").value);
+    if (!Number.isFinite(amount) || amount < 1){
+      errEl.textContent = "Введите сумму от 1 USDT";
+      errEl.classList.add("show");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Создаём...";
+
+    try{
+      const res = await fetch(WORKER_BASE + "/api/public/deposit_request", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "X-User-Token": tok },
+        body: JSON.stringify({ amountUsdt: amount })
+      });
+      const j = await res.json().catch(()=>null);
+
+      if (res.status === 401){ setGate(true); return; }
+      if (!res.ok || !j || !j.ok){
+        errEl.textContent = (j && j.error) || "Ошибка создания заявки";
+        errEl.classList.add("show");
+        btn.disabled = false;
+        btn.textContent = "Получить реквизиты";
+        return;
+      }
+
+      uniqueAmountUsdt = Number(j.amountUsdt);
+      depositAddress = String(j.address || "");
+      expiresAt = Date.now() + (Number(j.expiresIn) || 3600) * 1000;
+
+      showStep2();
+    }catch(e){
+      errEl.textContent = "Ошибка сети. Попробуйте ещё раз.";
+      errEl.classList.add("show");
+      btn.disabled = false;
+      btn.textContent = "Получить реквизиты";
+    }
+  };
+
+  function showStep2(){
+    document.getElementById("step1").classList.add("hidden");
+    document.getElementById("step2").classList.remove("hidden");
+
+    document.getElementById("uniqueAmount").textContent = uniqueAmountUsdt.toFixed(4) + " USDT";
+    document.getElementById("addrFull").textContent = depositAddress;
+
+    // QR
+    const qrImg = document.getElementById("qrImg");
+    const qrData = encodeURIComponent(depositAddress);
+    qrImg.onload = () => { qrImg.style.display = "block"; };
+    qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=" + qrData;
+
+    // Copy buttons
+    document.getElementById("copyAmountBtn").onclick = async () => {
+      const ok = await copyText(uniqueAmountUsdt.toFixed(4));
+      toast(ok ? "Сумма скопирована" : "Не удалось");
+    };
+    document.getElementById("copyAddrBtn").onclick = async () => {
+      const ok = await copyText(depositAddress);
+      toast(ok ? "Адрес скопирован" : "Не удалось");
+    };
+
+    // Start polling
+    startPolling();
+    startTimer();
+  }
+
+  function startTimer(){
+    const timerEl = document.getElementById("timerText");
+    timerInterval = setInterval(() => {
+      const left = Math.max(0, expiresAt - Date.now());
+      if (left <= 0){
+        timerEl.textContent = "Время истекло";
+        clearInterval(timerInterval);
+        clearInterval(pollTimer);
+        document.getElementById("statusText").textContent = "Время истекло";
+        document.getElementById("statusText").classList.remove("pulse");
+        document.getElementById("statusSub").textContent = "Создайте новую заявку на пополнение";
+        return;
+      }
+      const m = Math.floor(left / 60000);
+      const s = Math.floor((left % 60000) / 1000);
+      timerEl.textContent = "Осталось: " + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+    }, 1000);
+  }
+
+  function startPolling(){
+    const tok = getUserToken();
+    pollTimer = setInterval(async () => {
+      try{
+        const res = await fetch(WORKER_BASE + "/api/public/deposit_status", {
+          method:"GET", headers:{"X-User-Token":tok}
+        });
+        const j = await res.json().catch(()=>null);
+        if (j && j.ok && j.status === "CREDITED"){
+          clearInterval(pollTimer);
+          clearInterval(timerInterval);
+          showStep3(j.amountUsdt);
+        }
+      }catch{}
+    }, 5000); // poll every 5 seconds
+  }
+
+  function showStep3(amountUsdt){
+    document.getElementById("step2").classList.add("hidden");
+    document.getElementById("step3").classList.remove("hidden");
+    document.getElementById("creditedAmount").textContent =
+      "+" + Number(amountUsdt || 0).toFixed(4) + " USDT зачислено на баланс";
+  }
+
+  // Init: check auth + check if already has pending deposit
+  (async () => {
+    const u = await authMe();
+    if (!u){ setGate(true); return; }
+
+    // Check for existing pending deposit
+    try{
+      const tok = getUserToken();
+      const res = await fetch(WORKER_BASE + "/api/public/deposit_status", {
+        method:"GET", headers:{"X-User-Token":tok}
+      });
+      const j = await res.json().catch(()=>null);
+
+      if (j && j.ok){
+        if (j.status === "PENDING"){
+          uniqueAmountUsdt = Number(j.amountUsdt);
+          depositAddress = "TDSBNxZeRqxpHQ3e9LsgUvAcoTs38h1W53";
+          expiresAt = Date.now() + (Number(j.expiresIn) || 3600) * 1000;
+          showStep2();
+          return;
+        }
+        if (j.status === "CREDITED"){
+          showStep3(j.amountUsdt);
+          return;
+        }
+      }
+    }catch{}
+  })();
+</script>
+</body>
+</html>

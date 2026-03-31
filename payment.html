@@ -255,7 +255,6 @@
           </div>
         </div>
 
-
         <div class="statusWrap">
           <div class="statusHead">
             <div class="statusTitle">Статус</div>
@@ -291,7 +290,6 @@
   </div>
 
 <script>
-  // ✅ API base: поддержка ?wb= / ?api= + localStorage + дефолт
   function __q(name){
     try { return new URLSearchParams(location.search).get(name) || ""; }
     catch { return ""; }
@@ -305,7 +303,6 @@
     "https://api.crossflag.org"
   ).replace(/\/+$/, "");
 
-  // ✅ AUTH_HEADERS (чтобы не было AUTH_HEADERS is not defined)
   const USER_TOKEN = String(
     localStorage.getItem("CF_USER_TOKEN") ||
     localStorage.getItem("user_token") ||
@@ -320,28 +317,26 @@
     ? { "Authorization": "Bearer " + USER_TOKEN, "X-User-Token": USER_TOKEN }
     : {};
 
-  // ✅ универсальный getter параметров
   function q(name){
     try { return new URLSearchParams(location.search).get(name) || ""; }
     catch { return ""; }
   }
 
-  // ✅ принимаем разные названия параметров (чтобы не было Missing id/reserveId)
   const id = String(q("id") || q("offerId") || q("orderId") || "").trim();
+
   let reserveId = String(
     q("reserveId") || q("reservedId") || q("reserveid") || q("rid") || ""
   ).trim();
 
-  // ✅ fallback: если reserveId не пришёл — пробуем достать из storage
   if (!reserveId){
     try{
       reserveId =
+        String(sessionStorage.getItem("cf_reserve_buy_" + id) || "").trim() ||
+        String(localStorage.getItem("cf_reserve_buy_" + id) || "").trim() ||
         String(sessionStorage.getItem("reserveId") || "").trim() ||
         String(sessionStorage.getItem("reservedId") || "").trim() ||
-        String(sessionStorage.getItem("last_reserveId") || "").trim() ||
         String(localStorage.getItem("reserveId") || "").trim() ||
         String(localStorage.getItem("reservedId") || "").trim() ||
-        String(localStorage.getItem("last_reserveId") || "").trim() ||
         "";
     }catch{}
   }
@@ -350,12 +345,13 @@
   let rate = Number(q("rate") || 0);
   const method = String(q("method") || "").toUpperCase();
 
-  // ✅ сохраним на будущее (чтобы следующие страницы точно подхватили)
   try{ if (id) sessionStorage.setItem("last_id", id); }catch{}
+  try{ if (reserveId && id) sessionStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch{}
+  try{ if (reserveId && id) localStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch{}
   try{ if (reserveId) sessionStorage.setItem("reserveId", reserveId); }catch{}
   try{ if (reserveId) sessionStorage.setItem("reservedId", reserveId); }catch{}
-  try{ if (Number.isFinite(amountRub) && amountRub>0) sessionStorage.setItem("amountRub", String(amountRub)); }catch{}
-  try{ if (Number.isFinite(rate) && rate>0) sessionStorage.setItem("rate", String(rate)); }catch{}
+  try{ if (Number.isFinite(amountRub) && amountRub > 0) sessionStorage.setItem("amountRub", String(amountRub)); }catch{}
+  try{ if (Number.isFinite(rate) && rate > 0) sessionStorage.setItem("rate", String(rate)); }catch{}
   try{ if (method) sessionStorage.setItem("method", method); }catch{}
 
   const orderIdEl = document.getElementById("orderId");
@@ -373,51 +369,93 @@
   const cancelBtn = document.getElementById("cancelBtn");
   const paidBtn = document.getElementById("paidBtn");
 
+  let keepAliveTimer = null;
+  let ttlTimer = null;
+  let lastExpiresAt = 0;
+  let _clockOffset = 0;
+
   function fmtRub(n){
     const v = Number(n);
     if (!Number.isFinite(v)) return "—";
     return v.toLocaleString("ru-RU") + " ₽";
   }
+
   function fmtRate(n){
     const v = Number(n);
     if (!Number.isFinite(v)) return "—";
     return v.toLocaleString("ru-RU", { maximumFractionDigits: 2 });
   }
+
   function fmtUsdt(n){
     const v = Number(n);
     if (!Number.isFinite(v)) return "—";
     return v.toLocaleString("ru-RU", { maximumFractionDigits: 6 }) + " USDT";
   }
+
   function setStatus(text, kind){
     statusLine.textContent = text;
     statusLine.classList.remove("ok","bad","warn");
     statusLine.classList.add(kind || "warn");
   }
 
-  // normalise expiresAt: accept seconds, ms or ISO-string
+  function serverNow(){
+    return Date.now() - _clockOffset;
+  }
+
+  function syncClock(serverTime, httpRes){
+    try{
+      const st = Number(serverTime || 0);
+      if (Number.isFinite(st) && st > 0){
+        _clockOffset = Date.now() - st;
+        return;
+      }
+    }catch(_){}
+
+    try{
+      const sd = httpRes && httpRes.headers ? httpRes.headers.get("Date") : "";
+      if (!sd) return;
+      const st = new Date(sd).getTime();
+      if (!Number.isFinite(st)) return;
+      _clockOffset = Date.now() - st;
+    }catch(_){}
+  }
+
   function normExpiry(v){
     if (!v) return 0;
+
     let n = Number(v);
     if (!Number.isFinite(n)){
-      // try ISO date string
       n = new Date(v).getTime();
       if (!Number.isFinite(n)) return 0;
     }
-    // if value looks like seconds (< 1e12) — convert to ms
+
     if (n > 0 && n < 1e12) n *= 1000;
     return n;
   }
 
   function setTtl(expiresAt){
     const ms = normExpiry(expiresAt) - serverNow();
+
     if (!Number.isFinite(ms) || ms <= 0){
       ttlPill.textContent = "Осталось: 00:00";
       return;
     }
+
     const s = Math.floor(ms / 1000);
     const mm = String(Math.floor(s / 60)).padStart(2,"0");
     const ss = String(s % 60).padStart(2,"0");
     ttlPill.textContent = "Осталось: " + mm + ":" + ss;
+  }
+
+  function stopTimers(){
+    if (ttlTimer){
+      clearInterval(ttlTimer);
+      ttlTimer = null;
+    }
+    if (keepAliveTimer){
+      clearInterval(keepAliveTimer);
+      keepAliveTimer = null;
+    }
   }
 
   orderIdEl.textContent = id || "—";
@@ -437,7 +475,15 @@
           body: JSON.stringify({ id, reserveId })
         });
       }
-    } catch(e){}
+    }catch(_){}
+
+    try{
+      if (id){
+        sessionStorage.removeItem("cf_reserve_buy_" + id);
+        localStorage.removeItem("cf_reserve_buy_" + id);
+      }
+    }catch(_){}
+
     location.href = "./buy.html";
   }
 
@@ -465,7 +511,6 @@
       try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
       if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      // ✅ прокидываем данные дальше
       const qs = new URLSearchParams({
         id,
         reserveId,
@@ -474,11 +519,7 @@
         method: String(method || "")
       });
 
-      // как было у тебя:
       location.href = "./buy-paid.html?" + qs.toString();
-
-      // Если хочешь сразу в crossflag-buy-order.html — замени строку выше на:
-      // location.href = "./crossflag-buy-order.html?" + qs.toString();
 
     } catch(e){
       setStatus("Ошибка: " + (e.message || String(e)), "bad");
@@ -490,10 +531,11 @@
   copyBtn.onclick = async () => {
     const v = (payReqEl.textContent || "").trim();
     if (!v || v === "—") return;
+
     try{
       await navigator.clipboard.writeText(v);
       copyBtn.textContent = "Скопировано";
-      setTimeout(()=> copyBtn.textContent="Копировать", 900);
+      setTimeout(() => copyBtn.textContent = "Копировать", 900);
     }catch{
       const ta = document.createElement("textarea");
       ta.value = v;
@@ -502,26 +544,9 @@
       document.execCommand("copy");
       ta.remove();
       copyBtn.textContent = "Скопировано";
-      setTimeout(()=> copyBtn.textContent="Копировать", 900);
+      setTimeout(() => copyBtn.textContent = "Копировать", 900);
     }
   };
-
-  let keepAliveTimer = null;
-  let ttlTimer = null;
-  let lastExpiresAt = 0;
-  let _clockOffset = 0;
-
-  function serverNow(){ return Date.now() - _clockOffset; }
-
-  function calcClockOffset(httpRes){
-    try{
-      const sd = httpRes.headers.get("Date");
-      if (!sd) return;
-      const st = new Date(sd).getTime();
-      if (!Number.isFinite(st)) return;
-      _clockOffset = Date.now() - st;
-    }catch(_){}
-  }
 
   async function loadRequisitesAndKeepAlive(){
     if (!id || !reserveId){
@@ -535,52 +560,82 @@
       const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
         method:"POST",
         headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
-        body: JSON.stringify({ id, reserveId })
+        body: JSON.stringify({
+          id,
+          reserveId,
+          notifyOpen: true
+        })
       });
 
       const txt = await res.text();
       let j;
       try { j = JSON.parse(txt); } catch { throw new Error("Ответ не JSON: " + txt.slice(0,200)); }
-      if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-      calcClockOffset(res);
+      if (!res.ok && j && j.error === "Offer is reserved" && j.reserveId && String(j.reserveId) === String(reserveId)){
+        syncClock(j.serverTime, res);
+        lastExpiresAt = normExpiry(j.expiresAt || 0);
+        if (lastExpiresAt && serverNow() >= lastExpiresAt){
+          stopTimers();
+          setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+          ttlPill.textContent = "Истекло";
+          return;
+        }
+      } else if (!res.ok || !j.ok) {
+        throw new Error(j.error || ("HTTP " + res.status));
+      } else {
+        syncClock(j.serverTime, res);
 
-      const offer = j.offer || {};
-      payBankEl.textContent = offer.payBank || "—";
-      payReqEl.textContent = offer.payRequisite || "—";
+        if (j.reserveId){
+          reserveId = String(j.reserveId).trim();
+          try{ if (id) sessionStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch(_){}
+          try{ if (id) localStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch(_){}
+          try{ sessionStorage.setItem("reserveId", reserveId); }catch(_){}
+          try{ sessionStorage.setItem("reservedId", reserveId); }catch(_){}
+        }
 
-      if (!(Number.isFinite(amountRub) && amountRub > 0)){
-        const v = Number(offer.amountRub || 0);
-        if (Number.isFinite(v) && v > 0) amountRub = v;
+        const offer = j.offer || {};
+
+        payBankEl.textContent = offer.payBank || "—";
+        payReqEl.textContent = offer.payRequisite || "—";
+
+        if (!(Number.isFinite(amountRub) && amountRub > 0)){
+          const v = Number(offer.amountRub || 0);
+          if (Number.isFinite(v) && v > 0) amountRub = v;
+        }
+
+        if (!(Number.isFinite(rate) && rate > 0)){
+          const v = Number(offer.rate || 0);
+          if (Number.isFinite(v) && v > 0) rate = v;
+        }
+
+        amountRubEl.textContent = fmtRub(amountRub);
+        rateEl.textContent = fmtRate(rate);
+        usdtEl.textContent =
+          (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0)
+            ? fmtUsdt(amountRub / rate)
+            : "—";
+
+        lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || 0);
+
+        if (lastExpiresAt && serverNow() >= lastExpiresAt){
+          stopTimers();
+          setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
+          ttlPill.textContent = "Истекло";
+          return;
+        }
+
+        setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
+        setTtl(lastExpiresAt);
       }
-      if (!(Number.isFinite(rate) && rate > 0)){
-        const v = Number(offer.rate || 0);
-        if (Number.isFinite(v) && v > 0) rate = v;
-      }
-
-      amountRubEl.textContent = fmtRub(amountRub);
-      rateEl.textContent = fmtRate(rate);
-      usdtEl.textContent =
-        (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0)
-          ? fmtUsdt(amountRub / rate)
-          : "—";
-    
-      lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || 0);
-
-      if (lastExpiresAt && serverNow() >= lastExpiresAt){
-        setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
-        ttlPill.textContent = "Истекло";
-        return;
-      }
-
-      setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
 
       if (ttlTimer) clearInterval(ttlTimer);
       ttlTimer = setInterval(() => {
         if (!lastExpiresAt) return;
+
         setTtl(lastExpiresAt);
-        if (serverNow() > lastExpiresAt){
-          clearInterval(ttlTimer);
+
+        if (serverNow() >= lastExpiresAt){
+          stopTimers();
           setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
           ttlPill.textContent = "Истекло";
         }
@@ -592,18 +647,34 @@
           const ka = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
             method:"POST",
             headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
-            body: JSON.stringify({ id, reserveId })
+            body: JSON.stringify({
+              id,
+              reserveId
+            })
           });
+
           const t = await ka.text();
           let jj;
           try { jj = JSON.parse(t); } catch { return; }
-          if (ka.ok && jj && jj.ok && (jj.expiresAt || jj.offer?.expiresAt)){
-            lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
+
+          if (ka.ok && jj && jj.ok){
+            syncClock(jj.serverTime, ka);
+
+            if (jj.reserveId){
+              reserveId = String(jj.reserveId).trim();
+              try{ if (id) sessionStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch(_){}
+              try{ if (id) localStorage.setItem("cf_reserve_buy_" + id, reserveId); }catch(_){}
+            }
+
+            if (jj.expiresAt || jj.offer?.expiresAt){
+              lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
+            }
           }
-        }catch(e){}
+        }catch(_){}
       }, 20000);
 
     } catch(e){
+      stopTimers();
       setStatus("Ошибка: " + (e.message || String(e)), "bad");
     }
   }
@@ -614,7 +685,7 @@
       const KEY = "cf_active_deals";
       const deals = JSON.parse(localStorage.getItem(KEY) || "[]");
       const url = location.pathname + location.search;
-      const next = (Array.isArray(deals) ? deals : []).filter(d => !(d && d.type === "BUY" && String(d.id||"") === String(id)));
+      const next = (Array.isArray(deals) ? deals : []).filter(d => !(d && d.type === "BUY" && String(d.id || "") === String(id)));
       next.unshift({
         type: "BUY",
         id: String(id),
@@ -623,7 +694,7 @@
         ts: Date.now()
       });
       localStorage.setItem(KEY, JSON.stringify(next.slice(0, 50)));
-    }catch(e){}
+    }catch(_){}
   })();
 
   loadRequisitesAndKeepAlive();

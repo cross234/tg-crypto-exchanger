@@ -359,12 +359,54 @@
         <button class="cancelReasonBtn crBtn" data-reason="2 получателя на одном реквизите">
           <span class="crIcon">👥</span><span class="crText">2 получателя на одном реквизите</span><span class="crArrow">›</span>
         </button>
-        <button class="cancelReasonBtn crBtn" data-reason="Не хочу">
+        <button class="cancelReasonBtn crBtn" data-reason="Не хочу" data-fault="1">
           <span class="crIcon">🚫</span><span class="crText">Не хочу</span><span class="crArrow">›</span>
         </button>
       </div>
 
       <button id="cancelModalClose" type="button" style="margin-top:12px; width:100%; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:rgba(233,240,255,.4); border-radius:14px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; transition:background .15s;">Назад</button>
+    </div>
+  </div>
+
+  <!-- Proof upload modal -->
+  <style>
+    .proofDropzone{
+      border:2px dashed rgba(255,255,255,.18); border-radius:16px; padding:28px 16px;
+      text-align:center; cursor:pointer; transition: border-color .2s, background .2s; position:relative;
+    }
+    .proofDropzone:hover,.proofDropzone.dragover{ border-color:rgba(45,91,255,.5); background:rgba(45,91,255,.06); }
+    .proofDropzone.hasFile{ border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.06); }
+    .proofDropzone input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .proofPreview{ max-width:100%; max-height:180px; border-radius:12px; margin-top:10px; display:none; }
+    .proofBtnRow{ display:flex; gap:8px; margin-top:14px; }
+    .proofBtnRow button{ flex:1; border-radius:14px; padding:13px; font-weight:800; font-size:14px; cursor:pointer; border:0; transition: opacity .15s; }
+    .proofBtnRow button:disabled{ opacity:.5; cursor:not-allowed; }
+    .proofBtnSend{ background: linear-gradient(180deg,#2d5bff,#1f3fb3); color:#fff; box-shadow:0 8px 20px rgba(45,91,255,.25); }
+    .proofBtnSkip{ background:rgba(255,255,255,.06); color:rgba(233,240,255,.55); border:1px solid rgba(255,255,255,.10) !important; }
+    .proofStatus{ margin-top:10px; padding:10px 12px; border-radius:12px; font-size:13px; font-weight:700; display:none; }
+    .proofStatus.show{ display:block; }
+    .proofStatus.ok{ background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); color:#7dffcf; }
+    .proofStatus.bad{ background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; }
+    .proofStatus.warn{ background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.3); color:#fde68a; }
+  </style>
+  <div id="proofModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.82); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);">
+    <div style="background: linear-gradient(160deg, #0c1628 0%, #101e36 100%); border: 1px solid rgba(255,255,255,.12); border-radius: 24px; padding: 22px 18px 18px; max-width: 400px; width: 92%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); box-shadow: 0 32px 80px rgba(0,0,0,.65); animation: cancelModalIn .22s cubic-bezier(.34,1.4,.64,1) both;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <div style="font-size:28px; margin-bottom:6px; line-height:1;">📸</div>
+        <div style="font-weight:900; font-size:17px; color:#e9f0ff;">Подтверждение причины</div>
+        <div style="font-size:12px; color:rgba(159,176,212,.65); margin-top:4px; font-weight:700;">Приложите скриншот, подтверждающий причину отмены.<br>Это сохранит ваш процент выполнения.</div>
+      </div>
+      <div style="text-align:center; margin-bottom:12px;"><span style="display:inline-block; padding:5px 14px; border-radius:999px; border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.08); font-size:12px; font-weight:800; color:#fde68a;" id="proofReasonText">—</span></div>
+      <div class="proofDropzone" id="proofDropzone">
+        <input type="file" accept="image/*" id="proofFileInput" />
+        <div id="proofPlaceholder"><div style="font-size:32px; margin-bottom:6px;">📎</div><div style="font-weight:800; font-size:14px; color:rgba(233,240,255,.7);">Нажмите или перетащите скриншот</div><div style="font-size:11px; color:rgba(159,176,212,.5); margin-top:4px;">PNG, JPG до 10 МБ</div></div>
+        <img class="proofPreview" id="proofPreview" />
+      </div>
+      <div class="proofStatus" id="proofStatus"></div>
+      <div class="proofBtnRow">
+        <button class="proofBtnSkip" id="proofSkipBtn" type="button">Пропустить</button>
+        <button class="proofBtnSend" id="proofSendBtn" type="button" disabled>Отправить</button>
+      </div>
     </div>
   </div>
 
@@ -477,20 +519,115 @@ usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rat
 
 const cancelModal = document.getElementById("cancelModal");
 const cancelModalClose = document.getElementById("cancelModalClose");
+const proofModal = document.getElementById("proofModal");
+const proofFileInput = document.getElementById("proofFileInput");
+const proofPreview = document.getElementById("proofPreview");
+const proofPlaceholder = document.getElementById("proofPlaceholder");
+const proofDropzone = document.getElementById("proofDropzone");
+const proofSendBtn = document.getElementById("proofSendBtn");
+const proofSkipBtn = document.getElementById("proofSkipBtn");
+const proofReasonText = document.getElementById("proofReasonText");
+const proofStatusEl = document.getElementById("proofStatus");
+
+let _cancelReason = "";
+let _cancelId = "";
+let _proofFile = null;
+
+function showProofStatus(text, kind){
+  proofStatusEl.textContent = text;
+  proofStatusEl.className = "proofStatus show " + (kind || "warn");
+}
+
+proofDropzone.addEventListener("dragover", e => { e.preventDefault(); proofDropzone.classList.add("dragover"); });
+proofDropzone.addEventListener("dragleave", () => proofDropzone.classList.remove("dragover"));
+proofDropzone.addEventListener("drop", e => {
+  e.preventDefault(); proofDropzone.classList.remove("dragover");
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith("image/")) handleProofFile(f);
+});
+proofFileInput.addEventListener("change", () => { const f = proofFileInput.files[0]; if (f) handleProofFile(f); });
+
+function handleProofFile(f){
+  if (f.size > 10*1024*1024){ showProofStatus("Файл слишком большой (макс 10 МБ)","bad"); return; }
+  _proofFile = f;
+  proofPreview.src = URL.createObjectURL(f);
+  proofPreview.style.display = "block";
+  proofPlaceholder.style.display = "none";
+  proofDropzone.classList.add("hasFile");
+  proofSendBtn.disabled = false;
+  proofStatusEl.className = "proofStatus";
+}
 
 async function cancelWithReason(reason){
   cancelModal.style.display = "none";
+  const isFault = (reason === "Не хочу");
+
+  let cancelData = {};
   try{
     if (id && reserveId){
-      await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
+      const res = await fetch(WORKER_BASE + "/api/public/cancel_reserve", {
         method:"POST",
         headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
-        body: JSON.stringify({ id, reserveId, cancelReason: reason })
+        body: JSON.stringify({ id, reserveId, cancelReason: reason, needsProof: !isFault })
       });
+      const txt = await res.text();
+      try{ cancelData = JSON.parse(txt); }catch(_){}
     }
   } catch(e){}
+
+  if (!isFault){
+    _cancelReason = reason;
+    _cancelId = cancelData.cancelId || id || "";
+    _proofFile = null;
+    proofReasonText.textContent = reason;
+    proofPreview.style.display = "none";
+    proofPlaceholder.style.display = "";
+    proofDropzone.classList.remove("hasFile");
+    proofSendBtn.disabled = true;
+    proofFileInput.value = "";
+    proofStatusEl.className = "proofStatus";
+    proofModal.style.display = "block";
+    return;
+  }
+
   location.href = "./buy.html";
 }
+
+proofSendBtn.onclick = async () => {
+  if (!_proofFile){ showProofStatus("Выберите скриншот","bad"); return; }
+  proofSendBtn.disabled = true;
+  proofSkipBtn.disabled = true;
+  showProofStatus("Загрузка...","warn");
+  try{
+    const fd = new FormData();
+    fd.append("screenshot", _proofFile);
+    fd.append("cancelId", _cancelId);
+    fd.append("orderId", id || "");
+    fd.append("reserveId", reserveId || "");
+    fd.append("cancelReason", _cancelReason);
+    const res = await fetch(WORKER_BASE + "/api/public/cancel_proof", {
+      method:"POST", headers: AUTH_HEADERS, body: fd
+    });
+    const j = await res.json().catch(()=>({}));
+    showProofStatus(res.ok && (j.ok||j.success) ? "Скриншот отправлен. Отмена не повлияет на рейтинг." : "Отправлено (сервер обработает позже).","ok");
+  }catch(e){
+    showProofStatus("Отправлено (сервер обработает позже).","ok");
+  }
+  setTimeout(()=>{ location.href = "./buy.html"; }, 1500);
+};
+
+proofSkipBtn.onclick = async () => {
+  proofSkipBtn.disabled = true;
+  proofSendBtn.disabled = true;
+  try{
+    await fetch(WORKER_BASE + "/api/public/cancel_skip_proof", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", ...AUTH_HEADERS },
+      body: JSON.stringify({ cancelId: _cancelId, orderId: id, reserveId })
+    });
+  }catch(_){}
+  location.href = "./buy.html";
+};
 
 cancelBtn.onclick = () => { cancelModal.style.display = "flex"; };
 cancelModalClose.onclick = () => { cancelModal.style.display = "none"; };

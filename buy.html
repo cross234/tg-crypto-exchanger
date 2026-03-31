@@ -813,6 +813,39 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
     return null;
   }
 
+  // ===== BUY BAN CHECK =====
+  function checkBuyBan(user){
+    if (!user) return false;
+    const until = Number(user.buyBannedUntil || 0);
+    if (!until || until <= Date.now()) return false;
+
+    const d = new Date(until);
+    const dd = String(d.getDate()).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mi = String(d.getMinutes()).padStart(2,"0");
+    const dateStr = dd + "." + mm + "." + d.getFullYear() + " " + hh + ":" + mi;
+
+    const reasons = {
+      "AUTO_LOW_COMPLETION": "Процент выполнения заявок ниже 50%",
+      "AUTO_CONSECUTIVE_CANCELS": "Две отмены подряд без выполненных заявок",
+      "ADMIN_MANUAL": "Установлен администратором"
+    };
+    const reasonText = reasons[user.buyBanReason] || user.buyBanReason || "Нарушение правил";
+
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#071022;">'
+      + '<div style="max-width:440px;width:100%;background:rgba(15,26,48,.85);border:1px solid rgba(239,68,68,.25);border-radius:24px;padding:28px 22px;text-align:center;backdrop-filter:blur(12px);box-shadow:0 24px 60px rgba(0,0,0,.5);">'
+      + '<div style="font-size:48px;margin-bottom:12px;">🚫</div>'
+      + '<div style="font-weight:1000;font-size:20px;color:#fca5a5;margin-bottom:8px;">Покупка временно ограничена</div>'
+      + '<div style="font-size:14px;color:rgba(233,240,255,.7);margin-bottom:16px;line-height:1.5;">Вы не можете покупать крипту до<br><b style="color:#fff;font-size:16px;">' + dateStr + '</b></div>'
+      + '<div style="padding:10px 14px;border-radius:14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);font-size:13px;color:#fca5a5;font-weight:700;margin-bottom:18px;">' + reasonText + '</div>'
+      + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
+      + '<a href="./sell.html" style="padding:12px 24px;border-radius:14px;background:linear-gradient(180deg,#2d5bff,#1f3fb3);color:#fff;font-weight:900;text-decoration:none;font-size:14px;">Продать крипту</a>'
+      + '<a href="./index.html" style="padding:12px 24px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(233,240,255,.6);font-weight:900;text-decoration:none;font-size:14px;">На главную</a>'
+      + '</div></div></div>';
+    return true;
+  }
+
   const statusEl = document.getElementById("status");
   const listEl = document.getElementById("list");
   const sortEl = document.getElementById("sort");
@@ -1222,8 +1255,15 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
     renderOffers(applySort(lastOffers));
   };
 
-  loadOffers();
-  setInterval(loadOffers, 10000);
+  // Check buy ban before loading offers
+  (async()=>{
+    try{
+      const u = await authMe();
+      if (u && checkBuyBan(u)) return; // banned — page replaced
+    }catch(_){}
+    loadOffers();
+    setInterval(loadOffers, 10000);
+  })();
 
   // ===== Video autoplay =====
   const video = document.getElementById("bgVideo");

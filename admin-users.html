@@ -407,6 +407,15 @@ function render(){
 
   for (const u of list){
     const banned = !!u.banned;
+    const bs = u.buyStats || {};
+    const buyBannedUntil = Number(u.buyBannedUntil || 0);
+    const buyBanned = buyBannedUntil > Date.now();
+    const bCompleted = Number(bs.totalCompleted || 0);
+    const bCancelled = Number(bs.totalCancelled || 0);
+    const bExcused = Number(bs.totalCancelledExcused || 0);
+    const bTotal = bCompleted + bCancelled;
+    const bRate = bTotal > 0 ? Math.round(bCompleted / bTotal * 100) : 100;
+    const bConsec = Number(bs.consecutiveCancels || 0);
 
     const el = document.createElement("div");
     el.className = "card";
@@ -419,6 +428,7 @@ function render(){
             <span class="tag ${banned ? "bad" : "ok"}">
               ${banned ? "BANNED" : "OK"}
             </span>
+            ${buyBanned ? '<span class="tag bad" style="background:rgba(251,113,133,.15);">BUY BAN</span>' : ''}
           </div>
 
           <div class="meta">
@@ -431,6 +441,16 @@ function render(){
             </div>
             <div><span>Создан:</span> ${ts(u.createdAt)}</div>
             <div><span>Последний раз:</span> ${ts(u.lastSeenAt || u.updatedAt)}</div>
+          </div>
+
+          <div class="meta" style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08);">
+            <div style="font-weight:900; margin-bottom:4px; color:var(--accent);">Buy-статистика:</div>
+            <div><span>Выполнено:</span> <b>${bCompleted}</b></div>
+            <div><span>Отменено (засчитано):</span> <b style="color:${bCancelled > 0 ? 'var(--bad)' : 'inherit'}">${bCancelled}</b></div>
+            <div><span>Отменено (оправдано):</span> <b>${bExcused}</b></div>
+            <div><span>Completion rate:</span> <b style="color:${bRate < 50 && bTotal > 0 ? 'var(--bad)' : 'var(--ok)'}">${bRate}%</b></div>
+            <div><span>Отмен подряд:</span> <b style="color:${bConsec >= 2 ? 'var(--bad)' : 'inherit'}">${bConsec}</b></div>
+            ${buyBanned ? '<div><span>Buy бан до:</span> <b style="color:var(--bad)">' + ts(buyBannedUntil) + '</b></div>' : ''}
           </div>
         </div>
 
@@ -479,6 +499,14 @@ function render(){
                       data-ban="${banned ? "0" : "1"}">
                 ${banned ? "Разбанить" : "Забанить"}
               </button>
+
+              <button class="btnMini ${buyBanned ? "ok" : "bad"}"
+                      data-act="buyban"
+                      data-u="${u.username||""}"
+                      data-buyban="${buyBanned ? "0" : "1"}"
+                      style="font-size:11px;">
+                ${buyBanned ? "Разбан покупки" : "Бан покупки 3д"}
+              </button>
             </div>
 
           </div>
@@ -522,6 +550,22 @@ grid.addEventListener("click", async (e)=>{
         it.note = note;
       }
       setStatus(banned ? "Пользователь забанен ✅" : "Пользователь разбанен ✅", "ok");
+      render();
+      return;
+    }
+
+    // ✅ бан/разбан покупки
+    if (act === "buyban"){
+      const doBan = btn.dataset.buyban === "1";
+      const buyBannedUntil = doBan ? (Date.now() + 3 * 24 * 60 * 60 * 1000) : 0;
+      const buyBanReason = doBan ? "ADMIN_MANUAL" : "";
+      await apiJson("/api/admin/users/" + encodeURIComponent(username), "PATCH", { buyBannedUntil, buyBanReason });
+      const it = all.find(x => (x.username||"") === username);
+      if (it){
+        it.buyBannedUntil = buyBannedUntil;
+        it.buyBanReason = buyBanReason;
+      }
+      setStatus(doBan ? "Бан покупки на 3 дня ✅" : "Бан покупки снят ✅", "ok");
       render();
       return;
     }

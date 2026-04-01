@@ -101,6 +101,40 @@
       border-radius: 18px;
     }
 
+    /* Traffic control */
+    .trafficCard{
+      background: rgba(15,26,48,.72);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    }
+    .trafficLabel{ font-weight:1000; font-size:14px; }
+    .trafficHint{ font-size:12px; color:var(--muted); margin-top:2px; font-weight:850; }
+    .trafficBtns{ display:flex; gap:10px; }
+    .btnOn{
+      border:0; border-radius:12px; padding:11px 20px;
+      background: linear-gradient(180deg, #16a34a, #15803d);
+      color:#fff; font-weight:1000; cursor:pointer;
+      box-shadow: 0 6px 18px rgba(22,163,74,.3);
+      transition: opacity .15s;
+    }
+    .btnOff{
+      border:0; border-radius:12px; padding:11px 20px;
+      background: linear-gradient(180deg, #dc2626, #b91c1c);
+      color:#fff; font-weight:1000; cursor:pointer;
+      box-shadow: 0 6px 18px rgba(220,38,38,.3);
+      transition: opacity .15s;
+    }
+    .btnOn:disabled,.btnOff:disabled{ opacity:.5; cursor:not-allowed; }
+    .trafficStatus{
+      font-size:12px; font-weight:900; margin-top:6px;
+      min-height:16px;
+    }
+    .trafficStatus.ok{ color: var(--ok); }
+    .trafficStatus.bad{ color: var(--bad); }
+
     .liveIndicator{
       display:inline-flex; align-items:center; gap:6px;
       font-size:12px; font-weight:850; color: var(--ok);
@@ -113,6 +147,23 @@
     @keyframes pulse{
       0%,100%{ opacity:1; }
       50%{ opacity:.3; }
+    }
+
+    /* Timer */
+    .timerChip{
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 10px; border-radius:999px;
+      font-weight:1000; font-size:11px;
+    }
+    .timerChip.normal{
+      border:1px solid rgba(251,191,36,.30); color:var(--warn); background:rgba(251,191,36,.08);
+    }
+    .timerChip.danger{
+      border:1px solid rgba(251,113,133,.35); color:var(--bad); background:rgba(251,113,133,.10);
+      animation: pulse 1s ease infinite;
+    }
+    .timerChip.expired{
+      border:1px solid rgba(251,113,133,.4); color:var(--bad); background:rgba(251,113,133,.15);
     }
   </style>
 </head>
@@ -127,6 +178,19 @@
       <a class="btnGhost" href="./admin.html">← Назад</a>
       <span class="countBadge" id="countBadge">0</span>
       <span class="liveIndicator" id="liveIndicator">Live</span>
+    </div>
+  </div>
+
+  <!-- Traffic control -->
+  <div class="trafficCard">
+    <div>
+      <div class="trafficLabel">🔁 Трафик выплат</div>
+      <div class="trafficHint">Отправляет /buyamount_on или /buyamount_off во все подключённые чаты</div>
+      <div class="trafficStatus" id="trafficStatus"></div>
+    </div>
+    <div class="trafficBtns">
+      <button class="btnOn" id="btnTrafficOn">✅ Включить</button>
+      <button class="btnOff" id="btnTrafficOff">🔴 Выключить</button>
     </div>
   </div>
 
@@ -186,6 +250,21 @@ const reqListEl = document.getElementById("reqList");
 const countBadge = document.getElementById("countBadge");
 const statusBox = document.getElementById("statusBox");
 
+const REQUEST_TTL_MS = 7 * 60 * 1000; // 7 минут на взятие
+
+function getRequestTimer(createdAt){
+  const elapsed = Date.now() - Number(createdAt || 0);
+  const msLeft = Math.max(0, REQUEST_TTL_MS - elapsed);
+  const totalSec = Math.ceil(msLeft / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const danger = msLeft < 2 * 60 * 1000;
+  const expired = msLeft <= 0;
+  if (expired) return { text: "🗑️ Удалена", cls: "expired" };
+  if (danger) return { text: `🔴 ${m}:${String(s).padStart(2,"0")}`, cls: "danger" };
+  return { text: `⏱ ${m}:${String(s).padStart(2,"0")}`, cls: "normal" };
+}
+
 function setStatus(msg, cls){
   statusBox.className = "status" + (cls ? (" " + cls) : "");
   statusBox.textContent = msg || "—";
@@ -226,9 +305,12 @@ async function load(){
       const el = document.createElement("div");
       el.className = "reqItem";
 
+      const timer = getRequestTimer(r.createdAt);
+
       el.innerHTML = `
         <div class="reqTop">
           <div class="reqRange">${fmtRub(r.minRub)} — ${fmtRub(r.maxRub)}</div>
+          <span class="timerChip ${timer.cls}">${timer.text}</span>
           <span class="chip ok">${timeSince(r.createdAt)}</span>
         </div>
         <div class="reqMeta">
@@ -256,11 +338,37 @@ async function load(){
   }
 }
 
+// ── Traffic control ──
+const trafficStatus = document.getElementById("trafficStatus");
+const btnOn = document.getElementById("btnTrafficOn");
+const btnOff = document.getElementById("btnTrafficOff");
+
+async function sendTraffic(action){
+  btnOn.disabled = true; btnOff.disabled = true;
+  trafficStatus.className = "trafficStatus";
+  trafficStatus.textContent = "Отправляю...";
+  try{
+    const j = await api("/api/admin/buyamount_traffic", {
+      method:"POST",
+      body: JSON.stringify({ action })
+    });
+    trafficStatus.className = "trafficStatus ok";
+    trafficStatus.textContent = `✓ ${action === "on" ? "Включено" : "Выключено"} · отправлено в ${j.sent ?? 0} из ${j.total ?? 0} чатов`;
+  }catch(e){
+    trafficStatus.className = "trafficStatus bad";
+    trafficStatus.textContent = "Ошибка: " + (e.message || String(e));
+  }finally{
+    btnOn.disabled = false; btnOff.disabled = false;
+  }
+}
+btnOn.onclick  = () => sendTraffic("on");
+btnOff.onclick = () => sendTraffic("off");
+
 // Initial load
 load();
 
-// Auto-refresh every 10 seconds
-setInterval(load, 10000);
+// Auto-refresh every 5 seconds (для актуальности таймеров)
+setInterval(load, 5000);
 </script>
 </body>
 </html>

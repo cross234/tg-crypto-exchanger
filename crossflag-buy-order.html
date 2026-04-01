@@ -138,6 +138,80 @@
       font-size:12px;
       white-space:nowrap;
     }
+
+    /* ── Таймер ── */
+    .ttlBanner{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:14px 18px;
+      border-radius:16px;
+      border:2px solid rgba(245,158,11,.45);
+      background: rgba(245,158,11,.10);
+      margin-bottom:12px;
+      transition: border-color .4s, background .4s;
+    }
+    .ttlBanner.ttlOk{
+      border-color: rgba(34,197,94,.45);
+      background: rgba(34,197,94,.08);
+    }
+    .ttlBanner.ttlWarn{
+      border-color: rgba(245,158,11,.55);
+      background: rgba(245,158,11,.12);
+    }
+    .ttlBanner.ttlDanger{
+      border-color: rgba(239,68,68,.6);
+      background: rgba(239,68,68,.13);
+      animation: ttlPulse 1.1s ease-in-out infinite;
+    }
+    @keyframes ttlPulse{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(239,68,68,.0); }
+      50%{ box-shadow: 0 0 0 8px rgba(239,68,68,.18); }
+    }
+    .ttlIcon{ font-size:20px; line-height:1; flex-shrink:0; }
+    .ttlLabel{ font-size:12px; font-weight:900; color: var(--muted); }
+    .ttlValue{
+      font-size:26px;
+      font-weight:1000;
+      letter-spacing:.04em;
+      color:#fde68a;
+      transition: color .4s;
+    }
+    .ttlBanner.ttlOk  .ttlValue{ color:#86efac; }
+    .ttlBanner.ttlWarn .ttlValue{ color:#fde68a; }
+    .ttlBanner.ttlDanger .ttlValue{ color:#fca5a5; }
+
+    /* ── Логотип банка ── */
+    .bankLogo{
+      width:36px; height:36px; border-radius:10px;
+      object-fit:contain; background:#fff;
+      padding:3px; box-sizing:border-box;
+      flex-shrink:0; display:block;
+    }
+    .bankBadge{
+      width:36px; height:36px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:1000; font-size:13px; flex-shrink:0;
+      border:1px solid rgba(0,0,0,.1);
+    }
+
+    /* ── Реквизиты кликабельны ── */
+    .reqClickable{
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s;
+    }
+    .reqClickable:hover{ background: rgba(45,91,255,.07); }
+    .reqClickable:active{ background: rgba(45,91,255,.13); }
+    .reqCopied{
+      font-size:11px; font-weight:800;
+      color:#86efac; margin-top:4px;
+      opacity:0; transition:opacity .2s;
+      height:14px;
+    }
+    .reqCopied.show{ opacity:1; }
     .statusLine{
       padding:10px 12px;
       border-radius:14px;
@@ -250,10 +324,18 @@
         </div>
 
 
+        <!-- Таймер оплаты -->
+        <div class="ttlBanner ttlWarn" id="ttlBanner">
+          <span class="ttlIcon">⏱</span>
+          <div>
+            <div class="ttlLabel">Время на оплату</div>
+            <div class="ttlValue" id="ttlValue">—</div>
+          </div>
+        </div>
+
         <div class="statusWrap">
           <div class="statusHead">
             <div class="statusTitle">Статус</div>
-            <div class="pill" id="ttlPill">Осталось: —</div>
           </div>
           <div class="statusLine warn" id="statusLine">Загрузка…</div>
         </div>
@@ -261,16 +343,18 @@
         <div class="payTitle">Реквизиты для оплаты</div>
 
         <div class="row">
-          <div class="rowLeft">
+          <div id="bankLogoWrap" style="flex-shrink:0;"></div>
+          <div class="rowLeft" style="flex:1; min-width:0;">
             <div class="rowLabel">Банк</div>
             <div class="rowValue" id="payBank">—</div>
           </div>
         </div>
 
-        <div class="row">
+        <div class="row reqClickable" id="payReqRow" title="Нажмите, чтобы скопировать">
           <div class="rowLeft" style="flex:1; min-width:0;">
-            <div class="rowLabel">Реквизиты</div>
+            <div class="rowLabel">Реквизиты · нажмите для копирования</div>
             <div class="rowValue" id="payReq">—</div>
+            <div class="reqCopied" id="reqCopied">✓ Скопировано</div>
           </div>
           <button class="copyBtn" id="copyBtn" type="button">Копировать</button>
         </div>
@@ -321,6 +405,77 @@
     .crBtn .crText{ flex:1; }
     .crBtn .crArrow{ opacity:.35; font-size:13px; flex-shrink:0; }
   </style>
+
+  <!-- Cancel warning toast -->
+  <style>
+    .cancelWarning{
+      position:fixed; bottom:0; left:0; right:0; z-index:10001;
+      display:flex; justify-content:center;
+      pointer-events:none;
+      padding:0 14px calc(14px + env(safe-area-inset-bottom));
+      transform:translateY(120%);
+      transition: transform .35s cubic-bezier(.34,1.4,.64,1), opacity .25s;
+      opacity:0;
+    }
+    .cancelWarning.show{ transform:translateY(0); opacity:1; pointer-events:auto; }
+    .cancelWarningInner{
+      max-width:420px; width:100%;
+      background: linear-gradient(160deg, #1a0a0a 0%, #1c1020 100%);
+      border: 1px solid rgba(239,68,68,.35);
+      border-radius:20px;
+      padding:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(239,68,68,.12);
+    }
+    .cwHeader{
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:10px;
+    }
+    .cwIcon{ font-size:28px; }
+    .cwTitle{ font-weight:1000; font-size:15px; color:#fca5a5; }
+    .cwText{
+      font-size:12px; font-weight:800; line-height:1.45;
+      color:rgba(252,165,165,.75);
+    }
+    .cwText b{ color:#fca5a5; font-weight:1000; }
+    .cwBar{
+      margin-top:10px;
+      display:flex; gap:10px;
+    }
+    .cwBtn{
+      flex:1; border:0; border-radius:12px; padding:11px;
+      font-weight:1000; font-size:13px; cursor:pointer; color:#fff;
+      transition: transform .08s, filter .15s;
+    }
+    .cwBtn:active{ transform:scale(.97); }
+    .cwBtnCancel{
+      background: linear-gradient(180deg, #dc2626, #b91c1c);
+      box-shadow: 0 8px 20px rgba(185,28,28,.3);
+    }
+    .cwBtnBack{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(233,240,255,.65);
+    }
+    .cwBtnBack:hover{ background: rgba(255,255,255,.10); color:#fff; }
+  </style>
+
+  <div class="cancelWarning" id="cancelWarning">
+    <div class="cancelWarningInner">
+      <div class="cwHeader">
+        <span class="cwIcon">⚠️</span>
+        <span class="cwTitle">Предупреждение об отмене</span>
+      </div>
+      <div class="cwText">
+        Ордер будет отменён. Обратите внимание:<br><br>
+        <b>🚫 При частых отменах доступ к выплатам временно ограничивается.</b><br><br>
+        Если у вас возникли проблемы с реквизитами или оплатой — лучше обратитесь в поддержку, чем отменять заказ.
+      </div>
+      <div class="cwBar">
+        <button class="cwBtn cwBtnBack" id="cwBtnBack" type="button">Вернуться</button>
+        <button class="cwBtn cwBtnCancel" id="cwBtnProceed" type="button">Всё равно отменить</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Cancel reason modal -->
   <div id="cancelModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.78); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); align-items:center; justify-content:center;">
@@ -456,7 +611,7 @@ const rateEl = document.getElementById("rate");
 const usdtEl = document.getElementById("usdt");
 
 const statusLine = document.getElementById("statusLine");
-const ttlPill = document.getElementById("ttlPill");
+const ttlPill = null; // removed — replaced by ttlBanner
 
 const payBankEl = document.getElementById("payBank");
 const payReqEl = document.getElementById("payReq");
@@ -500,16 +655,102 @@ function normExpiry(v){
   return n;
 }
 
+const ttlBanner = document.getElementById("ttlBanner");
+const ttlValueEl = document.getElementById("ttlValue");
+
 function setTtl(expiresAt){
   const ms = normExpiry(expiresAt) - serverNow();
+  const banner = ttlBanner;
+  const valEl = ttlValueEl;
+  if (!banner || !valEl) return;
+
   if (!Number.isFinite(ms) || ms <= 0){
-    ttlPill.textContent = "Осталось: 00:00";
+    valEl.textContent = "00:00";
+    banner.className = "ttlBanner ttlDanger";
     return;
   }
   const s = Math.floor(ms / 1000);
   const mm = String(Math.floor(s / 60)).padStart(2,"0");
   const ss = String(s % 60).padStart(2,"0");
-  ttlPill.textContent = "Осталось: " + mm + ":" + ss;
+  valEl.textContent = mm + ":" + ss;
+
+  banner.className = "ttlBanner " + (
+    s > 5 * 60 ? "ttlOk" :
+    s > 2 * 60 ? "ttlWarn" :
+    "ttlDanger"
+  );
+}
+
+/* ── Логотипы банков ── */
+const BANK_LOGOS = {
+  "сбербанк":    { d:"sberbank.ru",      bg:"#21A038", fg:"#fff",  t:"Сб" },
+  "сбер":        { d:"sberbank.ru",      bg:"#21A038", fg:"#fff",  t:"Сб" },
+  "тинькофф":   { d:"tinkoff.ru",       bg:"#FFDD2D", fg:"#222",  t:"T"  },
+  "тинк":        { d:"tinkoff.ru",       bg:"#FFDD2D", fg:"#222",  t:"T"  },
+  "т-банк":      { d:"tinkoff.ru",       bg:"#FFDD2D", fg:"#222",  t:"T"  },
+  "t-bank":      { d:"tinkoff.ru",       bg:"#FFDD2D", fg:"#222",  t:"T"  },
+  "втб":         { d:"vtb.ru",           bg:"#009FDF", fg:"#fff",  t:"ВТБ"},
+  "vtb":         { d:"vtb.ru",           bg:"#009FDF", fg:"#fff",  t:"ВТБ"},
+  "альфа":       { d:"alfabank.ru",      bg:"#EF3124", fg:"#fff",  t:"А"  },
+  "альфабанк":   { d:"alfabank.ru",      bg:"#EF3124", fg:"#fff",  t:"А"  },
+  "газпром":     { d:"gazprombank.ru",   bg:"#004D97", fg:"#fff",  t:"ГП" },
+  "газпромбанк": { d:"gazprombank.ru",   bg:"#004D97", fg:"#fff",  t:"ГП" },
+  "мтс":         { d:"mtsbank.ru",       bg:"#E30611", fg:"#fff",  t:"МТС"},
+  "мтс банк":    { d:"mtsbank.ru",       bg:"#E30611", fg:"#fff",  t:"МТС"},
+  "открытие":    { d:"open.ru",          bg:"#FF6B00", fg:"#fff",  t:"О"  },
+  "совком":      { d:"sovcombank.ru",    bg:"#1D2F5E", fg:"#fff",  t:"СК" },
+  "совкомбанк":  { d:"sovcombank.ru",    bg:"#1D2F5E", fg:"#fff",  t:"СК" },
+  "росбанк":     { d:"rosbank.ru",       bg:"#D7001B", fg:"#fff",  t:"Р"  },
+  "рсхб":        { d:"rshb.ru",          bg:"#008931", fg:"#fff",  t:"РСХБ"},
+  "россельхоз":  { d:"rshb.ru",          bg:"#008931", fg:"#fff",  t:"РСХБ"},
+  "почта":       { d:"pochtabank.ru",    bg:"#006DB7", fg:"#fff",  t:"ПБ" },
+  "почта банк":  { d:"pochtabank.ru",    bg:"#006DB7", fg:"#fff",  t:"ПБ" },
+  "озон":        { d:"ozon.ru",          bg:"#005BFF", fg:"#fff",  t:"O"  },
+  "ozon":        { d:"ozon.ru",          bg:"#005BFF", fg:"#fff",  t:"O"  },
+  "юмани":       { d:"yoomoney.ru",      bg:"#8B00D1", fg:"#fff",  t:"Ю"  },
+  "юmoney":      { d:"yoomoney.ru",      bg:"#8B00D1", fg:"#fff",  t:"Ю"  },
+  "yoomoney":    { d:"yoomoney.ru",      bg:"#8B00D1", fg:"#fff",  t:"Ю"  },
+  "qiwi":        { d:"qiwi.com",         bg:"#FF8C00", fg:"#fff",  t:"Q"  },
+  "киви":        { d:"qiwi.com",         bg:"#FF8C00", fg:"#fff",  t:"Q"  },
+  "сбп":         { d:"nspk.ru",          bg:"#5E2D8C", fg:"#fff",  t:"СБП"},
+  "sbp":         { d:"nspk.ru",          bg:"#5E2D8C", fg:"#fff",  t:"СБП"},
+  "райффайзен":  { d:"raiffeisen.ru",    bg:"#FFDE00", fg:"#222",  t:"R"  },
+  "raiffeisen":  { d:"raiffeisen.ru",    bg:"#FFDE00", fg:"#222",  t:"R"  },
+  "уралсиб":     { d:"uralsib.ru",       bg:"#007DC3", fg:"#fff",  t:"УС" },
+  "хоум":        { d:"homecredit.ru",    bg:"#ED1C24", fg:"#fff",  t:"HC" },
+  "хоум кредит": { d:"homecredit.ru",    bg:"#ED1C24", fg:"#fff",  t:"HC" },
+  "ак барс":     { d:"akbars.ru",        bg:"#006A35", fg:"#fff",  t:"АБ" },
+  "акбарс":      { d:"akbars.ru",        bg:"#006A35", fg:"#fff",  t:"АБ" },
+  "промсвязь":   { d:"psbank.ru",        bg:"#E2000F", fg:"#fff",  t:"ПСБ"},
+  "псб":         { d:"psbank.ru",        bg:"#E2000F", fg:"#fff",  t:"ПСБ"},
+  "бкс":         { d:"bcs.ru",           bg:"#003087", fg:"#fff",  t:"БКС"},
+};
+
+function setBankLogo(bankName){
+  const wrap = document.getElementById("bankLogoWrap");
+  if (!wrap) return;
+  const key = (bankName || "").toLowerCase().trim();
+  let entry = null;
+  for (const [k, v] of Object.entries(BANK_LOGOS)){
+    if (key.includes(k)){ entry = v; break; }
+  }
+
+  function makeBadge(e, letter){
+    const bg = e ? e.bg : "rgba(45,91,255,.2)";
+    const fg = e ? e.fg : "#93b4ff";
+    const text = e ? e.t : (letter || "?");
+    wrap.innerHTML = `<div class="bankBadge" style="background:${bg};color:${fg}">${text}</div>`;
+  }
+
+  if (!entry){ makeBadge(null, (bankName||"?").charAt(0).toUpperCase()); return; }
+
+  const img = new Image();
+  img.className = "bankLogo";
+  img.alt = bankName;
+  img.onerror = () => makeBadge(entry);
+  img.src = "https://logo.clearbit.com/" + entry.d;
+  wrap.innerHTML = "";
+  wrap.appendChild(img);
 }
 
 orderIdEl.textContent = id || "—";
@@ -629,7 +870,26 @@ proofSkipBtn.onclick = async () => {
   location.href = "./buy.html";
 };
 
-cancelBtn.onclick = () => { cancelModal.style.display = "flex"; };
+// ── Cancel flow: warning → reason modal → cancel ──
+const cancelWarningEl = document.getElementById("cancelWarning");
+const cwBtnBack = document.getElementById("cwBtnBack");
+const cwBtnProceed = document.getElementById("cwBtnProceed");
+
+cancelBtn.onclick = () => {
+  // Show warning first
+  cancelWarningEl.classList.add("show");
+};
+
+cwBtnBack.onclick = () => {
+  cancelWarningEl.classList.remove("show");
+};
+
+cwBtnProceed.onclick = () => {
+  cancelWarningEl.classList.remove("show");
+  // Now show reason modal
+  cancelModal.style.display = "flex";
+};
+
 cancelModalClose.onclick = () => { cancelModal.style.display = "none"; };
 document.querySelectorAll(".cancelReasonBtn").forEach(btn => {
   btn.onclick = () => cancelWithReason(btn.getAttribute("data-reason"));
@@ -675,24 +935,29 @@ paidBtn.onclick = async () => {
   }
 };
 
-copyBtn.onclick = async () => {
+const reqCopiedEl = document.getElementById("reqCopied");
+const payReqRow = document.getElementById("payReqRow");
+
+async function doCopy(){
   const v = (payReqEl.textContent || "").trim();
   if (!v || v === "—") return;
   try{
     await navigator.clipboard.writeText(v);
-    copyBtn.textContent = "Скопировано";
-    setTimeout(()=> copyBtn.textContent="Копировать", 900);
   }catch{
     const ta = document.createElement("textarea");
-    ta.value = v;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    copyBtn.textContent = "Скопировано";
-    setTimeout(()=> copyBtn.textContent="Копировать", 900);
+    ta.value = v; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
   }
-};
+  copyBtn.textContent = "✓ Скопировано";
+  if (reqCopiedEl){ reqCopiedEl.classList.add("show"); }
+  setTimeout(()=>{
+    copyBtn.textContent = "Копировать";
+    if (reqCopiedEl){ reqCopiedEl.classList.remove("show"); }
+  }, 1400);
+}
+
+copyBtn.onclick = (e) => { e.stopPropagation(); doCopy(); };
+payReqRow.addEventListener("click", doCopy);
 
 let keepAliveTimer = null;
 let ttlTimer = null;
@@ -749,6 +1014,7 @@ async function loadRequisitesAndKeepAlive(){
 
     payBankEl.textContent = offer.payBank || "—";
     payReqEl.textContent = offer.payRequisite || "—";
+    setBankLogo(offer.payBank || "");
 
     // QR: show QR image
     try{
@@ -784,7 +1050,7 @@ async function loadRequisitesAndKeepAlive(){
     if (lastExpiresAt && serverNow() >= lastExpiresAt){
       // бронь уже просрочена — показываем предупреждение, но НЕ отменяем мгновенно
       setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
-      ttlPill.textContent = "Истекло";
+      if (ttlBanner){ ttlBanner.className = "ttlBanner ttlDanger"; } if (ttlValueEl){ ttlValueEl.textContent = "Истекло"; }
       return; // не запускаем таймер и keepAlive
     }
 
@@ -799,7 +1065,7 @@ async function loadRequisitesAndKeepAlive(){
       if (serverNow() > lastExpiresAt){
         clearInterval(ttlTimer);
         setStatus("Время бронирования истекло. Вернись в стакан и выбери новый ордер.", "bad");
-        ttlPill.textContent = "Истекло";
+        if (ttlBanner){ ttlBanner.className = "ttlBanner ttlDanger"; } if (ttlValueEl){ ttlValueEl.textContent = "Истекло"; }
       }
     }, 1000);
 

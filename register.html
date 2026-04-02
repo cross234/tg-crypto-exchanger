@@ -98,6 +98,53 @@
       min-width: 190px;
     }
     .btn:disabled{ opacity:.7; cursor:not-allowed; }
+    .btnTg{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      border:0;
+      border-radius:14px;
+      padding:13px 18px;
+      background: linear-gradient(180deg, #229ED9, #1a7fb5);
+      color:#fff;
+      font-weight:1000;
+      font-size:15px;
+      cursor:pointer;
+      width:100%;
+      text-decoration:none;
+    }
+    .btnTg:active{ opacity:.85; }
+    .step-block{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      margin-bottom:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .step-num{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; border-radius:50%;
+      background: rgba(45,91,255,.35);
+      font-size:11px; font-weight:1000; color:#fff;
+      flex-shrink:0;
+    }
+    .step-row{ display:flex; align-items:flex-start; gap:10px; }
+    .step-text{ font-size:13px; font-weight:900; color:var(--text); line-height:1.45; }
+    .step-muted{ font-size:12px; color:var(--muted); font-weight:850; }
+    .bot-banner{
+      display:none;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(34,197,94,.30);
+      background: rgba(34,197,94,.07);
+      margin-top:10px;
+      flex-direction:column;
+      gap:10px;
+    }
+    .bot-banner.show{ display:flex; }
+    .bot-banner-title{ font-weight:1000; font-size:14px; color:#22c55e; }
+    .bot-banner-hint{ font-size:12px; font-weight:850; color:var(--muted); line-height:1.5; }
     .status{
       margin-top:10px;
       padding:12px 14px;
@@ -125,35 +172,68 @@
           <a class="back" href="./index.html">← Назад</a>
         </div>
 
-        <div class="row">
-          <div class="hint">
-            1) Открой нашего бота и нажми <b>/start</b> (иначе Telegram не даст нам написать тебе первым).<br>
-            2) Введи свой <b>username</b> и нажми “Получить код”.<br>
-            3) Введи код из ЛС и нажми “Войти”.
+        <!-- Step 1: open bot -->
+        <div class=”step-block”>
+          <div class=”step-row”>
+            <div class=”step-num”>1</div>
+            <div>
+              <div class=”step-text”>Запусти нашего бота</div>
+              <div class=”step-muted”>Telegram должен разрешить нам отправить тебе код</div>
+            </div>
           </div>
+          <a class=”btnTg” id=”openBotBtn” href=”https://t.me/CrossflagEx_bot?start=reg” target=”_blank”>
+            <svg width=”20” height=”20” viewBox=”0 0 24 24” fill=”none”><path d=”M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.686-1.685 7.938c-.126.558-.457.694-.927.432l-2.56-1.887-1.237 1.19c-.137.137-.252.252-.517.252l.185-2.614 4.764-4.303c.207-.185-.045-.287-.32-.102L7.993 14.63l-2.51-.784c-.545-.17-.556-.545.114-.806l9.788-3.774c.454-.17.853.103.545.42z” fill=”#fff”/></svg>
+            Открыть бота в Telegram
+          </a>
         </div>
 
-        <div class="row">
-          <div class="label">Telegram username</div>
-          <input id="u" placeholder="@username" />
+        <!-- Step 2: enter username + get code -->
+        <div class=”step-block”>
+          <div class=”step-row”>
+            <div class=”step-num”>2</div>
+            <div>
+              <div class=”step-text”>Введи username и получи код</div>
+              <div class=”step-muted”>Код придёт в личку от бота</div>
+            </div>
+          </div>
+          <div>
+            <div class=”label”>Telegram username</div>
+            <input id=”u” placeholder=”@username” />
+          </div>
+          <div>
+            <div class=”label”>Реферальный код (необязательно)</div>
+            <input id=”ref” placeholder=”CFXXXXXXXX” />
+          </div>
+          <button class=”btn” id=”sendBtn” type=”button” style=”width:100%;min-width:0”>Получить код →</button>
         </div>
 
-        <div class="row">
-          <div class="label">Код из Telegram</div>
-          <input id="c" inputmode="numeric" placeholder="123456" />
+        <!-- Step 3: enter code -->
+        <div class=”step-block”>
+          <div class=”step-row”>
+            <div class=”step-num”>3</div>
+            <div>
+              <div class=”step-text”>Введи код из Telegram</div>
+              <div class=”step-muted”>6 цифр из личных сообщений</div>
+            </div>
+          </div>
+          <div>
+            <div class=”label”>Код</div>
+            <input id=”c” inputmode=”numeric” placeholder=”123456” />
+          </div>
+          <button class=”btnGhost” id=”loginBtn” type=”button” style=”width:100%;min-width:0”>Войти</button>
         </div>
 
-        <div class="row">
-          <div class="label">Реферальный код (необязательно)</div>
-          <input id="ref" placeholder="CFXXXXXXXX" />
+        <!-- Bot not started banner (shown on 404 error) -->
+        <div class=”bot-banner” id=”botBanner”>
+          <div class=”bot-banner-title”>⚠️ Сначала запусти бота</div>
+          <div class=”bot-banner-hint”>Мы не можем найти тебя в Telegram. Нажми кнопку ниже, нажми <b>СТАРТ</b> в боте, затем вернись и нажми «Получить код» снова.</div>
+          <a class=”btnTg” href=”https://t.me/CrossflagEx_bot?start=reg” target=”_blank”>
+            <svg width=”18” height=”18” viewBox=”0 0 24 24” fill=”none”><path d=”M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.93 6.686-1.685 7.938c-.126.558-.457.694-.927.432l-2.56-1.887-1.237 1.19c-.137.137-.252.252-.517.252l.185-2.614 4.764-4.303c.207-.185-.045-.287-.32-.102L7.993 14.63l-2.51-.784c-.545-.17-.556-.545.114-.806l9.788-3.774c.454-.17.853.103.545.42z” fill=”#fff”/></svg>
+            Открыть бота → нажать СТАРТ → вернуться сюда
+          </a>
         </div>
 
-        <div class="actions">
-          <button class="btn" id="sendBtn" type="button">Получить код</button>
-          <button class="btnGhost" id="loginBtn" type="button">Войти</button>
-        </div>
-
-        <div class="status" id="st">—</div>
+        <div class=”status” id=”st”>—</div>
       </div>
     </div>
   </div>
@@ -166,6 +246,7 @@
   const st = document.getElementById("st");
   const sendBtn = document.getElementById("sendBtn");
   const loginBtn = document.getElementById("loginBtn");
+  const botBanner = document.getElementById("botBanner");
 
   // Auto-fill referral code from URL ?ref=CF-XXXXX
   try {
@@ -205,8 +286,14 @@
         body: JSON.stringify({ username })
       });
       const j = await res.json().catch(()=>null);
-      if (!res.ok || !j || !j.ok) throw new Error(j?.error || ("HTTP " + res.status));
-
+      if (!res.ok || !j || !j.ok) {
+        if (res.status === 404) {
+          botBanner.classList.add("show");
+          throw new Error("Аккаунт не найден — сначала запусти бота (см. шаг 1)");
+        }
+        throw new Error(j?.error || ("HTTP " + res.status));
+      }
+      botBanner.classList.remove("show");
       setStatus("Код отправлен ✅ Проверь ЛС в Telegram.", "ok");
     }catch(e){
       setStatus("Ошибка: " + (e.message || e), "bad");

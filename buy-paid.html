@@ -582,6 +582,41 @@
           </div>
         </div>
 
+        <!-- ── Антифрод: дополнительная верификация ── -->
+        <div class="block" id="blockAntifrod" style="display:none; border:1px solid rgba(251,191,36,.25); background:rgba(251,191,36,.05); border-radius:16px; padding:14px; margin-top:10px;">
+          <div class="hint" id="antifrodHint" style="color:#fbbf24; font-weight:900; margin-bottom:10px;">
+            🛡 Дополнительная верификация
+          </div>
+
+          <!-- Фото ЛК банка -->
+          <div id="antifrodPhotoWrap" style="display:none; margin-bottom:12px;">
+            <label id="antifrodPhotoLabel" style="font-weight:950; margin-bottom:4px; display:block;">📷 Фото: карта / личный кабинет банка на фоне сделки</label>
+            <div class="hint" style="margin:0 0 8px 0; color:#a9b6d6;">Откройте страницу оплаты обменника и сфотографируйте экран банка (<b>карту или ЛК</b>) так, чтобы в кадре был виден номер/имя счёта и данная сделка.</div>
+            <div class="fileField">
+              <input id="antifrodPhoto" class="fileInput" type="file" accept="image/*" />
+              <button class="fileBtn" type="button" id="antifrodPhotoBtn">Выберите фото</button>
+              <div class="fileName" id="antifrodPhotoName">Файл не выбран</div>
+            </div>
+          </div>
+
+          <!-- Видео -->
+          <div id="antifrodVideoWrap" style="display:none;">
+            <label style="font-weight:950; margin-bottom:4px; display:block;">🎥 Видео-верификация</label>
+            <div class="hint" style="margin:0 0 8px 0; color:#a9b6d6;">
+              Снимите видео на <b>второй телефон</b>:<br>
+              1) Открыть <b>App Store / Google Play / RuStore</b><br>
+              2) Найти приложение вашего банка через поиск<br>
+              3) Перейти в него (не скачивать, просто открыть страницу)<br>
+              4) Открыть банк → найти данный платёж → развернуть чек
+            </div>
+            <div class="fileField">
+              <input id="antifrodVideo" class="fileInput" type="file" accept="video/*" />
+              <button class="fileBtn" type="button" id="antifrodVideoBtn">Выберите видео</button>
+              <div class="fileName" id="antifrodVideoName">Файл не выбран</div>
+            </div>
+          </div>
+        </div>
+
         <div class="status" id="status"></div>
 
         <div class="btnRow" style="margin-top:14px;">
@@ -663,6 +698,77 @@
     .proofStatus.bad{ background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fca5a5; }
     .proofStatus.warn{ background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.3); color:#fde68a; }
   </style>
+
+  <!-- Cancel warning toast -->
+  <style>
+    .cancelWarning{
+      position:fixed; bottom:0; left:0; right:0; z-index:10001;
+      display:flex; justify-content:center;
+      pointer-events:none;
+      padding:0 14px calc(14px + env(safe-area-inset-bottom));
+      transform:translateY(120%);
+      transition: transform .35s cubic-bezier(.34,1.4,.64,1), opacity .25s;
+      opacity:0;
+    }
+    .cancelWarning.show{ transform:translateY(0); opacity:1; pointer-events:auto; }
+    .cancelWarningInner{
+      max-width:420px; width:100%;
+      background: linear-gradient(160deg, #1a0a0a 0%, #1c1020 100%);
+      border: 1px solid rgba(239,68,68,.35);
+      border-radius:20px;
+      padding:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(239,68,68,.12);
+    }
+    .cwHeader{
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:10px;
+    }
+    .cwIcon{ font-size:28px; }
+    .cwTitle{ font-weight:1000; font-size:15px; color:#fca5a5; }
+    .cwText{
+      font-size:12px; font-weight:800; line-height:1.45;
+      color:rgba(252,165,165,.75);
+    }
+    .cwText b{ color:#fca5a5; font-weight:1000; }
+    .cwBar{
+      margin-top:10px;
+      display:flex; gap:10px;
+    }
+    .cwBtn{
+      flex:1; border:0; border-radius:12px; padding:11px;
+      font-weight:1000; font-size:13px; cursor:pointer; color:#fff;
+      transition: transform .08s, filter .15s;
+    }
+    .cwBtn:active{ transform:scale(.97); }
+    .cwBtnCancel{
+      background: linear-gradient(180deg, #dc2626, #b91c1c);
+      box-shadow: 0 8px 20px rgba(185,28,28,.3);
+    }
+    .cwBtnBack{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(233,240,255,.65);
+    }
+    .cwBtnBack:hover{ background: rgba(255,255,255,.10); color:#fff; }
+  </style>
+
+  <div class="cancelWarning" id="cancelWarning">
+    <div class="cancelWarningInner">
+      <div class="cwHeader">
+        <span class="cwIcon">⚠️</span>
+        <span class="cwTitle">Предупреждение об отмене</span>
+      </div>
+      <div class="cwText">
+        Ордер будет отменён. Обратите внимание:<br><br>
+        <b>🚫 При частых отменах доступ к выплатам временно ограничивается.</b><br><br>
+        Если у вас возникли проблемы с реквизитами или оплатой — лучше обратитесь в поддержку, чем отменять заказ.
+      </div>
+      <div class="cwBar">
+        <button class="cwBtn cwBtnBack" id="cwBtnBack" type="button">Вернуться</button>
+        <button class="cwBtn cwBtnCancel" id="cwBtnProceed" type="button">Всё равно отменить</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Cancel reason modal -->
   <div id="cancelModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.78); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); align-items:center; justify-content:center;">
@@ -1127,6 +1233,24 @@
     return j;
   }
 
+  // ── Antifrod: returns {photo, video} files (null if not required/missing) ──
+  function getAntifrodFiles() {
+    const af = window._antifrod || {};
+    const photo = af.requirePhoto ? (document.getElementById("antifrodPhoto").files[0] || null) : null;
+    const video = af.requireVideo ? (document.getElementById("antifrodVideo").files[0] || null) : null;
+    return { afPhoto: photo, afVideo: video };
+  }
+
+  function validateAntifrod() {
+    const af = window._antifrod || {};
+    if (af.requirePhoto && !document.getElementById("antifrodPhoto").files[0]) {
+      throw new Error("Прикрепи фото карты / личного кабинета банка на фоне сделки");
+    }
+    if (af.requireVideo && !document.getElementById("antifrodVideo").files[0]) {
+      throw new Error("Прикрепи видео-верификацию (инструкция выше)");
+    }
+  }
+
   async function submitMultipart({ bankFrom, proofType, alphaLink, pdf1, pdf2, video, photo }){
     const fd = new FormData();
     fd.set("id", id);
@@ -1464,7 +1588,24 @@
     window.location.href = "./buy.html";
   };
 
-  document.getElementById("cancelBtn").onclick = () => { cancelModal.style.display = "flex"; };
+  // ── Cancel flow: warning → reason modal → cancel ──
+  const cancelWarningEl = document.getElementById("cancelWarning");
+  const cwBtnBack = document.getElementById("cwBtnBack");
+  const cwBtnProceed = document.getElementById("cwBtnProceed");
+
+  document.getElementById("cancelBtn").onclick = () => {
+    cancelWarningEl.classList.add("show");
+  };
+
+  cwBtnBack.onclick = () => {
+    cancelWarningEl.classList.remove("show");
+  };
+
+  cwBtnProceed.onclick = () => {
+    cancelWarningEl.classList.remove("show");
+    cancelModal.style.display = "flex";
+  };
+
   cancelModalClose.onclick = () => { cancelModal.style.display = "none"; };
   document.querySelectorAll(".cancelReasonBtn").forEach(btn => {
     btn.onclick = () => cancelWithReason(btn.getAttribute("data-reason"));
@@ -1488,8 +1629,10 @@
         const shot = document.getElementById("checkOnlyShot").files[0];
         if (!pdf) throw new Error("Выбери PDF чек");
         if (!shot) throw new Error("Приложи скриншот операции");
+        validateAntifrod();
+        const { afPhoto, afVideo } = getAntifrodFiles();
 
-        await submitMultipart({ bankFrom: "—", proofType: "CHECK_ONLY_PDF_SCREENSHOT", alphaLink: "", pdf1: pdf, photo: shot });
+        await submitMultipart({ bankFrom: "—", proofType: "CHECK_ONLY_PDF_SCREENSHOT", alphaLink: "", pdf1: pdf, photo: shot || afPhoto, video: afVideo });
         setStatus("Готово ✅ Отправлено на проверку.", "ok");
         goCheck();
       }catch(e){
@@ -1505,11 +1648,10 @@
     try{
       if (!id || !reserveId) throw new Error("Missing id / reserveId");
       await markPaid();
-
-      // ✅ ДОБАВЛЕНО: если "только чек" — банк не требуем
+      validateAntifrod();
+      const { afPhoto, afVideo } = getAntifrodFiles();
       const bankFromToSend = CHECK_ONLY ? "—" : bankSelect.value;
-
-      await submitMultipart({ bankFrom: bankFromToSend, proofType: "EMAIL", alphaLink: "" });
+      await submitMultipart({ bankFrom: bankFromToSend, proofType: "EMAIL", alphaLink: "", photo: afPhoto, video: afVideo });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1522,14 +1664,16 @@
   btnSendAlfa.onclick = async () => {
     setLoading(btnSendAlfa, true);
     try{
-      if (!id || !reserveId) throw new Error("Missing id / reserveId");
+      if (!id || !reserveId) throw new Error(“Missing id / reserveId”);
       await markPaid();
-      const alphaLink = (document.getElementById("alphaLink").value || "").trim();
-      const pdf = document.getElementById("alfaPdf").files[0];
-      if (!alphaLink) throw new Error("Вставь ссылку “разделение платежа”");
-      if (!pdf) throw new Error("Выбери PDF чек");
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: "ALFA", alphaLink, pdf1: pdf });
-      setStatus("Готово ✅ Отправлено на проверку.", "ok");
+      const alphaLink = (document.getElementById(“alphaLink”).value || “”).trim();
+      const pdf = document.getElementById(“alfaPdf”).files[0];
+      if (!alphaLink) throw new Error(“Вставь ссылку “разделение платежа””);
+      if (!pdf) throw new Error(“Выбери PDF чек”);
+      validateAntifrod();
+      const { afPhoto, afVideo } = getAntifrodFiles();
+      await submitMultipart({ bankFrom: bankSelect.value, proofType: “ALFA”, alphaLink, pdf1: pdf, photo: afPhoto, video: afVideo });
+      setStatus(“Готово ✅ Отправлено на проверку.”, “ok”);
       goCheck();
     }catch(e){
       setStatus("Ошибка: " + (e.message || String(e)), "bad");
@@ -1547,7 +1691,9 @@
       const pdf2 = document.getElementById("sberPdf2").files[0];
       if (!pdf1) throw new Error("Выбери PDF чек");
       if (!pdf2) throw new Error("Выбери PDF выписку");
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: "SBER", alphaLink: "", pdf1, pdf2 });
+      validateAntifrod();
+      const { afPhoto: afPhotoSber, afVideo: afVideoSber } = getAntifrodFiles();
+      await submitMultipart({ bankFrom: bankSelect.value, proofType: "SBER", alphaLink: "", pdf1, pdf2, photo: afPhotoSber, video: afVideoSber });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1567,7 +1713,9 @@
       const vid = document.getElementById("otherVideo").files[0];
       if (needPdf && !pdf) throw new Error("Выбери PDF чек");
       if (!vid) throw new Error("Выбери видео");
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: "VIDEO_ONLY", alphaLink: "", pdf1: pdf, video: vid });
+      validateAntifrod();
+      const { afPhoto: afPhotoOther, afVideo: afVideoOther } = getAntifrodFiles();
+      await submitMultipart({ bankFrom: bankSelect.value, proofType: "VIDEO_ONLY", alphaLink: "", pdf1: pdf, video: vid, photo: afPhotoOther });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1614,6 +1762,41 @@
     } else {
       // в режиме "только чек" подсказка уже есть внутри блока — не дублируем её в статусе
       if (!CHECK_ONLY) setStatus("Выберите банк и загрузите подтверждение.", "warn");
+    }
+
+    // Wire antifrod file inputs
+    wireFile("antifrodPhoto", "antifrodPhotoBtn", "antifrodPhotoName");
+    wireFile("antifrodVideo", "antifrodVideoBtn", "antifrodVideoName");
+
+    // Fetch verification requirements if we have an id
+    if (id) {
+      fetch(WORKER_BASE + "/api/public/verification_requirements?id=" + encodeURIComponent(id), {
+        headers: AUTH_HEADERS, cache: "no-store"
+      })
+      .then(r => r.json()).catch(() => null)
+      .then(reqs => {
+        if (!reqs || !reqs.ok) return;
+        window._antifrod = reqs;
+        const block = document.getElementById("blockAntifrod");
+        const photoWrap = document.getElementById("antifrodPhotoWrap");
+        const videoWrap = document.getElementById("antifrodVideoWrap");
+        const hint = document.getElementById("antifrodHint");
+
+        const needPhoto = !!reqs.requirePhoto;
+        const needVideo = !!reqs.requireVideo;
+
+        if (needPhoto || needVideo) {
+          block.style.display = "block";
+          if (needPhoto) photoWrap.style.display = "block";
+          if (needVideo) videoWrap.style.display = "block";
+
+          const parts = [];
+          if (needPhoto && needVideo) parts.push("фото ЛК банка и видео-верификация");
+          else if (needPhoto) parts.push("фото личного кабинета / карты банка на фоне сделки");
+          else if (needVideo) parts.push("видео-верификация");
+          hint.innerHTML = "🛡 Требуется дополнительная верификация: <b>" + parts.join(" и ") + "</b>";
+        }
+      });
     }
   })();
 

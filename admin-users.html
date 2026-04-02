@@ -416,6 +416,12 @@ function render(){
     const bTotal = bCompleted + bCancelled;
     const bRate = bTotal > 0 ? Math.round(bCompleted / bTotal * 100) : 100;
     const bConsec = Number(bs.consecutiveCancels || 0);
+    const trustScore = Number(u.trustScore || 0);
+    const trustTier = Number(u.trustTier ?? -1);
+    const tierLabels = ["🆕 Новичок", "⭐ Знакомый", "💎 Надёжный", "🏅 Доверенный", "🔱 Элита"];
+    const tierColors = ["#9fb0d4", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa"];
+    const tierLabel = trustTier >= 0 ? (tierLabels[trustTier] || String(trustTier)) : "—";
+    const tierColor = trustTier >= 0 ? (tierColors[trustTier] || "#9fb0d4") : "#9fb0d4";
 
     const el = document.createElement("div");
     el.className = "card";
@@ -445,6 +451,8 @@ function render(){
 
           <div class="meta" style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08);">
             <div style="font-weight:900; margin-bottom:4px; color:var(--accent);">Buy-статистика:</div>
+            <div><span>Tier:</span> <b style="color:${tierColor}">${tierLabel}</b></div>
+            <div><span>Trust Score:</span> <b style="color:${tierColor}">${trustScore}</b></div>
             <div><span>Выполнено:</span> <b>${bCompleted}</b></div>
             <div><span>Отменено (засчитано):</span> <b style="color:${bCancelled > 0 ? 'var(--bad)' : 'inherit'}">${bCancelled}</b></div>
             <div><span>Отменено (оправдано):</span> <b>${bExcused}</b></div>

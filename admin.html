@@ -130,6 +130,7 @@
   <button class="miniBtn" id="openWithdrawals" type="button">Выводы</button>
 
   <button class="miniBtn" id="openBuyAmountRequests" type="button">BUY запросы сумм</button>
+  <button class="miniBtn" id="openBroadcast" type="button" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.35);color:#fbbf24;">📣 Рассылка</button>
   <button class="miniBtn" id="openStats" type="button" style="background:rgba(37,99,235,.22);border-color:rgba(37,99,235,.4);">Статистика</button>
   <button class="miniBtn" id="openPdfChecker" type="button" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.35);color:#f59e0b;">PDF Checker</button>
 </div>
@@ -429,6 +430,10 @@
     };
   }
 
+
+  document.getElementById("openBroadcast").onclick = () => {
+    location.href = "./admin-broadcast.html";
+  };
 
   document.getElementById("openStats").onclick = () => {
     location.href = "./admin-stats.html";

@@ -1578,78 +1578,7 @@
     };
   }
 
-  btnEmailSent.onclick = async () => {
-    setLoading(btnEmailSent, true);
-    try{
-      if (!id || !reserveId) throw new Error("Missing id / reserveId");
-      await markPaid();
-      await submitMultipart({ bankFrom: "—", proofType: "EMAIL", alphaLink: "" });
-      setStatus("Готово ✅ Отправлено на проверку.", "ok");
-      goCheck();
-    }catch(e){
-      setStatus("Ошибка: " + (e.message || String(e)), "bad");
-    }finally{
-      setLoading(btnEmailSent, false);
-    }
-  };
-
-  btnSendAlfa.onclick = async () => {
-    setLoading(btnSendAlfa, true);
-    try{
-      if (!id || !reserveId) throw new Error(“Missing id / reserveId”);
-      await markPaid();
-      const alphaLink = (document.getElementById(“alphaLink”).value || “”).trim();
-      const pdf = document.getElementById(“alfaPdf”).files[0];
-      if (!alphaLink) throw new Error(“Вставь ссылку “разделение платежа””);
-      if (!pdf) throw new Error(“Выбери PDF чек”);
-      await submitMultipart({ bankFrom: “—“, proofType: “ALFA”, alphaLink, pdf1: pdf });
-      setStatus(“Готово ✅ Отправлено на проверку.”, “ok”);
-      goCheck();
-    }catch(e){
-      setStatus("Ошибка: " + (e.message || String(e)), "bad");
-    }finally{
-      setLoading(btnSendAlfa, false);
-    }
-  };
-
-  btnSendSber.onclick = async () => {
-    setLoading(btnSendSber, true);
-    try{
-      if (!id || !reserveId) throw new Error("Missing id / reserveId");
-      await markPaid();
-      const pdf1 = document.getElementById("sberPdf1").files[0];
-      const pdf2 = document.getElementById("sberPdf2").files[0];
-      if (!pdf1) throw new Error("Выбери PDF чек");
-      if (!pdf2) throw new Error("Выбери PDF выписку");
-      await submitMultipart({ bankFrom: "—", proofType: "SBER", alphaLink: "", pdf1, pdf2 });
-      setStatus("Готово ✅ Отправлено на проверку.", "ok");
-      goCheck();
-    }catch(e){
-      setStatus("Ошибка: " + (e.message || String(e)), "bad");
-    }finally{
-      setLoading(btnSendSber, false);
-    }
-  };
-
-  btnSendOther.onclick = async () => {
-    setLoading(btnSendOther, true);
-    try{
-      if (!id || !reserveId) throw new Error("Missing id / reserveId");
-      await markPaid();
-      const needPdf = otherNeedsPdf();
-      const pdf = needPdf ? (document.getElementById("otherPdf1").files[0] || null) : null;
-      const vid = document.getElementById("otherVideo").files[0];
-      if (needPdf && !pdf) throw new Error("Выбери PDF чек");
-      if (!vid) throw new Error("Выбери видео");
-      await submitMultipart({ bankFrom: "—", proofType: "VIDEO_ONLY", alphaLink: "", pdf1: pdf, video: vid });
-      setStatus("Готово ✅ Отправлено на проверку.", "ok");
-      goCheck();
-    }catch(e){
-      setStatus("Ошибка: " + (e.message || String(e)), "bad");
-    }finally{
-      setLoading(btnSendOther, false);
-    }
-  };
+  // Скрытые кнопки (банк-специфичные блоки убраны) — handler'ы не нужны
 
   (function(){
     initHeader();

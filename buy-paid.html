@@ -448,27 +448,20 @@
       </div>
 
       <div class="block show" style="margin-top:12px;">
-        <div class="hint" id="topHint">
-          Выберите банк, с которого была произведена оплата, и загрузите подтверждение по инструкции ниже.
+        <!-- bankWrap и blockEmail/Alfa/Sber/Other скрыты — всё идёт через единый блок ниже -->
+        <div style="display:none" id="bankWrap">
+          <input id="bankSelect" class="bankInput" value="" autocomplete="off" />
+          <div id="bankSelectDD"></div>
         </div>
+        <div class="block" id="blockEmail" style="display:none"><button class="btn" id="btnEmailSent" type="button" style="display:none">hidden</button></div>
+        <div class="block" id="blockAlfa"  style="display:none"><button class="btn" id="btnSendAlfa"  type="button" style="display:none">hidden</button></div>
+        <div class="block" id="blockSber"  style="display:none"><button class="btn" id="btnSendSber"  type="button" style="display:none">hidden</button></div>
+        <div class="block" id="blockOther" style="display:none"><button class="btn" id="btnSendOther" type="button" style="display:none">hidden</button></div>
 
-        <div style="margin-top:10px;" id="bankWrap">
-          <label>Банк отправителя</label>
-          <div class="bankSel">
-            <div class="bankField" id="bankField">
-              <input id="bankSelect" class="bankInput" placeholder="Начни вводить банк…" autocomplete="off" />
-              <svg class="bankChevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M7 10l5 5 5-5" stroke="rgba(233,240,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <div class="bankDd" id="bankSelectDD"></div>
-          </div>
-        </div>
-
-        <!-- ✅ Режим «Только чек»: нужен PDF чек + скриншот/фото -->
-        <div class="block" id="blockCheckOnly">
+        <!-- Единый блок: PDF чек + фото на фоне сделки -->
+        <div class="block show" id="blockCheckOnly">
           <div class="hint" id="checkOnlyHint">
-            <b>Прикрепите PDF чек и скриншот операции</b> и отправьте на проверку.
+            Прикрепите <b>PDF чек</b> и <b>фото карты / экрана банка на фоне этой сделки</b> и отправьте на проверку.
           </div>
           <div style="margin-top:10px;">
             <label>PDF чек</label>
@@ -479,11 +472,11 @@
             </div>
           </div>
           <div style="margin-top:10px;">
-            <label id="checkOnlyShotLabel">Скриншот операции</label>
-            <div class="hint" id="checkOnlyShotHint" style="margin:0 0 8px 0;">Приложите скриншот операции из приложения банка.</div>
+            <label id="checkOnlyShotLabel">Фото на фоне сделки</label>
+            <div class="hint" id="checkOnlyShotHint" style="margin:0 0 8px 0;">Сфотографируйте карту или экран банка так, чтобы в кадре была видна данная сделка.</div>
             <div class="fileField">
               <input id="checkOnlyShot" class="fileInput" type="file" accept="image/*" />
-              <button class="fileBtn" type="button" id="checkOnlyShotBtn">Выберите файл</button>
+              <button class="fileBtn" type="button" id="checkOnlyShotBtn">Выберите фото</button>
               <div class="fileName" id="checkOnlyShotName">Файл не выбран</div>
             </div>
           </div>
@@ -580,25 +573,6 @@
           <div class="btnRow">
             <button class="btn" id="btnSendOther" type="button">Отправить на проверку</button>
           </div>
-        </div>
-
-        <!-- ── Антифрод: дополнительная верификация ── -->
-        <div class="block" id="blockAntifrod" style="display:none; border:1px solid rgba(251,191,36,.25); background:rgba(251,191,36,.05); border-radius:16px; padding:14px; margin-top:10px;">
-          <div class="hint" id="antifrodHint" style="color:#fbbf24; font-weight:900; margin-bottom:10px;">
-            🛡 Дополнительная верификация
-          </div>
-
-          <!-- Фото ЛК банка -->
-          <div id="antifrodPhotoWrap" style="display:none; margin-bottom:12px;">
-            <label id="antifrodPhotoLabel" style="font-weight:950; margin-bottom:4px; display:block;">📷 Фото: карта / личный кабинет банка на фоне сделки</label>
-            <div class="hint" style="margin:0 0 8px 0; color:#a9b6d6;">Откройте страницу оплаты обменника и сфотографируйте экран банка (<b>карту или ЛК</b>) так, чтобы в кадре был виден номер/имя счёта и данная сделка.</div>
-            <div class="fileField">
-              <input id="antifrodPhoto" class="fileInput" type="file" accept="image/*" />
-              <button class="fileBtn" type="button" id="antifrodPhotoBtn">Выберите фото</button>
-              <div class="fileName" id="antifrodPhotoName">Файл не выбран</div>
-            </div>
-          </div>
-
         </div>
 
         <div class="status" id="status"></div>
@@ -1218,18 +1192,6 @@
   }
 
   // ── Antifrod: returns {photo, video} files (null if not required/missing) ──
-  function getAntifrodFiles() {
-    const af = window._antifrod || {};
-    const photo = af.requirePhoto ? (document.getElementById("antifrodPhoto").files[0] || null) : null;
-    return { afPhoto: photo, afVideo: null };
-  }
-
-  function validateAntifrod() {
-    const af = window._antifrod || {};
-    if (af.requirePhoto && !document.getElementById("antifrodPhoto").files[0]) {
-      throw new Error("Прикрепи фото карты / личного кабинета банка на фоне сделки");
-    }
-  }
 
   async function submitMultipart({ bankFrom, proofType, alphaLink, pdf1, pdf2, video, photo }){
     const fd = new FormData();
@@ -1379,28 +1341,7 @@
   }
 
   function initBanks(){
-    const dd = document.getElementById("bankSelectDD");
-
-    // ✅ ДОБАВЛЕНО: если "только чек" — убираем выбор банка и просто показываем email-блок
-    if (CHECK_ONLY){
-      const bankWrap = document.getElementById("bankWrap");
-      const topHint = document.getElementById("topHint");
-      if (bankWrap) bankWrap.classList.add("hide");
-      if (topHint) topHint.innerHTML = "Загрузите/отправьте <b>только чек</b> по инструкции ниже.";
-
-      hideAll();
-      applyEmailCfg();
-      blockEmail.classList.add("show");
-      setStatus("Отправьте чек на почту и нажмите кнопку ниже.", "warn");
-      return;
-    }
-
-    attachBankDropdown(bankSelect, dd, BANKS, onBankChange);
-
-    const preBank = (p.get("bankFrom") || "").trim();
-    if (preBank) bankSelect.value = preBank;
-
-    onBankChange();
+    // Банк не запрашиваем — всё идёт через единый блок (PDF + фото)
   }
 
   function wireFile(inputId, btnId, nameId){
@@ -1608,11 +1549,9 @@
         const pdf = document.getElementById("checkOnlyPdf").files[0];
         const shot = document.getElementById("checkOnlyShot").files[0];
         if (!pdf) throw new Error("Выбери PDF чек");
-        if (!shot) throw new Error("Приложи скриншот операции");
-        validateAntifrod();
-        const { afPhoto, afVideo } = getAntifrodFiles();
+        if (!shot) throw new Error("Приложи фото на фоне сделки");
 
-        await submitMultipart({ bankFrom: "—", proofType: "CHECK_ONLY_PDF_SCREENSHOT", alphaLink: "", pdf1: pdf, photo: shot || afPhoto, video: afVideo });
+        await submitMultipart({ bankFrom: "—", proofType: "CHECK_ONLY_PDF_SCREENSHOT", alphaLink: "", pdf1: pdf, photo: shot });
         setStatus("Готово ✅ Отправлено на проверку.", "ok");
         goCheck();
       }catch(e){
@@ -1628,10 +1567,7 @@
     try{
       if (!id || !reserveId) throw new Error("Missing id / reserveId");
       await markPaid();
-      validateAntifrod();
-      const { afPhoto, afVideo } = getAntifrodFiles();
-      const bankFromToSend = CHECK_ONLY ? "—" : bankSelect.value;
-      await submitMultipart({ bankFrom: bankFromToSend, proofType: "EMAIL", alphaLink: "", photo: afPhoto, video: afVideo });
+      await submitMultipart({ bankFrom: "—", proofType: "EMAIL", alphaLink: "" });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1650,9 +1586,7 @@
       const pdf = document.getElementById(“alfaPdf”).files[0];
       if (!alphaLink) throw new Error(“Вставь ссылку “разделение платежа””);
       if (!pdf) throw new Error(“Выбери PDF чек”);
-      validateAntifrod();
-      const { afPhoto, afVideo } = getAntifrodFiles();
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: “ALFA”, alphaLink, pdf1: pdf, photo: afPhoto, video: afVideo });
+      await submitMultipart({ bankFrom: “—“, proofType: “ALFA”, alphaLink, pdf1: pdf });
       setStatus(“Готово ✅ Отправлено на проверку.”, “ok”);
       goCheck();
     }catch(e){
@@ -1671,9 +1605,7 @@
       const pdf2 = document.getElementById("sberPdf2").files[0];
       if (!pdf1) throw new Error("Выбери PDF чек");
       if (!pdf2) throw new Error("Выбери PDF выписку");
-      validateAntifrod();
-      const { afPhoto: afPhotoSber, afVideo: afVideoSber } = getAntifrodFiles();
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: "SBER", alphaLink: "", pdf1, pdf2, photo: afPhotoSber, video: afVideoSber });
+      await submitMultipart({ bankFrom: "—", proofType: "SBER", alphaLink: "", pdf1, pdf2 });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1693,9 +1625,7 @@
       const vid = document.getElementById("otherVideo").files[0];
       if (needPdf && !pdf) throw new Error("Выбери PDF чек");
       if (!vid) throw new Error("Выбери видео");
-      validateAntifrod();
-      const { afPhoto: afPhotoOther, afVideo: afVideoOther } = getAntifrodFiles();
-      await submitMultipart({ bankFrom: bankSelect.value, proofType: "VIDEO_ONLY", alphaLink: "", pdf1: pdf, video: vid, photo: afPhotoOther });
+      await submitMultipart({ bankFrom: "—", proofType: "VIDEO_ONLY", alphaLink: "", pdf1: pdf, video: vid });
       setStatus("Готово ✅ Отправлено на проверку.", "ok");
       goCheck();
     }catch(e){
@@ -1709,63 +1639,11 @@
     initHeader();
     initBanks();
 
-    wireFile("alfaPdf", "alfaPdfBtn", "alfaPdfName");
-    wireFile("sberPdf1", "sberPdf1Btn", "sberPdf1Name");
-    wireFile("sberPdf2", "sberPdf2Btn", "sberPdf2Name");
-    wireFile("otherPdf1", "otherPdf1Btn", "otherPdf1Name");
-    wireFile("otherVideo", "otherVideoBtn", "otherVideoName");
     wireFile("checkOnlyPdf", "checkOnlyPdfBtn", "checkOnlyPdfName");
     wireFile("checkOnlyShot", "checkOnlyShotBtn", "checkOnlyShotName");
 
-    // ✅ UI: режим «Только чек»
-    if (CHECK_ONLY){
-      if (bankWrap) bankWrap.style.display = "none";
-      // убираем верхнюю подсказку, чтобы текст не дублировался
-      if (topHintEl) topHintEl.style.display = "none";
-      // показываем нужный блок
-      hideAll();
-      if (blockCheckOnly) blockCheckOnly.classList.add("show");
-    }
-
-    // ✅ Если заявка из чата — меняем текст скриншота
-    if (FROM_CHAT){
-      const shotLabel = document.getElementById("checkOnlyShotLabel");
-      const shotHint = document.getElementById("checkOnlyShotHint");
-      const mainHint = document.getElementById("checkOnlyHint");
-      if (shotLabel) shotLabel.textContent = "Фото/скрин на фоне сделки";
-      if (shotHint) shotHint.innerHTML = "Приложите скриншот об отправке из приложения банка или фото карты <b>НА ФОНЕ СДЕЛКИ В ОБМЕННИКЕ!!!</b>";
-      if (mainHint) mainHint.innerHTML = "<b>Прикрепите PDF чек и фото/скрин на фоне сделки</b> и отправьте на проверку.";
-    }
-
     if (!id || !reserveId){
       setStatus("Ошибка: Missing id / reserveId", "bad");
-    } else {
-      // в режиме "только чек" подсказка уже есть внутри блока — не дублируем её в статусе
-      if (!CHECK_ONLY) setStatus("Выберите банк и загрузите подтверждение.", "warn");
-    }
-
-    // Wire antifrod file inputs
-    wireFile("antifrodPhoto", "antifrodPhotoBtn", "antifrodPhotoName");
-
-    // Fetch verification requirements if we have an id
-    if (id) {
-      fetch(WORKER_BASE + "/api/public/verification_requirements?id=" + encodeURIComponent(id), {
-        headers: AUTH_HEADERS, cache: "no-store"
-      })
-      .then(r => r.json()).catch(() => null)
-      .then(reqs => {
-        if (!reqs || !reqs.ok) return;
-        window._antifrod = reqs;
-        const block = document.getElementById("blockAntifrod");
-        const photoWrap = document.getElementById("antifrodPhotoWrap");
-        const hint = document.getElementById("antifrodHint");
-
-        if (reqs.requirePhoto) {
-          block.style.display = "block";
-          photoWrap.style.display = "block";
-          hint.innerHTML = "🛡 Требуется дополнительная верификация: <b>фото карты / личного кабинета банка на фоне сделки</b>";
-        }
-      });
     }
   })();
 

@@ -595,11 +595,28 @@ const WORKER_BASE = String(
 
 const p = new URLSearchParams(location.search);
 const id = (p.get("id") || "").trim();
-const reserveId =
+let reserveId =
   (p.get("reserveId") || "").trim() ||
   (p.get("reservedId") || "").trim() ||
   (p.get("reserveid") || "").trim() ||
   (p.get("rid") || "").trim();
+
+// Fallback: ищем reserveId в localStorage (когда ссылка из TG только с ?id=)
+if (!reserveId && id) {
+  try {
+    reserveId =
+      (sessionStorage.getItem("cf_reserve_buy_" + id) || "").trim() ||
+      (localStorage.getItem("cf_reserve_buy_" + id) || "").trim() ||
+      (localStorage.getItem("cf_reserve_" + id) || "").trim();
+  } catch(_) {}
+}
+if (!reserveId && id) {
+  try {
+    const _deals = JSON.parse(localStorage.getItem("cf_active_deals") || "[]");
+    const _hit = Array.isArray(_deals) ? _deals.find(d => d && d.type === "BUY" && String(d.id||"") === String(id)) : null;
+    if (_hit && _hit.reserveId) reserveId = String(_hit.reserveId).trim();
+  } catch(_) {}
+}
 
 let amountRub = Number(p.get("amountRub"));
 let rate = Number(p.get("rate"));
@@ -986,7 +1003,8 @@ function syncClock(serverTime, httpRes){
 
 async function loadRequisitesAndKeepAlive(){
   if (!id || !reserveId){
-    setStatus("Ошибка: Missing id or reserveId", "bad");
+    setStatus("Сессия устарела. Вернитесь в список ордеров и выберите заново.", "bad");
+    paidBtn.disabled = true;
     return;
   }
 

@@ -599,22 +599,6 @@
             </div>
           </div>
 
-          <!-- Видео -->
-          <div id="antifrodVideoWrap" style="display:none;">
-            <label style="font-weight:950; margin-bottom:4px; display:block;">🎥 Видео-верификация</label>
-            <div class="hint" style="margin:0 0 8px 0; color:#a9b6d6;">
-              Снимите видео на <b>второй телефон</b>:<br>
-              1) Открыть <b>App Store / Google Play / RuStore</b><br>
-              2) Найти приложение вашего банка через поиск<br>
-              3) Перейти в него (не скачивать, просто открыть страницу)<br>
-              4) Открыть банк → найти данный платёж → развернуть чек
-            </div>
-            <div class="fileField">
-              <input id="antifrodVideo" class="fileInput" type="file" accept="video/*" />
-              <button class="fileBtn" type="button" id="antifrodVideoBtn">Выберите видео</button>
-              <div class="fileName" id="antifrodVideoName">Файл не выбран</div>
-            </div>
-          </div>
         </div>
 
         <div class="status" id="status"></div>
@@ -1237,17 +1221,13 @@
   function getAntifrodFiles() {
     const af = window._antifrod || {};
     const photo = af.requirePhoto ? (document.getElementById("antifrodPhoto").files[0] || null) : null;
-    const video = af.requireVideo ? (document.getElementById("antifrodVideo").files[0] || null) : null;
-    return { afPhoto: photo, afVideo: video };
+    return { afPhoto: photo, afVideo: null };
   }
 
   function validateAntifrod() {
     const af = window._antifrod || {};
     if (af.requirePhoto && !document.getElementById("antifrodPhoto").files[0]) {
       throw new Error("Прикрепи фото карты / личного кабинета банка на фоне сделки");
-    }
-    if (af.requireVideo && !document.getElementById("antifrodVideo").files[0]) {
-      throw new Error("Прикрепи видео-верификацию (инструкция выше)");
     }
   }
 
@@ -1766,7 +1746,6 @@
 
     // Wire antifrod file inputs
     wireFile("antifrodPhoto", "antifrodPhotoBtn", "antifrodPhotoName");
-    wireFile("antifrodVideo", "antifrodVideoBtn", "antifrodVideoName");
 
     // Fetch verification requirements if we have an id
     if (id) {
@@ -1779,22 +1758,12 @@
         window._antifrod = reqs;
         const block = document.getElementById("blockAntifrod");
         const photoWrap = document.getElementById("antifrodPhotoWrap");
-        const videoWrap = document.getElementById("antifrodVideoWrap");
         const hint = document.getElementById("antifrodHint");
 
-        const needPhoto = !!reqs.requirePhoto;
-        const needVideo = !!reqs.requireVideo;
-
-        if (needPhoto || needVideo) {
+        if (reqs.requirePhoto) {
           block.style.display = "block";
-          if (needPhoto) photoWrap.style.display = "block";
-          if (needVideo) videoWrap.style.display = "block";
-
-          const parts = [];
-          if (needPhoto && needVideo) parts.push("фото ЛК банка и видео-верификация");
-          else if (needPhoto) parts.push("фото личного кабинета / карты банка на фоне сделки");
-          else if (needVideo) parts.push("видео-верификация");
-          hint.innerHTML = "🛡 Требуется дополнительная верификация: <b>" + parts.join(" и ") + "</b>";
+          photoWrap.style.display = "block";
+          hint.innerHTML = "🛡 Требуется дополнительная верификация: <b>фото карты / личного кабинета банка на фоне сделки</b>";
         }
       });
     }

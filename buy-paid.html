@@ -1157,11 +1157,27 @@
     setStatus("Выберите подтверждение и отправьте на проверку.", "warn");
   }
 
-  function initHeader(){
+  function renderHeader(rub, rt, usdt){
     oidEl.textContent = id || "—";
-    amountEl.textContent = Number.isFinite(amountRub) ? fmtRub(amountRub) : "—";
-    rateEl.textContent = (Number.isFinite(rate) && rate > 0) ? fmtRate(rate) : "—";
-    usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
+    amountEl.textContent = (rub > 0) ? fmtRub(rub) : "—";
+    rateEl.textContent   = (rt > 0)  ? fmtRate(rt) : "—";
+    const usdtVal = usdt > 0 ? usdt : (rub > 0 && rt > 0 ? rub / rt : 0);
+    usdtEl.textContent   = usdtVal > 0 ? fmtUsdt(usdtVal) : "—";
+  }
+
+  function initHeader(){
+    renderHeader(amountRub, rate, 0);
+    // Если параметры не пришли в URL — подгружаем с сервера
+    if (id && (amountRub <= 0 || rate <= 0)) {
+      fetch(WORKER_BASE + "/api/public/offer_info?id=" + encodeURIComponent(id), {
+        headers: AUTH_HEADERS, cache: "no-store"
+      })
+      .then(r => r.json()).catch(() => null)
+      .then(d => {
+        if (!d || !d.ok) return;
+        renderHeader(Number(d.amountRub || 0), Number(d.rate || 0), Number(d.amountUsdt || 0));
+      });
+    }
   }
 
   function goBack(){

@@ -467,6 +467,12 @@
 
           <!-- ✅ НОВОЕ: удаление заявки -->
           <button class="btn small danger" data-act="deleteOffer">Удалить</button>
+
+          <!-- Бан / разбан покупки -->
+          ${(o.user?.username || o.tgUser?.username) ? `
+            <button class="btn small bad" data-act="buyban" style="border-color:rgba(251,113,133,.4);">🚫 Бан покупки 3д</button>
+            <button class="btn small ok" data-act="buyunban" style="border-color:rgba(52,211,153,.4);">✅ Разбан покупки</button>
+          ` : ''}
         </div>
       `;
 
@@ -503,6 +509,37 @@
           toast("Ошибка: " + e.message);
         }
       };
+
+      // ✅ Бан / разбан покупки
+      const _buyUserObj = o.user || o.tgUser || {};
+      const _buyUsername = String(_buyUserObj.username || "").replace(/^@/, "").trim();
+      if (_buyUsername) {
+        const _btnBuyBan = card.querySelector('[data-act="buyban"]');
+        const _btnBuyUnban = card.querySelector('[data-act="buyunban"]');
+        if (_btnBuyBan) {
+          _btnBuyBan.onclick = async () => {
+            if (!confirm(`Забанить покупку для @${_buyUsername} на 3 дня?`)) return;
+            try{
+              await api(`/api/admin/users/${encodeURIComponent(_buyUsername)}`, {
+                method: "PATCH",
+                body: { buyBannedUntil: Date.now() + 3 * 24 * 60 * 60 * 1000, buyBanReason: "ADMIN_MANUAL" }
+              });
+              toast("🚫 Бан покупки установлен для @" + _buyUsername);
+            }catch(e){ toast("Ошибка бана: " + e.message); }
+          };
+        }
+        if (_btnBuyUnban) {
+          _btnBuyUnban.onclick = async () => {
+            try{
+              await api(`/api/admin/users/${encodeURIComponent(_buyUsername)}`, {
+                method: "PATCH",
+                body: { buyBannedUntil: 0, buyBanReason: "" }
+              });
+              toast("✅ Бан покупки снят для @" + _buyUsername);
+            }catch(e){ toast("Ошибка разбана: " + e.message); }
+          };
+        }
+      }
 
       elList.appendChild(card);
     }

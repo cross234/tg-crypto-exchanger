@@ -727,7 +727,7 @@ await fillBuyRateIfNeeded(true);
         return true;
       });
 
-      for (const o of list){
+      for (const o of (j.offers || [])){
         const st = String(o.status||"NEW").toUpperCase();
         const tr = document.createElement("tr");
 
@@ -752,7 +752,8 @@ await fillBuyRateIfNeeded(true);
         };
         td.appendChild(freezeBtn);
 
-        if (st === "ON_CHECK") {
+        const hasProof = !!(o.checkInfo || o.txHash);
+        if (st === "ON_CHECK" || (st === "PAID" && hasProof)) {
           const okBtn = document.createElement("button");
           okBtn.className = "btn ok";
           okBtn.style.marginLeft = "8px";

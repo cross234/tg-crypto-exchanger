@@ -228,6 +228,23 @@
       display:none;
     }
     .homeBtn.show{ display:block; }
+    .marketBtn{
+      margin-top:10px;
+      width:100%;
+      border:1px solid rgba(45,91,255,.45);
+      border-radius:16px;
+      padding:14px 16px;
+      background:
+        radial-gradient(420px 120px at 50% 0%, rgba(45,91,255,.22), transparent 70%),
+        rgba(45,91,255,.12);
+      color:#e9f0ff;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,.28);
+      display:none;
+    }
+    .marketBtn.show{ display:block; }
+    .marketBtn:active{ transform:translateY(1px); }
 
     .hint{
       padding: 14px 16px 16px;
@@ -295,6 +312,7 @@
             </div>
           </div>
 
+          <button class="marketBtn" id="marketBtn" type="button">В СТАКАН ЗАЯВОК</button>
           <button class="homeBtn" id="homeBtn" type="button">На главную страницу</button>
 
         </div>
@@ -332,6 +350,7 @@
   const copyHashBtn = document.getElementById("copyHashBtn");
 
   const homeBtn = document.getElementById("homeBtn");
+  const marketBtn = document.getElementById("marketBtn");
 
   oidEl.textContent = id || "—";
   ridEl.textContent = reserveId || "—";
@@ -345,6 +364,7 @@
   function showSending(show){ sendingBox.classList.toggle("show", !!show); }
   function showHash(show){ hashBox.classList.toggle("show", !!show); }
   function showHome(show){ homeBtn.classList.toggle("show", !!show); }
+  function showMarket(show){ marketBtn.classList.toggle("show", !!show); }
 
   function statusRu(st){
     st = String(st||"").toUpperCase();
@@ -442,6 +462,7 @@ if (isBuyTerminalStatus(st, txHash)) {
 showSending(false);
       showHash(false);
       showHome(false);
+      showMarket(false);
 
       if (st === "NEW"){
         statusTitle.textContent = "Заявка создана";
@@ -458,11 +479,13 @@ showSending(false);
         statusSub.textContent = "Ожидай проверки / загрузки подтверждений.";
         setBadge(null, statusRu(st));
         hintEl.textContent = "После проверки статус изменится автоматически.";
+        showMarket(true);
       } else if (st === "ON_CHECK"){
         statusTitle.textContent = "Проверяем подтверждения";
         statusSub.textContent = "Администратор проверяет чек/видео. Обычно это занимает несколько минут.";
         setBadge(null, statusRu(st));
         hintEl.textContent = "Не закрывай мини-приложение — статус обновится сам.";
+        showMarket(true);
       } else if (st === "FAILED"){
         statusTitle.textContent = "Платёж не подтверждён";
         statusSub.textContent = "Если это ошибка — свяжись с поддержкой.";
@@ -547,6 +570,9 @@ showSending(false);
 
   homeBtn.onclick = () => {
     location.href = "./index.html";
+  };
+  marketBtn.onclick = () => {
+    location.href = "./trade.html";
   };
 
   loadInfo();

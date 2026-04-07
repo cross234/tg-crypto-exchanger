@@ -100,9 +100,7 @@
     .warnBox .t{ font-weight:1000; font-size:13px; line-height:1.25; }
     .warnBox .s{ margin-top:6px; font-weight:900; font-size:12px; color: rgba(233,240,255,.78); line-height:1.35; }
 
-    .inputGroup{
-      margin-top:14px;
-    }
+    .inputGroup{ margin-top:14px; }
     .inputGroup label{
       display:block; font-weight:950; font-size:13px; color:rgba(233,240,255,.7); margin-bottom:6px;
     }
@@ -114,40 +112,78 @@
     .inputGroup input:focus{ border-color:rgba(45,91,255,.5); }
     .inputGroup input::placeholder{ color:rgba(255,255,255,.25); }
 
+    .helperText{
+      margin-top:8px;
+      font-size:12px;
+      font-weight:900;
+      color:rgba(233,240,255,.56);
+      line-height:1.35;
+    }
+
     .btnPrimary{
       margin-top:14px; width:100%; padding:14px; border:none; border-radius:16px;
       background: linear-gradient(180deg, rgba(45,91,255,.85), rgba(31,63,179,.72));
       color:#fff; font-size:16px; font-weight:1000; cursor:pointer;
       box-shadow: 0 10px 26px rgba(0,0,0,.30);
     }
-    .btnPrimary:disabled{ opacity:.4; cursor:not-allowed; }
+    .btnPrimary:disabled{ opacity:.45; cursor:not-allowed; }
     .btnPrimary:active:not(:disabled){ transform: translateY(1px); }
 
+    .btnSecondary{
+      flex:1; padding:12px; border:none; border-radius:14px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      color:#fff; font-weight:900; font-size:13px; cursor:pointer;
+    }
+    .btnSecondary:disabled{ opacity:.45; cursor:not-allowed; }
+    .btnSecondary:active:not(:disabled){ transform:translateY(1px); }
+
     .resultBox{
-      margin-top:14px; border-radius:18px; border:1px solid rgba(34,197,94,.25);
-      background:rgba(34,197,94,.08); padding:14px;
+      margin-top:14px; border-radius:18px; border:1px solid rgba(45,91,255,.22);
+      background:rgba(45,91,255,.08); padding:14px;
     }
     .resultLabel{ font-weight:950; font-size:12px; color:rgba(233,240,255,.6); margin-bottom:4px; }
-    .resultValue{ font-size:22px; font-weight:1000; letter-spacing:.3px; word-break:break-all; }
-    .resultValue.amount{ color:var(--ok); font-size:26px; }
+    .resultValue{ font-size:22px; font-weight:1000; letter-spacing:.3px; word-break:break-word; }
+    .resultValue.amount{ color:#dce6ff; font-size:24px; }
+
+    .metaRow{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+    .metaItem{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:12px;
+    }
+    .metaItem .k{
+      font-size:11px;
+      font-weight:950;
+      color:rgba(233,240,255,.55);
+      margin-bottom:5px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .metaItem .v{
+      font-size:14px;
+      font-weight:1000;
+      color:#fff;
+    }
 
     .addrBlock{
       margin-top:12px; border-radius:18px; border:1px solid rgba(255,255,255,.10);
       background:rgba(15,26,48,.42); padding:12px;
     }
     .addrLabel{ font-size:12px; font-weight:950; color:rgba(233,240,255,.7); }
-    .addrText{ margin-top:6px; font-size:14px; font-weight:1000; letter-spacing:.2px; word-break:break-all; }
+    .addrText{
+      margin-top:6px; font-size:14px; font-weight:1000; letter-spacing:.2px;
+      word-break:break-all; min-height:20px;
+    }
 
     .copyRow{
       margin-top:10px; display:flex; gap:8px;
     }
-    .copyBtn{
-      flex:1; padding:12px; border:none; border-radius:14px;
-      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
-      color:#fff; font-weight:900; font-size:13px; cursor:pointer;
-    }
-    .copyBtn:active{ transform:translateY(1px); }
-    .copyBtn.primary{ background:linear-gradient(180deg, rgba(45,91,255,.85), rgba(31,63,179,.72)); border:none; }
 
     .statusBox{
       margin-top:14px; padding:14px; border-radius:18px; text-align:center;
@@ -155,13 +191,20 @@
     .statusBox.waiting{
       border:1px solid rgba(245,158,11,.3); background:rgba(245,158,11,.08);
     }
+    .statusBox.progress{
+      border:1px solid rgba(45,91,255,.28); background:rgba(45,91,255,.08);
+    }
     .statusBox.success{
       border:1px solid rgba(34,197,94,.3); background:rgba(34,197,94,.08);
     }
+    .statusBox.error{
+      border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.08);
+    }
     .statusText{ font-weight:1000; font-size:14px; }
-    .statusSub{ font-weight:900; font-size:12px; color:rgba(233,240,255,.6); margin-top:4px; }
-
-    .timerText{ font-weight:800; font-size:13px; color:rgba(233,240,255,.5); margin-top:6px; }
+    .statusSub{ font-weight:900; font-size:12px; color:rgba(233,240,255,.65); margin-top:4px; line-height:1.35; }
+    .statusMini{
+      font-weight:900; font-size:11px; color:rgba(233,240,255,.52); margin-top:8px;
+    }
 
     .qrWrap{ margin-top:12px; display:flex; justify-content:center; }
     .qrCard{
@@ -179,8 +222,19 @@
       box-shadow:0 10px 30px rgba(0,0,0,.25);
     }
     .qrPaper img{ width:100%; height:100%; object-fit:contain; display:block; }
+    .qrPlaceholder{
+      color:#7a7a7a;
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+      padding:16px;
+      line-height:1.35;
+    }
 
-    .err{ margin-top:10px; font-weight:950; font-size:12px; color:rgba(239,68,68,.92); display:none; line-height:1.35; }
+    .err{
+      margin-top:10px; font-weight:950; font-size:12px; color:rgba(239,68,68,.92);
+      display:none; line-height:1.35;
+    }
     .err.show{ display:block; }
 
     .toast{
@@ -239,12 +293,12 @@
         </button>
         <div class="titleBlock">
           <div class="titleRow"><span>Пополнить</span></div>
-          <div class="sub">USDT · TRC20 (TRON)</div>
+          <div class="sub">USDT · TRON</div>
         </div>
       </div>
     </div>
 
-    <!-- STEP 1: Enter amount -->
+    <!-- STEP 1 -->
     <div class="card" id="step1">
       <div class="sectionTitle">
         <span>Пополнение баланса</span>
@@ -252,74 +306,85 @@
       </div>
 
       <div class="warnBox">
-        <div class="t">Отправляй только USDT в сети TRC20</div>
-        <div class="s">Активы других сетей или токены могут быть безвозвратно утрачены.</div>
+        <div class="t">Отправляй только USDT в сети TRON</div>
+        <div class="s">Не используй другие сети и не отправляй другие токены на этот адрес.</div>
       </div>
 
       <div class="inputGroup">
-        <label for="amountInput">Сумма пополнения (USDT)</label>
-        <input type="number" id="amountInput" placeholder="Например: 500" min="1" step="1" inputmode="numeric" />
+        <label for="amountInput">Планируемая сумма (необязательно)</label>
+        <input type="number" id="amountInput" placeholder="Например: 500" min="0" step="0.01" inputmode="decimal" />
+      </div>
+
+      <div class="helperText">
+        Сумма нужна только для удобства на экране. Адрес создаётся персонально для твоего аккаунта, перевод можно отправить на любую сумму.
       </div>
 
       <div class="err" id="errStep1"></div>
 
-      <button class="btnPrimary" id="createDepositBtn" type="button">Получить реквизиты</button>
+      <button class="btnPrimary" id="createDepositBtn" type="button">Получить адрес для пополнения</button>
     </div>
 
-    <!-- STEP 2: Show unique amount + address + waiting -->
+    <!-- STEP 2 -->
     <div class="card hidden" id="step2">
       <div class="sectionTitle">
-        <span>Переведите точную сумму</span>
+        <span>Реквизиты для пополнения</span>
         <span class="pill"><span class="coin">$</span> USDT</span>
       </div>
 
-      <div class="resultBox">
-        <div class="resultLabel">Отправьте ровно:</div>
-        <div class="resultValue amount" id="uniqueAmount">—</div>
-        <div style="margin-top:4px; font-weight:900; font-size:11px; color:rgba(233,240,255,.5);">
-          Сумма с уникальным идентификатором — переведите именно столько
+      <div class="resultBox hidden" id="plannedAmountBox">
+        <div class="resultLabel">Планируемая сумма</div>
+        <div class="resultValue amount" id="plannedAmountValue">—</div>
+      </div>
+
+      <div class="metaRow">
+        <div class="metaItem">
+          <div class="k">Сеть</div>
+          <div class="v" id="networkValue">TRON</div>
+        </div>
+        <div class="metaItem">
+          <div class="k">Актив</div>
+          <div class="v" id="assetValue">USDT</div>
         </div>
       </div>
 
-      <div class="copyRow">
-        <button class="copyBtn primary" id="copyAmountBtn" type="button">Копировать сумму</button>
-      </div>
-
       <div class="addrBlock">
-        <div class="addrLabel">Адрес USDT (TRC20)</div>
+        <div class="addrLabel">Адрес пополнения</div>
         <div class="addrText" id="addrFull">—</div>
       </div>
 
       <div class="copyRow">
-        <button class="copyBtn" id="copyAddrBtn" type="button">Копировать адрес</button>
+        <button class="btnSecondary" id="copyAddrBtn" type="button" disabled>Копировать адрес</button>
+        <button class="btnSecondary" id="refreshStatusBtn" type="button">Обновить статус</button>
       </div>
 
       <div class="qrWrap">
         <div class="qrCard">
           <div class="qrImgBox">
-            <div class="qrPaper">
+            <div class="qrPaper" id="qrPaper">
+              <div class="qrPlaceholder" id="qrPlaceholder">QR появится после получения адреса</div>
               <img id="qrImg" alt="QR" style="display:none;" />
             </div>
           </div>
         </div>
       </div>
 
-      <div class="statusBox waiting" id="statusBox">
-        <div class="statusText pulse" id="statusText">Ожидаем перевод...</div>
-        <div class="statusSub" id="statusSub">Как только транзакция появится в сети, баланс зачислится автоматически</div>
-        <div class="timerText" id="timerText"></div>
+      <div class="statusBox progress" id="statusBox">
+        <div class="statusText pulse" id="statusText">Получаем адрес...</div>
+        <div class="statusSub" id="statusSub">Подожди несколько секунд</div>
+        <div class="statusMini" id="statusMini"></div>
       </div>
 
       <div class="err" id="errStep2"></div>
     </div>
 
-    <!-- STEP 3: Success -->
+    <!-- STEP 3 -->
     <div class="card hidden" id="step3">
       <div class="statusBox success">
         <div class="statusText">Депозит зачислен!</div>
         <div class="statusSub" id="creditedAmount"></div>
+        <div class="statusMini" id="creditedTx"></div>
       </div>
-      <button class="btnPrimary" style="margin-top:14px;" onclick="location.href='./qr.html'">Вернуться в кошелёк</button>
+      <button class="btnPrimary" style="margin-top:14px;" id="backWalletBtn" type="button">Вернуться в кошелёк</button>
     </div>
   </div>
 
@@ -330,24 +395,44 @@
   const AUTH_URL = "./auth.html";
   const USER_TOKEN_KEY = "user_token";
 
+  const state = {
+    plannedAmount: null,
+    depositAddress: "",
+    provider: "RAPIRA",
+    network: "TRON",
+    asset: "USDT",
+    pollTimer: null,
+    lastStatus: "",
+    lastRapiraStatus: "",
+    successShown: false
+  };
+
   function getUserToken(){
     try { return (localStorage.getItem(USER_TOKEN_KEY) || "").trim(); } catch { return ""; }
   }
+
   async function authMe(){
     const tok = getUserToken();
     if (!tok) return null;
     try{
-      const res = await fetch(WORKER_BASE + "/api/public/auth/me", { method:"GET", headers:{"X-User-Token":tok} });
+      const res = await fetch(WORKER_BASE + "/api/public/auth/me", {
+        method:"GET",
+        headers:{ "X-User-Token": tok }
+      });
       const j = await res.json().catch(()=>null);
       if (!res.ok || !j || !j.ok) return null;
       return j.user || null;
-    }catch{ return null; }
+    }catch{
+      return null;
+    }
   }
+
   function goAuth(returnUrl){
     const back = returnUrl || (location.pathname + location.search);
     try { sessionStorage.setItem("auth_return", back); } catch {}
     location.href = AUTH_URL + "?return=" + encodeURIComponent(back);
   }
+
   function setGate(open){
     const g = document.getElementById("authGate");
     if (!g) return;
@@ -357,6 +442,7 @@
   document.getElementById("gateGoAuth").onclick = () => goAuth(location.pathname + location.search);
   document.getElementById("gateClose").onclick = () => setGate(false);
   document.getElementById("backBtn").onclick = () => { location.href = "./qr.html"; };
+  document.getElementById("backWalletBtn").onclick = () => { location.href = "./qr.html"; };
 
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
@@ -364,173 +450,409 @@
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1200);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 1300);
   }
 
   async function copyText(text){
-    try{ await navigator.clipboard.writeText(text); return true; }catch{
+    try{
+      await navigator.clipboard.writeText(text);
+      return true;
+    }catch{
       try{
-        const ta = document.createElement("textarea"); ta.value = text;
+        const ta = document.createElement("textarea");
+        ta.value = text;
         ta.style.cssText = "position:fixed;opacity:0;";
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        const ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
-      }catch{ return false; }
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      }catch{
+        return false;
+      }
     }
   }
 
-  let uniqueAmountUsdt = 0;
-  let depositAddress = "";
-  let pollTimer = null;
-  let expiresAt = 0;
-  let timerInterval = null;
+  function showErr(id, msg){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg || "";
+    el.classList.toggle("show", !!msg);
+  }
 
-  // Step 1: Create deposit request
-  document.getElementById("createDepositBtn").onclick = async () => {
-    const btn = document.getElementById("createDepositBtn");
-    const errEl = document.getElementById("errStep1");
-    errEl.classList.remove("show");
+  function setStep(step){
+    document.getElementById("step1").classList.toggle("hidden", step !== 1);
+    document.getElementById("step2").classList.toggle("hidden", step !== 2);
+    document.getElementById("step3").classList.toggle("hidden", step !== 3);
+  }
 
-    const tok = getUserToken();
-    if (!tok){ setGate(true); return; }
+  function setStatusBox(type, title, sub, mini){
+    const box = document.getElementById("statusBox");
+    const text = document.getElementById("statusText");
+    const subEl = document.getElementById("statusSub");
+    const miniEl = document.getElementById("statusMini");
 
-    const amount = Number(document.getElementById("amountInput").value);
-    if (!Number.isFinite(amount) || amount < 1){
-      errEl.textContent = "Введите сумму от 1 USDT";
-      errEl.classList.add("show");
+    box.classList.remove("waiting","progress","success","error");
+    box.classList.add(type || "progress");
+
+    text.textContent = title || "";
+    subEl.textContent = sub || "";
+    miniEl.textContent = mini || "";
+
+    if (type === "progress" || type === "waiting") text.classList.add("pulse");
+    else text.classList.remove("pulse");
+  }
+
+  function setAddress(address){
+    state.depositAddress = String(address || "").trim();
+
+    const addrEl = document.getElementById("addrFull");
+    const copyBtn = document.getElementById("copyAddrBtn");
+    const qrImg = document.getElementById("qrImg");
+    const qrPlaceholder = document.getElementById("qrPlaceholder");
+
+    if (!state.depositAddress){
+      addrEl.textContent = "Адрес ещё не готов";
+      copyBtn.disabled = true;
+      qrImg.style.display = "none";
+      qrImg.removeAttribute("src");
+      qrPlaceholder.style.display = "block";
+      qrPlaceholder.textContent = "QR появится после получения адреса";
       return;
     }
 
-    btn.disabled = true;
-    btn.textContent = "Создаём...";
+    addrEl.textContent = state.depositAddress;
+    copyBtn.disabled = false;
 
-    try{
-      const res = await fetch(WORKER_BASE + "/api/public/deposit_request", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "X-User-Token": tok },
-        body: JSON.stringify({ amountUsdt: amount })
-      });
-      const j = await res.json().catch(()=>null);
-
-      if (res.status === 401){ setGate(true); return; }
-      if (!res.ok || !j || !j.ok){
-        errEl.textContent = (j && j.error) || "Ошибка создания заявки";
-        errEl.classList.add("show");
-        btn.disabled = false;
-        btn.textContent = "Получить реквизиты";
-        return;
-      }
-
-      uniqueAmountUsdt = Number(j.amountUsdt);
-      depositAddress = String(j.address || "");
-      expiresAt = Date.now() + (Number(j.expiresIn) || 3600) * 1000;
-
-      showStep2();
-    }catch(e){
-      errEl.textContent = "Ошибка сети. Попробуйте ещё раз.";
-      errEl.classList.add("show");
-      btn.disabled = false;
-      btn.textContent = "Получить реквизиты";
-    }
-  };
-
-  function showStep2(){
-    document.getElementById("step1").classList.add("hidden");
-    document.getElementById("step2").classList.remove("hidden");
-
-    document.getElementById("uniqueAmount").textContent = uniqueAmountUsdt.toFixed(4) + " USDT";
-    document.getElementById("addrFull").textContent = depositAddress;
-
-    // QR
-    const qrImg = document.getElementById("qrImg");
-    const qrData = encodeURIComponent(depositAddress);
-    qrImg.onload = () => { qrImg.style.display = "block"; };
+    const qrData = encodeURIComponent(state.depositAddress);
+    qrImg.onload = () => {
+      qrPlaceholder.style.display = "none";
+      qrImg.style.display = "block";
+    };
+    qrImg.onerror = () => {
+      qrImg.style.display = "none";
+      qrPlaceholder.style.display = "block";
+      qrPlaceholder.textContent = "Не удалось загрузить QR";
+    };
     qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=" + qrData;
-
-    // Copy buttons
-    document.getElementById("copyAmountBtn").onclick = async () => {
-      const ok = await copyText(uniqueAmountUsdt.toFixed(4));
-      toast(ok ? "Сумма скопирована" : "Не удалось");
-    };
-    document.getElementById("copyAddrBtn").onclick = async () => {
-      const ok = await copyText(depositAddress);
-      toast(ok ? "Адрес скопирован" : "Не удалось");
-    };
-
-    // Start polling
-    startPolling();
-    startTimer();
   }
 
-  function startTimer(){
-    const timerEl = document.getElementById("timerText");
-    timerInterval = setInterval(() => {
-      const left = Math.max(0, expiresAt - Date.now());
-      if (left <= 0){
-        timerEl.textContent = "Время истекло";
-        clearInterval(timerInterval);
-        clearInterval(pollTimer);
-        document.getElementById("statusText").textContent = "Время истекло";
-        document.getElementById("statusText").classList.remove("pulse");
-        document.getElementById("statusSub").textContent = "Создайте новую заявку на пополнение";
-        return;
-      }
-      const m = Math.floor(left / 60000);
-      const s = Math.floor((left % 60000) / 1000);
-      timerEl.textContent = "Осталось: " + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
-    }, 1000);
+  function setPlannedAmount(value){
+    const box = document.getElementById("plannedAmountBox");
+    const val = document.getElementById("plannedAmountValue");
+
+    if (value == null || value === "" || !Number.isFinite(Number(value)) || Number(value) <= 0){
+      box.classList.add("hidden");
+      val.textContent = "—";
+      state.plannedAmount = null;
+      return;
+    }
+
+    state.plannedAmount = Number(value);
+    val.textContent = Number(value).toFixed(2) + " USDT";
+    box.classList.remove("hidden");
+  }
+
+  function humanRapiraStatus(status){
+    const s = String(status || "").toUpperCase();
+    if (s === "MEMPOOL") return "Транзакция найдена в сети";
+    if (s === "PENDING_CONFIRMATIONS") return "Ждём подтверждения сети";
+    if (s === "PENDING_AML") return "Идёт проверка";
+    if (s === "MANUAL_CHECK") return "Идёт ручная проверка";
+    if (s === "SUCCESS") return "Средства зачислены";
+    return s || "";
+  }
+
+  async function api(path, options = {}){
+    const tok = getUserToken();
+    const headers = Object.assign({}, options.headers || {});
+    if (tok) headers["X-User-Token"] = tok;
+
+    const cfg = {
+      method: options.method || "GET",
+      headers
+    };
+
+    if (options.body !== undefined) cfg.body = options.body;
+
+    try{
+      const res = await fetch(WORKER_BASE + path, cfg);
+      const data = await res.json().catch(()=>null);
+      return { res, data };
+    }catch(err){
+      return { res: null, data: null, networkError: err };
+    }
   }
 
   function startPolling(){
-    const tok = getUserToken();
-    pollTimer = setInterval(async () => {
-      try{
-        const res = await fetch(WORKER_BASE + "/api/public/deposit_status", {
-          method:"GET", headers:{"X-User-Token":tok}
-        });
-        const j = await res.json().catch(()=>null);
-        if (j && j.ok && j.status === "CREDITED"){
-          clearInterval(pollTimer);
-          clearInterval(timerInterval);
-          showStep3(j.amountUsdt);
-        }
-      }catch{}
-    }, 5000); // poll every 5 seconds
+    stopPolling();
+    refreshDepositStatus(false);
+    state.pollTimer = setInterval(() => {
+      refreshDepositStatus(false);
+    }, 6000);
   }
 
-  function showStep3(amountUsdt){
-    document.getElementById("step2").classList.add("hidden");
-    document.getElementById("step3").classList.remove("hidden");
-    document.getElementById("creditedAmount").textContent =
-      "+" + Number(amountUsdt || 0).toFixed(4) + " USDT зачислено на баланс";
+  function stopPolling(){
+    if (state.pollTimer){
+      clearInterval(state.pollTimer);
+      state.pollTimer = null;
+    }
   }
 
-  // Init: check auth + check if already has pending deposit
-  (async () => {
-    const u = await authMe();
-    if (!u){ setGate(true); return; }
+  async function loadDepositAddress(showStep = true){
+    showErr("errStep1", "");
+    showErr("errStep2", "");
 
-    // Check for existing pending deposit
-    try{
-      const tok = getUserToken();
-      const res = await fetch(WORKER_BASE + "/api/public/deposit_status", {
-        method:"GET", headers:{"X-User-Token":tok}
-      });
-      const j = await res.json().catch(()=>null);
+    const createBtn = document.getElementById("createDepositBtn");
+    const refreshBtn = document.getElementById("refreshStatusBtn");
 
-      if (j && j.ok){
-        if (j.status === "PENDING"){
-          uniqueAmountUsdt = Number(j.amountUsdt);
-          depositAddress = "TDSBNxZeRqxpHQ3e9LsgUvAcoTs38h1W53";
-          expiresAt = Date.now() + (Number(j.expiresIn) || 3600) * 1000;
-          showStep2();
-          return;
-        }
-        if (j.status === "CREDITED"){
-          showStep3(j.amountUsdt);
-          return;
+    if (showStep){
+      setStep(2);
+      setStatusBox("progress", "Получаем адрес...", "Подожди несколько секунд", "");
+      setAddress("");
+    }
+
+    createBtn.disabled = true;
+    createBtn.textContent = "Получаем адрес...";
+    refreshBtn.disabled = true;
+
+    const { res, data, networkError } = await api("/api/public/deposit_request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    });
+
+    createBtn.disabled = false;
+    createBtn.textContent = "Получить адрес для пополнения";
+    refreshBtn.disabled = false;
+
+    if (networkError){
+      if (showStep){
+        setStatusBox("error", "Ошибка сети", "Не удалось связаться с сервером", "Попробуй ещё раз");
+        showErr("errStep2", "Ошибка сети. Попробуйте ещё раз.");
+      } else {
+        showErr("errStep1", "Ошибка сети. Попробуйте ещё раз.");
+      }
+      return false;
+    }
+
+    if (!res || res.status === 401){
+      setGate(true);
+      return false;
+    }
+
+    if (!res.ok || !data || !data.ok){
+      const msg = (data && data.error) || "Не удалось получить адрес";
+      if (showStep){
+        setStatusBox("error", "Не удалось получить адрес", msg, "");
+        showErr("errStep2", msg);
+      } else {
+        showErr("errStep1", msg);
+      }
+      return false;
+    }
+
+    state.provider = String(data.provider || "RAPIRA");
+    state.network = String(data.network || "TRON");
+    state.asset = String(data.asset || "USDT");
+
+    document.getElementById("networkValue").textContent = state.network;
+    document.getElementById("assetValue").textContent = state.asset;
+
+    setAddress(data.address || "");
+
+    if (data.creating || !data.address){
+      setStatusBox(
+        "progress",
+        "Создаём адрес...",
+        "Как только адрес будет готов, он появится автоматически",
+        state.provider
+      );
+    } else {
+      setStatusBox(
+        "waiting",
+        "Адрес готов",
+        "Отправь USDT в сети TRON на адрес выше. После этого статус обновится автоматически.",
+        state.provider
+      );
+    }
+
+    return true;
+  }
+
+  async function refreshDepositStatus(manual){
+    showErr("errStep2", "");
+
+    const { res, data, networkError } = await api("/api/public/deposit_status", {
+      method: "GET"
+    });
+
+    if (networkError){
+      if (manual){
+        showErr("errStep2", "Не удалось обновить статус. Проверь интернет.");
+        toast("Ошибка сети");
+      }
+      return;
+    }
+
+    if (!res || res.status === 401){
+      stopPolling();
+      setGate(true);
+      return;
+    }
+
+    if (!res.ok || !data || !data.ok){
+      if (manual){
+        const msg = (data && data.error) || "Не удалось обновить статус";
+        showErr("errStep2", msg);
+        toast("Не удалось обновить");
+      }
+      return;
+    }
+
+    state.provider = String(data.provider || state.provider || "RAPIRA");
+    state.network = String(data.network || state.network || "TRON");
+    state.asset = String(data.asset || state.asset || "USDT");
+    state.lastStatus = String(data.status || "");
+    state.lastRapiraStatus = String(data.rapiraStatus || "");
+
+    document.getElementById("networkValue").textContent = state.network;
+    document.getElementById("assetValue").textContent = state.asset;
+
+    if (data.address) setAddress(data.address);
+
+    const rapiraHuman = humanRapiraStatus(data.rapiraStatus);
+
+    if (data.status === "PENDING_ADDRESS"){
+      setStatusBox(
+        "progress",
+        "Создаём адрес...",
+        "Подожди немного, адрес появится автоматически",
+        state.provider
+      );
+      if (!state.depositAddress){
+        const addrRes = await api("/api/public/wallet/deposit_address", { method: "GET" });
+        if (addrRes && addrRes.data && addrRes.data.ok && addrRes.data.address){
+          setAddress(addrRes.data.address);
         }
       }
-    }catch{}
+      return;
+    }
+
+    if (data.status === "NONE"){
+      setStatusBox(
+        "waiting",
+        "Ожидаем перевод...",
+        "После отправки USDT в сети TRON мы автоматически увидим поступление и начнём зачисление.",
+        state.provider
+      );
+      if (manual) toast("Статус обновлён");
+      return;
+    }
+
+    if (data.status === "PENDING"){
+      const amountLine = Number.isFinite(Number(data.amountUsdt)) && Number(data.amountUsdt) > 0
+        ? "Обнаружено: " + Number(data.amountUsdt).toFixed(6) + " USDT."
+        : "Перевод найден.";
+      setStatusBox(
+        "progress",
+        "Перевод найден",
+        amountLine + " Ждём завершения обработки и зачисления.",
+        rapiraHuman || state.provider
+      );
+      if (manual) toast("Перевод найден");
+      return;
+    }
+
+    if (data.status === "CREDITED"){
+      stopPolling();
+      showStep3(data.amountUsdt, data.txid);
+      return;
+    }
+
+    setStatusBox(
+      "waiting",
+      "Ожидаем перевод...",
+      "Статус обновится автоматически после поступления средств.",
+      state.provider
+    );
+  }
+
+  function showStep3(amountUsdt, txid){
+    state.successShown = true;
+    setStep(3);
+
+    const amountEl = document.getElementById("creditedAmount");
+    const txEl = document.getElementById("creditedTx");
+
+    if (Number.isFinite(Number(amountUsdt)) && Number(amountUsdt) > 0){
+      amountEl.textContent = "+" + Number(amountUsdt).toFixed(6) + " USDT зачислено на баланс";
+    } else {
+      amountEl.textContent = "Средства уже добавлены на баланс";
+    }
+
+    txEl.textContent = txid ? ("TXID: " + String(txid)) : "";
+    toast("Пополнение зачислено");
+  }
+
+  document.getElementById("createDepositBtn").onclick = async () => {
+    const tok = getUserToken();
+    if (!tok){
+      setGate(true);
+      return;
+    }
+
+    const rawAmount = document.getElementById("amountInput").value.trim();
+    if (rawAmount !== ""){
+      const amount = Number(rawAmount);
+      if (!Number.isFinite(amount) || amount <= 0){
+        showErr("errStep1", "Если указываешь сумму, она должна быть больше 0");
+        return;
+      }
+      setPlannedAmount(amount);
+    } else {
+      setPlannedAmount(null);
+    }
+
+    const ok = await loadDepositAddress(true);
+    if (ok){
+      startPolling();
+    }
+  };
+
+  document.getElementById("copyAddrBtn").onclick = async () => {
+    if (!state.depositAddress) return;
+    const ok = await copyText(state.depositAddress);
+    toast(ok ? "Адрес скопирован" : "Не удалось скопировать");
+  };
+
+  document.getElementById("refreshStatusBtn").onclick = async () => {
+    const tok = getUserToken();
+    if (!tok){
+      setGate(true);
+      return;
+    }
+
+    if (!document.getElementById("step2").classList.contains("hidden")){
+      if (!state.depositAddress){
+        await loadDepositAddress(true);
+      }
+      await refreshDepositStatus(true);
+    }
+  };
+
+  window.addEventListener("pagehide", stopPolling);
+  window.addEventListener("beforeunload", stopPolling);
+
+  (async () => {
+    const user = await authMe();
+    if (!user){
+      setGate(true);
+      return;
+    }
+
+    setPlannedAmount(null);
   })();
 </script>
 </body>

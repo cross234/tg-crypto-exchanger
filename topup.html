@@ -100,20 +100,8 @@
     .warnBox .t{ font-weight:1000; font-size:13px; line-height:1.25; }
     .warnBox .s{ margin-top:6px; font-weight:900; font-size:12px; color: rgba(233,240,255,.78); line-height:1.35; }
 
-    .inputGroup{ margin-top:14px; }
-    .inputGroup label{
-      display:block; font-weight:950; font-size:13px; color:rgba(233,240,255,.7); margin-bottom:6px;
-    }
-    .inputGroup input{
-      width:100%; padding:14px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
-      color:#fff; font-size:18px; font-weight:800; outline:none;
-    }
-    .inputGroup input:focus{ border-color:rgba(45,91,255,.5); }
-    .inputGroup input::placeholder{ color:rgba(255,255,255,.25); }
-
     .helperText{
-      margin-top:8px;
+      margin-top:12px;
       font-size:12px;
       font-weight:900;
       color:rgba(233,240,255,.56);
@@ -136,14 +124,6 @@
     }
     .btnSecondary:disabled{ opacity:.45; cursor:not-allowed; }
     .btnSecondary:active:not(:disabled){ transform:translateY(1px); }
-
-    .resultBox{
-      margin-top:14px; border-radius:18px; border:1px solid rgba(45,91,255,.22);
-      background:rgba(45,91,255,.08); padding:14px;
-    }
-    .resultLabel{ font-weight:950; font-size:12px; color:rgba(233,240,255,.6); margin-bottom:4px; }
-    .resultValue{ font-size:22px; font-weight:1000; letter-spacing:.3px; word-break:break-word; }
-    .resultValue.amount{ color:#dce6ff; font-size:24px; }
 
     .metaRow{
       display:grid;
@@ -310,13 +290,8 @@
         <div class="s">Не используй другие сети и не отправляй другие токены на этот адрес.</div>
       </div>
 
-      <div class="inputGroup">
-        <label for="amountInput">Планируемая сумма (необязательно)</label>
-        <input type="number" id="amountInput" placeholder="Например: 500" min="0" step="0.01" inputmode="decimal" />
-      </div>
-
       <div class="helperText">
-        Сумма нужна только для удобства на экране. Адрес создаётся персонально для твоего аккаунта, перевод можно отправить на любую сумму.
+        Адрес создаётся персонально для твоего аккаунта. После отправки средств депозит определится автоматически.
       </div>
 
       <div class="err" id="errStep1"></div>
@@ -329,11 +304,6 @@
       <div class="sectionTitle">
         <span>Реквизиты для пополнения</span>
         <span class="pill"><span class="coin">$</span> USDT</span>
-      </div>
-
-      <div class="resultBox hidden" id="plannedAmountBox">
-        <div class="resultLabel">Планируемая сумма</div>
-        <div class="resultValue amount" id="plannedAmountValue">—</div>
       </div>
 
       <div class="metaRow">
@@ -396,7 +366,6 @@
   const USER_TOKEN_KEY = "user_token";
 
   const state = {
-    plannedAmount: null,
     depositAddress: "",
     provider: "RAPIRA",
     network: "TRON",
@@ -536,22 +505,6 @@
       qrPlaceholder.textContent = "Не удалось загрузить QR";
     };
     qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=" + qrData;
-  }
-
-  function setPlannedAmount(value){
-    const box = document.getElementById("plannedAmountBox");
-    const val = document.getElementById("plannedAmountValue");
-
-    if (value == null || value === "" || !Number.isFinite(Number(value)) || Number(value) <= 0){
-      box.classList.add("hidden");
-      val.textContent = "—";
-      state.plannedAmount = null;
-      return;
-    }
-
-    state.plannedAmount = Number(value);
-    val.textContent = Number(value).toFixed(2) + " USDT";
-    box.classList.remove("hidden");
   }
 
   function humanRapiraStatus(status){
@@ -803,18 +756,6 @@
       return;
     }
 
-    const rawAmount = document.getElementById("amountInput").value.trim();
-    if (rawAmount !== ""){
-      const amount = Number(rawAmount);
-      if (!Number.isFinite(amount) || amount <= 0){
-        showErr("errStep1", "Если указываешь сумму, она должна быть больше 0");
-        return;
-      }
-      setPlannedAmount(amount);
-    } else {
-      setPlannedAmount(null);
-    }
-
     const ok = await loadDepositAddress(true);
     if (ok){
       startPolling();
@@ -851,8 +792,6 @@
       setGate(true);
       return;
     }
-
-    setPlannedAmount(null);
   })();
 </script>
 </body>

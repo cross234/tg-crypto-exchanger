@@ -1063,7 +1063,18 @@ async function loadRequisitesAndKeepAlive(){
     rateEl.textContent = fmtRate(rate);
     usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
   
-    lastExpiresAt = normExpiry(j.expiresAt || j.offer?.expiresAt || offer.expiresAt || 0);
+    // Use sessionStorage to preserve original expiresAt across page reloads
+    const _expiryKey = "cf_expiry_" + id;
+    const _serverExpiry = normExpiry(j.expiresAt || j.offer?.expiresAt || offer.expiresAt || 0);
+    let _savedExpiry = 0;
+    try { _savedExpiry = Number(sessionStorage.getItem(_expiryKey) || 0); } catch {}
+    // Use saved expiry if still valid and earlier than server value (prevents reset)
+    if (_savedExpiry && _savedExpiry > serverNow() && (!_serverExpiry || _savedExpiry < _serverExpiry)) {
+      lastExpiresAt = _savedExpiry;
+    } else {
+      lastExpiresAt = _serverExpiry;
+      if (lastExpiresAt) { try { sessionStorage.setItem(_expiryKey, String(lastExpiresAt)); } catch {} }
+    }
 
     if (lastExpiresAt && serverNow() >= lastExpiresAt){
       // бронь уже просрочена — показываем предупреждение, но НЕ отменяем мгновенно
@@ -1073,8 +1084,7 @@ async function loadRequisitesAndKeepAlive(){
     }
 
     setStatus("Реквизиты выданы. Переведи точную сумму и нажми «Я оплатил».", "ok");
-        setTtl(lastExpiresAt);
-
+    setTtl(lastExpiresAt);
 
     if (ttlTimer) clearInterval(ttlTimer);
     ttlTimer = setInterval(() => {
@@ -1104,11 +1114,9 @@ async function loadRequisitesAndKeepAlive(){
           setStatus("Бронь больше недоступна (кто-то уже открыл эту заявку). Вернись в стакан.", "bad");
           return;
         }
-                if (ka.ok && jj && jj.ok){
+        if (ka.ok && jj && jj.ok){
           syncClock(jj.serverTime, ka);
-          if (jj.expiresAt || jj.offer?.expiresAt){
-            lastExpiresAt = normExpiry(jj.expiresAt || jj.offer?.expiresAt);
-          }
+          // Don't update lastExpiresAt from keepAlive — timer must count down naturally
         }
       }catch(e){}
     }, 20000);

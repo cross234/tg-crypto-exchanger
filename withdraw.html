@@ -677,13 +677,8 @@
         return;
       }
 
-      setStatus("Заявка создана ✅ Ожидай подтверждения администратором.", "ok");
-      toAddrEl.value = "";
-      amtEl.value = "";
-      updateNet();
-
-      const bal2 = await fetchBalance();
-      if (bal2 != null) availEl.textContent = fmtUsdt(bal2);
+      setStatus("Заявка создана ✅ Перенаправляем...", "ok");
+      setTimeout(() => { location.href = "./wallet.html"; }, 1500);
     }catch(e){
       setStatus("Ошибка: " + (e.message || String(e)), "bad");
     }finally{

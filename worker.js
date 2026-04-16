@@ -6730,13 +6730,9 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
           createdAt: now(), updatedAt: now()
         };
 
-        const items = await readJsonKV(BUY_AMOUNT_REQ_KEY, []);
-        const arr = Array.isArray(items) ? items : [];
-        arr.unshift(rec);
-        await writeJsonKV(BUY_AMOUNT_REQ_KEY, arr.slice(0, 5000));
+        // MW requests are managed by Moon Wallet — do not add to CF buy requests list
 
         ctx.waitUntil((async () => {
-          try { await tgBroadcastBuyAmountRequest(rec); } catch {}
           try {
             await tgNotifyAdmin({
               title: "🌙 Moon Wallet: запрос на покупку",

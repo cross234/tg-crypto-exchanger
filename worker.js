@@ -1998,6 +1998,35 @@ function normalizeBase64(s) {
   return s + "=".repeat(pad);
 }
 
+// Wraps a PKCS#1 (BEGIN RSA PRIVATE KEY) DER into a PKCS#8 envelope
+// so that crypto.subtle.importKey("pkcs8") can accept it.
+function wrapPkcs1InPkcs8(pkcs1Der) {
+  function encLen(n) {
+    if (n < 0x80) return new Uint8Array([n]);
+    if (n < 0x100) return new Uint8Array([0x81, n]);
+    return new Uint8Array([0x82, (n >> 8) & 0xff, n & 0xff]);
+  }
+  function cat(...arrays) {
+    const total = arrays.reduce((s, a) => s + a.length, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const a of arrays) { out.set(a, offset); offset += a.length; }
+    return out;
+  }
+  // version INTEGER 0
+  const ver = new Uint8Array([0x02, 0x01, 0x00]);
+  // AlgorithmIdentifier: SEQUENCE { OID rsaEncryption (1.2.840.113549.1.1.1), NULL }
+  const alg = new Uint8Array([
+    0x30, 0x0d,
+    0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01,
+    0x05, 0x00
+  ]);
+  // privateKey OCTET STRING ::= pkcs1Der
+  const pkOctet = cat(new Uint8Array([0x04]), encLen(pkcs1Der.length), pkcs1Der);
+  const inner = cat(ver, alg, pkOctet);
+  return cat(new Uint8Array([0x30]), encLen(inner.length), inner);
+}
+
 function b64ToBytes(input) {
   let s = String(input || "").trim();
   if (!s) throw new Error("Empty private key");
@@ -2052,25 +2081,69 @@ async function createRapiraClientJwt(env) {
     throw new Error("RAPIRA_PRIVATE_KEY is empty");
   }
 
-  const keyBytes = b64ToBytes(rawKey);
+  // Decode base64-wrapped PEM if needed to check the header text
+  let pemText = rawKey;
+  if (!rawKey.includes("BEGIN ") && /^LS0tLS1CRUdJTi/.test(rawKey)) {
+    const pad = "=".repeat((4 - (rawKey.length % 4)) % 4);
+    pemText = atob(rawKey + pad);
+  }
+
+  let keyBytes = b64ToBytes(rawKey);
+
+  // Detect whether the DER is PKCS#1 or PKCS#8.
+  // After decoding PEM/base64 we have raw DER bytes.
+  // PKCS#8:  30 .. 02 01 00 30 ..  (version then SEQUENCE=AlgorithmIdentifier)
+  // PKCS#1:  30 .. 02 01 00 02 ..  (version then INTEGER=modulus)
+  // We check the tag byte right after the 3-byte version field (02 01 00).
+  function derTagAfterVersion(buf) {
+    if (buf.length < 6 || buf[0] !== 0x30) return null;
+    let off = 1;
+    if (buf[off] & 0x80) off += 1 + (buf[off] & 0x7f); else off += 1;
+    if (buf[off] === 0x02 && buf[off+1] === 0x01 && buf[off+2] === 0x00) return buf[off+3];
+    return null;
+  }
+
+  let isPkcs1 = pemText.includes("BEGIN RSA PRIVATE KEY");
+  if (!isPkcs1 && !pemText.includes("BEGIN PRIVATE KEY")) {
+    // No PEM header — determine from DER structure
+    const tagAfterVer = derTagAfterVersion(keyBytes);
+    // 0x02 = INTEGER → PKCS#1 (next field is modulus)
+    // 0x30 = SEQUENCE → PKCS#8 (next field is AlgorithmIdentifier)
+    if (tagAfterVer === 0x02) isPkcs1 = true;
+  }
+
+  // If PKCS#1, wrap in PKCS#8 envelope so crypto.subtle can import it
+  if (isPkcs1) {
+    keyBytes = wrapPkcs1InPkcs8(keyBytes);
+  }
 
   let privateKey;
   try {
     privateKey = await crypto.subtle.importKey(
       "pkcs8",
-      keyBytes.buffer.slice(
-        keyBytes.byteOffset,
-        keyBytes.byteOffset + keyBytes.byteLength
-      ),
+      keyBytes.buffer.slice(keyBytes.byteOffset, keyBytes.byteOffset + keyBytes.byteLength),
       { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
       false,
       ["sign"]
     );
   } catch (e) {
-    throw new Error(
-      "Не удалось импортировать RAPIRA_PRIVATE_KEY. Нужен PKCS#8 ключ. Исходная ошибка: " +
-      (e?.message || e)
-    );
+    // Last-ditch: maybe the stored key is already PKCS#8 DER but wrapped — try as-is without conversion
+    const raw2 = b64ToBytes(rawKey);
+    try {
+      privateKey = await crypto.subtle.importKey(
+        "pkcs8",
+        raw2.buffer.slice(raw2.byteOffset, raw2.byteOffset + raw2.byteLength),
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+    } catch (e2) {
+      const hint = Array.from(keyBytes.slice(0, 8)).map(b => b.toString(16).padStart(2, "0")).join(" ");
+      throw new Error(
+        `Не удалось импортировать RAPIRA_PRIVATE_KEY (isPkcs1=${isPkcs1}, DER prefix: ${hint}). ` +
+        `Ошибка: ${e?.message || e}`
+      );
+    }
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -2148,17 +2221,9 @@ async function rapiraFetch(env, path, opts = {}) {
   const jsonBody = opts.jsonBody || null;
   const form = opts.form || null;
 
-  const relayBase = String(env.RAPIRA_RELAY_BASE || "").replace(/\/+$/, "");
-  const relayToken = String(env.RAPIRA_RELAY_TOKEN || "").trim();
-
-  if (!relayBase) {
-    throw new Error("RAPIRA_RELAY_BASE is not set");
-  }
-  if (!relayToken) {
-    throw new Error("RAPIRA_RELAY_TOKEN is not set");
-  }
-
-  let url = relayBase + path;
+  // Call Rapira API directly using Bearer token (no relay needed)
+  const bearer = await getRapiraBearer(env);
+  let url = "https://api.rapira.net" + path;
 
   if (query && typeof query === "object") {
     const sp = new URLSearchParams();
@@ -2172,7 +2237,7 @@ async function rapiraFetch(env, path, opts = {}) {
 
   const headers = {
     "Accept": "application/json",
-    "X-Relay-Token": relayToken
+    "Authorization": "Bearer " + bearer
   };
 
   let body = undefined;
@@ -2201,7 +2266,7 @@ async function rapiraFetch(env, path, opts = {}) {
 
   if (!res.ok) {
     throw new Error(
-      `Relay ${method} ${path} -> ${res.status}: ${
+      `RapiraAPI ${method} ${path} -> ${res.status}: ${
         typeof data === "string"
           ? data.slice(0, 300)
           : JSON.stringify(data).slice(0, 300)

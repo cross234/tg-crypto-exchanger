@@ -1040,8 +1040,10 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
       const locks = json.locks || {};
       _locks = Object.create(null);
       for (const [id, v] of Object.entries(locks)){
-        _locks[id] = { locked: !!(v && v.locked), until: Number(v && v.until || 0) };
-      }
+  const locked = !!(v && (v.locked || v.reserved));
+  const until = Number((v && (v.until || v.expiresAt)) || 0);
+  _locks[id] = { locked, until };
+}
       applyLocksToRendered();
     }catch(_){}
   }
@@ -1126,10 +1128,17 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
       try{ if (reserveId) localStorage.setItem(reserveKey, reserveId); }catch(_){}
 
       if (method === "QR"){
-        const qs = new URLSearchParams({ id: o.id, reserveId });
-        location.href = "./crossflag-buy-order.html?" + qs.toString();
-        return;
-      }
+  const qs = new URLSearchParams({
+    id: o.id || "",
+    reserveId,
+    amountRub: String(o.amountRub || ""),
+    method: String(o.method || "QR"),
+    rate: String(o.rate || "")
+  });
+
+  location.href = "./crossflag-buy-order.html?" + qs.toString();
+  return;
+}
 
       const qs = new URLSearchParams({
         id: o.id || "",

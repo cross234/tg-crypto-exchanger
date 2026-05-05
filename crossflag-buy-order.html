@@ -618,8 +618,8 @@ if (!reserveId && id) {
   } catch(_) {}
 }
 
-let amountRub = Number(p.get("amountRub"));
-let rate = Number(p.get("rate"));
+let amountRub = p.has("amountRub") ? Number(p.get("amountRub")) : NaN;
+let rate = p.has("rate") ? Number(p.get("rate")) : NaN;
 const methodUrl = (p.get("method") || "").toUpperCase();
 
 const orderIdEl = document.getElementById("orderId");
@@ -1002,14 +1002,19 @@ function syncClock(serverTime, httpRes){
 }
 
 async function loadRequisitesAndKeepAlive(){
-  if (!id || !reserveId){
-    setStatus("Сессия устарела. Вернитесь в список ордеров и выберите заново.", "bad");
+  if (!id){
+    setStatus("Не найден ID ордера. Вернитесь в список ордеров и выберите заново.", "bad");
     paidBtn.disabled = true;
     return;
   }
 
   try{
-    setStatus("Загружаю реквизиты…", "warn");
+    if (!reserveId) {
+      setStatus("Бронирую заявку…", "warn");
+    } else {
+      setStatus("Загружаю реквизиты…", "warn");
+    }
+    
 
     const res = await fetch(WORKER_BASE + "/api/public/reserve_offer", {
       method:"POST",
@@ -1025,9 +1030,17 @@ async function loadRequisitesAndKeepAlive(){
     }
     if (!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
 
-        syncClock(j.serverTime, res);
+syncClock(j.serverTime, res);
 
-    const offer = j.offer || {};
+reserveId = String(j.reserveId || reserveId || "").trim();
+if (!reserveId) throw new Error("Сервер не вернул reserveId");
+
+try {
+  localStorage.setItem("cf_reserve_buy_" + id, reserveId);
+  sessionStorage.setItem("cf_reserve_buy_" + id, reserveId);
+} catch (_) {}
+
+const offer = j.offer || {};
     currentOffer = offer;
 
     payBankEl.textContent = offer.payBank || "—";
@@ -1062,6 +1075,16 @@ async function loadRequisitesAndKeepAlive(){
     amountRubEl.textContent = fmtRub(amountRub);
     rateEl.textContent = fmtRate(rate);
     usdtEl.textContent = (Number.isFinite(amountRub) && Number.isFinite(rate) && rate > 0) ? fmtUsdt(amountRub / rate) : "—";
+
+    try {
+  const qs = new URLSearchParams(location.search);
+  qs.set("id", id);
+  qs.set("reserveId", reserveId);
+  if (Number.isFinite(amountRub) && amountRub > 0) qs.set("amountRub", String(amountRub));
+  if (Number.isFinite(rate) && rate > 0) qs.set("rate", String(rate));
+  if (offer.method) qs.set("method", String(offer.method));
+  history.replaceState(null, "", location.pathname + "?" + qs.toString());
+} catch (_) {}
   
     // Use sessionStorage to preserve original expiresAt across page reloads
     const _expiryKey = "cf_expiry_" + id;

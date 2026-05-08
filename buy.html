@@ -1186,7 +1186,7 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
     const promo = document.createElement("div");
     promo.className = "item amountReqItem";
     promo.innerHTML = `
-      <button class="amountReqGo" type="button" disabled style="opacity:.55;cursor:not-allowed;filter:grayscale(1);animation:none;">
+      <button class="amountReqGo" type="button">
         <span class="amountReqTxt">
           <span class="amountReqTitle">Запросить сумму</span>
           <span class="amountReqSub" id="promoSub">

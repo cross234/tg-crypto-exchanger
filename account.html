@@ -505,6 +505,16 @@
           <div class="hint">
           </div>
         </div>
+        <div class="section" id="kycBox" style="display:none;">
+          <div class="sectionTitle">
+            <span>Верификация (KYC)</span>
+            <span class="chip" id="kycChip">—</span>
+          </div>
+          <div id="kycInfo" class="hint" style="margin-bottom:10px;">Загрузка...</div>
+          <div class="actions" id="kycActions" style="display:none;">
+            <button class="btn" id="kycGoBtn" type="button">Пройти верификацию</button>
+          </div>
+        </div>
 
         <div class="section" id="activeDealsBox" style="display:none;">
           <div class="sectionTitle">
@@ -859,11 +869,14 @@ function tsToRu(ts){
 
     els.profileBox.style.display = "block";
     els.activeDealsBox.style.display = "block";
+    const kycBox = document.getElementById("kycBox");
+    if(kycBox) kycBox.style.display = "block";
 
     els.meUsername.textContent = "@" + (user?.username || "—");
 
     if (els.profileChip) els.profileChip.classList.add("anim");
 
+    loadKycStatus();
     syncActiveDeals().then(()=>{ renderActive(); renderStats(user); }).catch(()=>{ renderActive(); renderStats(user); });
   }
 
@@ -881,6 +894,59 @@ function tsToRu(ts){
 
     els.profileBox.style.display = "none";
     els.activeDealsBox.style.display = "none";
+    const kycBox2 = document.getElementById("kycBox");
+    if(kycBox2) kycBox2.style.display = "none";
+  }
+
+  // ===== KYC STATUS =====
+  async function loadKycStatus(){
+    const kycChip = document.getElementById("kycChip");
+    const kycInfo = document.getElementById("kycInfo");
+    const kycActions = document.getElementById("kycActions");
+    const kycGoBtn = document.getElementById("kycGoBtn");
+    if(!kycChip) return;
+    try{
+      const j = await apiJson("/api/public/kyc/me");
+      if(j.canTrade){
+        kycChip.textContent = "✅ Одобрен";
+        kycChip.className = "chip ok";
+        kycInfo.textContent = j.tradingAccess === "ALLOWED_BY_ADMIN"
+          ? "Доступ к операциям выдан администратором."
+          : "Верификация пройдена. Покупка и продажа доступны.";
+        if(kycActions) kycActions.style.display = "none";
+      } else if(j.kycStatus === "PENDING_REVIEW"){
+        kycChip.textContent = "⏳ На проверке";
+        kycChip.className = "chip warn";
+        kycInfo.textContent = "Ваша заявка отправлена и ожидает проверки. Мы уведомим вас в Telegram.";
+        if(kycActions) kycActions.style.display = "none";
+      } else if(j.kycStatus === "REJECTED"){
+        kycChip.textContent = "❌ Отклонен";
+        kycChip.className = "chip" ;
+        kycChip.style.borderColor = "rgba(239,68,68,.35)";
+        kycChip.style.background = "rgba(239,68,68,.10)";
+        kycInfo.textContent = "Заявка отклонена. Вы можете подать повторную заявку.";
+        if(kycActions) kycActions.style.display = "flex";
+      } else if(j.kycStatus === "FACE_CHECK_REQUIRED"){
+        kycChip.textContent = "📷 Нужна проверка лица";
+        kycChip.className = "chip warn";
+        kycInfo.textContent = "Паспорт принят. Осталось пройти проверку лица.";
+        if(kycActions) kycActions.style.display = "flex";
+        if(kycGoBtn) kycGoBtn.textContent = "Продолжить верификацию";
+      } else {
+        kycChip.textContent = "Не пройден";
+        kycChip.className = "chip";
+        kycInfo.textContent = "Для покупки и продажи криптовалюты нужно пройти верификацию.";
+        if(kycActions) kycActions.style.display = "flex";
+      }
+    }catch(e){
+      kycChip.textContent = "Не пройден";
+      kycChip.className = "chip";
+      kycInfo.textContent = "Для покупки и продажи криптовалюты нужно пройти верификацию.";
+      if(kycActions) kycActions.style.display = "flex";
+    }
+    if(kycGoBtn){
+      kycGoBtn.onclick = ()=>{ location.href = "./kyc.html"; };
+    }
   }
 
   async function loadMe(){

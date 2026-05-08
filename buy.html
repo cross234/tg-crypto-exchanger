@@ -711,6 +711,20 @@
     </div>
   </div>
 
+  <div class="authModalOverlay" id="kycModal">
+    <div class="authModal">
+      <div style="text-align:center;font-size:38px;margin-bottom:8px;">🛡️</div>
+      <div class="authModalTitle" style="text-align:center;">Требуется верификация</div>
+      <div class="authModalText" style="text-align:center;">
+        Для покупки и продажи криптовалюты необходимо пройти проверку личности (KYC). Это займёт пару минут.
+      </div>
+      <div class="authModalActions" style="justify-content:center;">
+        <button class="authBtn ghost" id="kycCancel" type="button">Отмена</button>
+        <button class="authBtn primary" id="kycGo" type="button">Пройти KYC</button>
+      </div>
+    </div>
+  </div>
+
   <div class="playOverlay" id="playOverlay">
     <button class="playBtn" id="playBtn" type="button">▶ Включить фон</button>
   </div>
@@ -983,6 +997,22 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
     location.href = "./account.html?next=" + next;
   };
 
+  // ===== KYC MODAL =====
+  const kycModal = document.getElementById("kycModal");
+  const kycCancel = document.getElementById("kycCancel");
+  const kycGo = document.getElementById("kycGo");
+
+  function openKycModal(){
+    setStatus("", "");
+    kycModal.classList.add("show");
+  }
+  function closeKycModal(){ kycModal.classList.remove("show"); }
+  kycCancel.onclick = closeKycModal;
+  kycModal.onclick = (e)=>{ if(e.target === kycModal) closeKycModal(); };
+  kycGo.onclick = ()=>{
+    location.href = "./kyc.html?return=" + encodeURIComponent(location.pathname + location.search);
+  };
+
   function setStatus(text, kind){
     statusEl.textContent = text;
     statusEl.classList.remove("bad","ok");
@@ -1121,7 +1151,7 @@ const WORKER_BASE = new URLSearchParams(location.search).get("wb") || "https://a
       }
 
       if (json && json.error === "KYC_REQUIRED"){
-        location.href = "./kyc.html?return=" + encodeURIComponent(location.pathname + location.search);
+        openKycModal();
         return;
       }
       if (!res.ok || !json || !json.ok){

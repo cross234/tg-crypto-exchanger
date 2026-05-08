@@ -15,6 +15,4 @@ database_id = "423ecdab-3460-48b6-85d8-071b78b062fc"
 name = "RESERVATIONS_DO"
 class_name = "ReservationsDO"
 
-[[r2_buckets]]
-binding = "KYC_FILES"
-bucket_name = "crossflag-kyc-files"
+

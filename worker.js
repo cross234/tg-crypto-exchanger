@@ -313,7 +313,7 @@ var ReservationsDO = class {
       if (cur && Number(cur.expiresAt || 0) > now) {
         if (reserveIdIn && reserveIdIn === curReserveId || !reserveIdIn && sameUser) {
           cur.lastSeenAt = now;
-          // Keep original expiresAt — only extend if less than 3 min remain
+          // Keep original expiresAt вЂ” only extend if less than 3 min remain
           const msLeft = Number(cur.expiresAt || 0) - now;
           if (msLeft < 3 * 60 * 1000) {
             cur.expiresAt = now + ttlMs;
@@ -489,7 +489,7 @@ var index_default = {
         ).bind(amountE6, now(), userId).run();
         await env.DB.put(doneKey, JSON.stringify({ ts: now(), userId, amountE6 }), {
           expirationTtl: 3600 * 24 * 180
-          // 180 дней
+          // 180 РґРЅРµР№
         });
         offer.walletCreditedAt = now();
         offer.walletCreditedE6 = amountE6;
@@ -1347,22 +1347,22 @@ async function rememberBuyAmountChat(chat, byUser) {
         const producerLow = result.producer.toLowerCase();
         const combined = creatorLow + " | " + producerLow;
         const whitelistPatterns = [
-          // Сбер, Т-Банк, Альфа, ВТБ, Газпром, Почта, etc. — JasperReports + iText/OpenPDF
+          // РЎР±РµСЂ, Рў-Р‘Р°РЅРє, РђР»СЊС„Р°, Р’РўР‘, Р“Р°Р·РїСЂРѕРј, РџРѕС‡С‚Р°, etc. вЂ” JasperReports + iText/OpenPDF
           { creator: "jasperreports", producer: "itext" },
           { creator: "jasperreports", producer: "openpdf" },
-          // Ozon Банк, СовкомБанк, МТС — Chromium + Skia
+          // Ozon Р‘Р°РЅРє, РЎРѕРІРєРѕРјР‘Р°РЅРє, РњРўРЎ вЂ” Chromium + Skia
           { creator: "chromium", producer: "skia" },
-          // Ак Барс, ВТБ — wkhtmltopdf + Qt
+          // РђРє Р‘Р°СЂСЃ, Р’РўР‘ вЂ” wkhtmltopdf + Qt
           { creator: "wkhtmltopdf", producer: "qt" },
-          // Райффайзен, Альфа через iOS — iOS as Producer
+          // Р Р°Р№С„С„Р°Р№Р·РµРЅ, РђР»СЊС„Р° С‡РµСЂРµР· iOS вЂ” iOS as Producer
           { creator: "", producer: "ios version" },
-          // PayTop / merchant banks — rPDF
+          // PayTop / merchant banks вЂ” rPDF
           { creator: "", producer: "rpdf" },
           // Android WebView-based banks
           { creator: "chromium", producer: "chromium" },
           // Some banks use Mozilla/Firefox-based generators
           { creator: "mozilla", producer: "skia" },
-          // iText (any version, any creator — used by many bank systems)
+          // iText (any version, any creator вЂ” used by many bank systems)
           { creator: "", producer: "itext" }
         ];
         let isWhitelisted = false;
@@ -2031,13 +2031,13 @@ function b64ToBytes(input) {
   let s = String(input || "").trim();
   if (!s) throw new Error("Empty private key");
 
-  // Если это base64-обертка PEM (начинается с LS0t..., т.е. -----BEGIN ...)
+  // Р•СЃР»Рё СЌС‚Рѕ base64-РѕР±РµСЂС‚РєР° PEM (РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ LS0t..., С‚.Рµ. -----BEGIN ...)
   if (!s.includes("BEGIN ") && /^LS0tLS1CRUdJTi/.test(s)) {
     const pad1 = "=".repeat((4 - (s.length % 4)) % 4);
     s = atob(s + pad1);
   }
 
-  // Если это PEM-текст
+  // Р•СЃР»Рё СЌС‚Рѕ PEM-С‚РµРєСЃС‚
   if (s.includes("BEGIN ")) {
     const m = s.match(
       /-----BEGIN (?:RSA )?PRIVATE KEY-----([\s\S]+?)-----END (?:RSA )?PRIVATE KEY-----/
@@ -2105,10 +2105,10 @@ async function createRapiraClientJwt(env) {
 
   let isPkcs1 = pemText.includes("BEGIN RSA PRIVATE KEY");
   if (!isPkcs1 && !pemText.includes("BEGIN PRIVATE KEY")) {
-    // No PEM header — determine from DER structure
+    // No PEM header вЂ” determine from DER structure
     const tagAfterVer = derTagAfterVersion(keyBytes);
-    // 0x02 = INTEGER → PKCS#1 (next field is modulus)
-    // 0x30 = SEQUENCE → PKCS#8 (next field is AlgorithmIdentifier)
+    // 0x02 = INTEGER в†’ PKCS#1 (next field is modulus)
+    // 0x30 = SEQUENCE в†’ PKCS#8 (next field is AlgorithmIdentifier)
     if (tagAfterVer === 0x02) isPkcs1 = true;
   }
 
@@ -2127,7 +2127,7 @@ async function createRapiraClientJwt(env) {
       ["sign"]
     );
   } catch (e) {
-    // Last-ditch: maybe the stored key is already PKCS#8 DER but wrapped — try as-is without conversion
+    // Last-ditch: maybe the stored key is already PKCS#8 DER but wrapped вЂ” try as-is without conversion
     const raw2 = b64ToBytes(rawKey);
     try {
       privateKey = await crypto.subtle.importKey(
@@ -2140,8 +2140,8 @@ async function createRapiraClientJwt(env) {
     } catch (e2) {
       const hint = Array.from(keyBytes.slice(0, 8)).map(b => b.toString(16).padStart(2, "0")).join(" ");
       throw new Error(
-        `Не удалось импортировать RAPIRA_PRIVATE_KEY (isPkcs1=${isPkcs1}, DER prefix: ${hint}). ` +
-        `Ошибка: ${e?.message || e}`
+        `РќРµ СѓРґР°Р»РѕСЃСЊ РёРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ RAPIRA_PRIVATE_KEY (isPkcs1=${isPkcs1}, DER prefix: ${hint}). ` +
+        `РћС€РёР±РєР°: ${e?.message || e}`
       );
     }
   }
@@ -2359,10 +2359,10 @@ async function creditRapiraDepositToUser(d1, userId, address, dep, env) {
         body: JSON.stringify({
           chat_id: String(env.TG_CHAT_ID),
           text: [
-            "<b>💰 DEPOSIT: Rapira автопополнение</b>",
-            `👤 userId: <code>${userId}</code>`,
-            `📬 ${address}`,
-            `🧾 <code>${txid}</code>`,
+            "<b>рџ’° DEPOSIT: Rapira Р°РІС‚РѕРїРѕРїРѕР»РЅРµРЅРёРµ</b>",
+            `рџ‘¤ userId: <code>${userId}</code>`,
+            `рџ“¬ ${address}`,
+            `рџ§ѕ <code>${txid}</code>`,
             `Amount: ${(amountDec6 / 1e6).toFixed(6)} USDT`,
             "Network: TRON"
           ].join("\n"),
@@ -2382,7 +2382,7 @@ async function creditRapiraDepositToUser(d1, userId, address, dep, env) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
-          text: `✅ Депозит зачислен!\n💰 +${(amountDec6 / 1e6).toFixed(2)} USDT на ваш баланс`,
+          text: `вњ… Р”РµРїРѕР·РёС‚ Р·Р°С‡РёСЃР»РµРЅ!\nрџ’° +${(amountDec6 / 1e6).toFixed(2)} USDT РЅР° РІР°С€ Р±Р°Р»Р°РЅСЃ`,
           disable_web_page_preview: true
         })
       }).catch(() => null);
@@ -2569,7 +2569,7 @@ async function scanRapiraDeposits(env) {
                 ctx.waitUntil(
                   tgNotifyUserText(
                     targetUser,
-                    `✅ Вывод завершён.\n💸 ${fmtUsdtE6(Number(w.amountUsdtE6 || 0))}\nСеть: ${String(w.network || "TRON")}`
+                    `вњ… Р’С‹РІРѕРґ Р·Р°РІРµСЂС€С‘РЅ.\nрџ’ё ${fmtUsdtE6(Number(w.amountUsdtE6 || 0))}\nРЎРµС‚СЊ: ${String(w.network || "TRON")}`
                   )
                 );
               } catch {}
@@ -2592,7 +2592,7 @@ async function scanRapiraDeposits(env) {
                 ctx.waitUntil(
                   tgNotifyUserText(
                     targetUser,
-                    `⚠️ Вывод не прошёл.\nСредства возвращены на баланс: ${fmtUsdtE6(Number(w.amountUsdtE6 || 0))}.`
+                    `вљ пёЏ Р’С‹РІРѕРґ РЅРµ РїСЂРѕС€С‘Р».\nРЎСЂРµРґСЃС‚РІР° РІРѕР·РІСЂР°С‰РµРЅС‹ РЅР° Р±Р°Р»Р°РЅСЃ: ${fmtUsdtE6(Number(w.amountUsdtE6 || 0))}.`
                   )
                 );
               } catch {}
@@ -3043,6 +3043,20 @@ async function scanRapiraDeposits(env) {
         actorShape = ensureUserShape(actor);
       } catch {
       }
+      // в”Ђв”Ђ KYC gate в”Ђв”Ђ
+      try {
+        const au = await readUserToken(request);
+        if (au && au.ok && au.user) {
+          const userId = String(au.user.id || "");
+          const kyc = userId ? await readJsonKV(`kyc:${userId}`, null) : null;
+          const canTrade = (au.user.tradingAccess === "ALLOWED_BY_ADMIN")
+            || (au.user.tradingAccess === "KYC_APPROVED")
+            || (kyc && kyc.status === "APPROVED");
+          if (!canTrade) {
+            return json({ ok: false, error: "KYC_REQUIRED" }, 403);
+          }
+        }
+      } catch {}
       const ttlMs = 20 * 60 * 1e3;
       let finalReserveId = reserveId;
       let finalExpiresAt = now() + ttlMs;
@@ -3114,7 +3128,7 @@ async function scanRapiraDeposits(env) {
                 "\u0411\u0430\u043D\u043A: " + String(offer.payBank || ""),
                 "\u0420\u0435\u043A\u0432\u0438\u0437\u0438\u0442\u044B: " + String(offer.payRequisite || ""),
                 ...offer.qrOrder ? ["QR-\u0437\u0430\u044F\u0432\u043A\u0430 \u0432\u0437\u044F\u0442\u0430 \u0438\u0441\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u0435\u043C"] : [],
-                ...(reserves[id].toAddress ? ["📥 USDT addr: " + reserves[id].toAddress] : []),
+                ...(reserves[id].toAddress ? ["рџ“Ґ USDT addr: " + reserves[id].toAddress] : []),
                 ...(reserves[id].moonWalletUser?.name ? ["Moon Wallet: " + reserves[id].moonWalletUser.name] : [])
               ]
             })
@@ -3281,7 +3295,7 @@ async function scanRapiraDeposits(env) {
       }
       const offer = offers[idx];
 
-      // ── Enrich offer with Moon Wallet user data ────────────────
+      // в”Ђв”Ђ Enrich offer with Moon Wallet user data в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
       // moonWalletUser is stored in reserves (set during reserve_offer) or
       // in the buyAmountRequest (for BUY_AMOUNT_CHAT_REPLY). Copy it onto
       // the offer so the SUCCESS webhook can reach MW.
@@ -3307,7 +3321,7 @@ async function scanRapiraDeposits(env) {
           }
         } catch {}
       }
-      // ─────────────────────────────────────────────────────────
+      // в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
       const prevStatus = String(offer.status || "").toUpperCase();
       const actorShape = actor ? {
@@ -3460,7 +3474,7 @@ async function scanRapiraDeposits(env) {
               ]
             })
           );
-          // ── Moon Wallet deal complete webhook ──────────────────
+          // в”Ђв”Ђ Moon Wallet deal complete webhook в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
           // offer.moonWalletUser / offer.user.mwTgId were populated above
           // from reserves or buyAmountRequest before this block runs.
           const mwTgIdDeal = String(offer.moonWalletUser?.tgId || offer.user?.mwTgId || "").trim();
@@ -3962,7 +3976,7 @@ async function scanRapiraDeposits(env) {
               "Offer ID: " + id,
               "Reserve ID: " + String(r.reserveId || "")
             ,
-                ...(r.toAddress ? ["📤 Отправить USDT на: " + r.toAddress] : []),
+                ...(r.toAddress ? ["рџ“¤ РћС‚РїСЂР°РІРёС‚СЊ USDT РЅР°: " + r.toAddress] : []),
                 ...(r.moonWalletUser?.name ? ["Moon Wallet: " + r.moonWalletUser.name] : [])]
           })
         );
@@ -4490,7 +4504,7 @@ async function scanRapiraDeposits(env) {
         status: normalizeWithdrawalStatus(w.status),
         createdAt,
         updatedAt,
-        // то, что ждёт admin-withdrawals.html
+        // С‚Рѕ, С‡С‚Рѕ Р¶РґС‘С‚ admin-withdrawals.html
         user_id: userId || void 0,
         username: username || void 0,
         amountUsdtE6: amtE6 != null ? amtE6 : void 0,
@@ -4618,7 +4632,7 @@ async function scanRapiraDeposits(env) {
             }
           }
 
-          // Rapira не настроена — просто одобряем вручную и списываем баланс
+          // Rapira РЅРµ РЅР°СЃС‚СЂРѕРµРЅР° вЂ” РїСЂРѕСЃС‚Рѕ РѕРґРѕР±СЂСЏРµРј РІСЂСѓС‡РЅСѓСЋ Рё СЃРїРёСЃС‹РІР°РµРј Р±Р°Р»Р°РЅСЃ
           w.status = "DONE";
           w.updatedAt = now();
           w.manualApprove = true;
@@ -4639,7 +4653,7 @@ async function scanRapiraDeposits(env) {
                   "Amount: " + fmtUsdtE6(amountE6),
                   "Network: " + network,
                   "To: " + toAddress,
-                  "Ручное одобрение (без Rapira)"
+                  "Р СѓС‡РЅРѕРµ РѕРґРѕР±СЂРµРЅРёРµ (Р±РµР· Rapira)"
                 ]
               })
             );
@@ -4647,7 +4661,7 @@ async function scanRapiraDeposits(env) {
             ctx.waitUntil(
               tgNotifyUserText(
                 wUser,
-                `✅ Вывод одобрен.\n💸 ${fmtUsdtE6(amountE6)}\nСеть: ${network}\nАдрес: ${toAddress}`
+                `вњ… Р’С‹РІРѕРґ РѕРґРѕР±СЂРµРЅ.\nрџ’ё ${fmtUsdtE6(amountE6)}\nРЎРµС‚СЊ: ${network}\nРђРґСЂРµСЃ: ${toAddress}`
               )
             );
           } catch {}
@@ -6767,7 +6781,7 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
         if (!Number.isFinite(minRub) || minRub <= 0) return bad("Invalid amount");
 
         const cfg = await readJsonKV("config", {});
-        if (cfg.buyAmountEnabled === false) return bad("Запросы временно отключены", 403);
+        if (cfg.buyAmountEnabled === false) return bad("Р—Р°РїСЂРѕСЃС‹ РІСЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡РµРЅС‹", 403);
 
         let approxRate = Number(body.approxRate ?? 0);
         if (!Number.isFinite(approxRate) || approxRate <= 0) approxRate = await calcCurrentBuyRate();
@@ -6795,20 +6809,20 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
           createdAt: now(), updatedAt: now()
         };
 
-        // MW requests are managed by Moon Wallet — do not add to CF buy requests list
+        // MW requests are managed by Moon Wallet вЂ” do not add to CF buy requests list
 
         ctx.waitUntil((async () => {
           try {
             await tgNotifyAdmin({
-              title: "🌙 Moon Wallet: запрос на покупку",
+              title: "рџЊ™ Moon Wallet: Р·Р°РїСЂРѕСЃ РЅР° РїРѕРєСѓРїРєСѓ",
               user: userShape, deal: "MW_BUY " + id,
               step: "MW_BUY_REQUEST", req: request,
               lines: [
-                "Сумма: " + minRub + (maxRub !== minRub ? "–" + maxRub : "") + " RUB",
-                "Курс: " + approxRate,
-                "Источник: Moon Wallet",
-                ...(toAddress ? ["📥 USDT addr: " + toAddress] : []),
-                ...(moonWalletUser?.name ? ["👤 " + moonWalletUser.name] : [])
+                "РЎСѓРјРјР°: " + minRub + (maxRub !== minRub ? "вЂ“" + maxRub : "") + " RUB",
+                "РљСѓСЂСЃ: " + approxRate,
+                "РСЃС‚РѕС‡РЅРёРє: Moon Wallet",
+                ...(toAddress ? ["рџ“Ґ USDT addr: " + toAddress] : []),
+                ...(moonWalletUser?.name ? ["рџ‘¤ " + moonWalletUser.name] : [])
               ]
             });
           } catch {}
@@ -6880,8 +6894,8 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
       await tgSendMessage(
         String(chat.chatId),
         action === "on"
-          ? "✅ Уведомления о запросах суммы включены для этого чата."
-          : "⛔️ Уведомления о запросах суммы отключены для этого чата."
+          ? "вњ… РЈРІРµРґРѕРјР»РµРЅРёСЏ Рѕ Р·Р°РїСЂРѕСЃР°С… СЃСѓРјРјС‹ РІРєР»СЋС‡РµРЅС‹ РґР»СЏ СЌС‚РѕРіРѕ С‡Р°С‚Р°."
+          : "в›”пёЏ РЈРІРµРґРѕРјР»РµРЅРёСЏ Рѕ Р·Р°РїСЂРѕСЃР°С… СЃСѓРјРјС‹ РѕС‚РєР»СЋС‡РµРЅС‹ РґР»СЏ СЌС‚РѕРіРѕ С‡Р°С‚Р°."
       );
       results.push({
         chatId: chat.chatId,
@@ -7546,9 +7560,358 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
       led.sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
       return json({ ok: true, balance: bal, deposits, ledger: led.slice(0, 200) });
     }
+    // в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+    // в–€в–€  KYC SYSTEM (files via Telegram)  в–€в–€
+    // в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+
+    const kycKey = /* @__PURE__ */ __name2((userId) => `kyc:${userId}`, "kycKey");
+    const kycIndexKey = "kycRequests";
+
+    async function readKyc(userId) {
+      return await readJsonKV(kycKey(userId), null);
+    }
+    __name(readKyc, "readKyc"); __name2(readKyc, "readKyc");
+
+    async function writeKyc(userId, obj) {
+      await writeJsonKV(kycKey(userId), obj);
+    }
+    __name(writeKyc, "writeKyc"); __name2(writeKyc, "writeKyc");
+
+    async function addKycToIndex(userId) {
+      const idx = await readJsonKV(kycIndexKey, []);
+      const arr = Array.isArray(idx) ? idx : [];
+      if (!arr.includes(userId)) {
+        arr.unshift(userId);
+        await writeJsonKV(kycIndexKey, arr.slice(0, 10000));
+      }
+    }
+    __name(addKycToIndex, "addKycToIndex"); __name2(addKycToIndex, "addKycToIndex");
+
+    function kycCanTrade(user, kyc) {
+      if (user && user.tradingAccess === "ALLOWED_BY_ADMIN") return true;
+      if (user && user.tradingAccess === "BLOCKED_BY_ADMIN") return false;
+      if (kyc && kyc.status === "APPROVED") return true;
+      if (user && user.tradingAccess === "KYC_APPROVED") return true;
+      return false;
+    }
+    __name(kycCanTrade, "kycCanTrade"); __name2(kycCanTrade, "kycCanTrade");
+
+    // в”Ђв”Ђв”Ђв”Ђ GET /api/public/kyc/me в”Ђв”Ђв”Ђв”Ђ
+    if (url.pathname === "/api/public/kyc/me" && request.method === "GET") {
+      const au = await readUserToken(request);
+      if (!au) return bad("Unauthorized", 401);
+      if (!au.ok) return bad(au.error || "Unauthorized", au.error === "Banned" ? 403 : 401);
+      const userId = String(au.user.id || "");
+      const kyc = await readKyc(userId);
+      const canTrade = kycCanTrade(au.user, kyc);
+      const tradingAccess = au.user.tradingAccess || (kyc && kyc.status === "APPROVED" ? "KYC_APPROVED" : "NONE");
+      const kycStatus = kyc ? kyc.status : "NONE";
+      return json({
+        ok: true, canTrade, tradingAccess, kycStatus,
+        hasPassport: !!(kyc && kyc.passportUploadedAt),
+        hasFace: !!(kyc && kyc.faceUploadedAt),
+        updatedAt: kyc ? kyc.updatedAt : null
+      });
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ POST /api/public/kyc/passport в”Ђв”Ђв”Ђв”Ђ
+    if (url.pathname === "/api/public/kyc/passport" && request.method === "POST") {
+      const au = await readUserToken(request);
+      if (!au) return bad("Unauthorized", 401);
+      if (!au.ok) return bad(au.error || "Unauthorized", au.error === "Banned" ? 403 : 401);
+      const userId = String(au.user.id || "");
+      const username = String(au.user.username || "").replace(/^@/, "");
+
+      try {
+        const fd = await request.formData();
+        const passportPhoto = fd.get("passportPhoto");
+        const ocrStr = fd.get("ocr");
+        const ocrText = fd.get("ocrText");
+
+        if (!passportPhoto || !(passportPhoto instanceof File) || passportPhoto.size < 1000) {
+          return bad("Missing or too small passport photo");
+        }
+        if (passportPhoto.size > 15 * 1024 * 1024) {
+          return bad("Passport photo too large (max 15MB)");
+        }
+
+        let ocr = {};
+        try { ocr = JSON.parse(ocrStr || "{}"); } catch { ocr = {}; }
+
+        // Send passport photo to admin TG chat
+        let tgFileId = "";
+        try {
+          const caption = `рџ“‹ KYC РџР°СЃРїРѕСЂС‚\nрџ‘¤ @${username} (tgId: ${userId})\n` +
+            `рџ“Љ OCR: ${ocr.success ? "вњ…" : "вќЊ"}\n` +
+            `РЎРµСЂРёСЏ: ${ocr.passportSeries || "вЂ”"} РќРѕРјРµСЂ: ${ocr.passportNumber || "вЂ”"}\n` +
+            `Р¤РРћ: ${[ocr.lastName, ocr.firstName, ocr.middleName].filter(Boolean).join(" ") || "вЂ”"}\n` +
+            `Р”Р°С‚Р° СЂРѕР¶Рґ: ${ocr.birthDate || "вЂ”"} Р’С‹РґР°РЅ: ${ocr.issueDate || "вЂ”"}\n` +
+            `РљРѕРґ: ${ocr.departmentCode || "вЂ”"}`;
+          const result = await tgSendFileToChat(TG_ADMIN_CHAT_ID, "photo", passportPhoto, "passport.jpg", {
+            caption: caption.slice(0, 1024)
+          });
+          if (result && result.messageId) {
+            // Get file_id from the sent message
+            tgFileId = "msg:" + result.chatId + ":" + result.messageId;
+          }
+        } catch (e) {
+          // Even if TG send fails, still save the KYC record
+        }
+
+        // Update KYC record
+        let kyc = await readKyc(userId) || {
+          userId, username, status: "PASSPORT_UPLOADED", createdAt: now()
+        };
+        kyc.ocr = ocr;
+        kyc.ocrText = String(ocrText || "").slice(0, 5000);
+        kyc.passportUploadedAt = now();
+        kyc.passportTgRef = tgFileId;
+        kyc.username = username;
+        kyc.updatedAt = now();
+
+        if (!ocr.success) {
+          kyc.status = "OCR_FAILED";
+        } else {
+          kyc.status = "FACE_CHECK_REQUIRED";
+        }
+
+        await writeKyc(userId, kyc);
+        await addKycToIndex(userId);
+
+        return json({ ok: true, status: kyc.status });
+      } catch (e) {
+        return bad(e.message || "Passport upload failed", 500);
+      }
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ POST /api/public/kyc/face в”Ђв”Ђв”Ђв”Ђ
+    if (url.pathname === "/api/public/kyc/face" && request.method === "POST") {
+      const au = await readUserToken(request);
+      if (!au) return bad("Unauthorized", 401);
+      if (!au.ok) return bad(au.error || "Unauthorized", au.error === "Banned" ? 403 : 401);
+      const userId = String(au.user.id || "");
+      const username = String(au.user.username || "").replace(/^@/, "");
+
+      try {
+        const fd = await request.formData();
+        const faceVideo = fd.get("faceVideo");
+
+        if (!faceVideo || !(faceVideo instanceof File) || faceVideo.size < 1000) {
+          return bad("Missing or too small face video");
+        }
+        if (faceVideo.size > 50 * 1024 * 1024) {
+          return bad("Face video too large (max 50MB)");
+        }
+
+        // Send face video to admin TG chat
+        let faceTgRef = "";
+        try {
+          const caption = `рџЋҐ KYC Р›РёС†Рѕ в†’ РћР–РР”РђР•Рў РџР РћР’Р•Р РљР\nрџ‘¤ @${username} (tgId: ${userId})`;
+          const result = await tgSendFileToChat(TG_ADMIN_CHAT_ID, "video", faceVideo, "face-check.webm", {
+            caption: caption.slice(0, 1024)
+          });
+          if (result && result.messageId) {
+            faceTgRef = "msg:" + result.chatId + ":" + result.messageId;
+          }
+        } catch (e) {}
+
+        // Send frame snapshots
+        const frameTgRefs = [];
+        for (let i = 1; i <= 3; i++) {
+          const frame = fd.get("frame" + i);
+          if (frame && frame instanceof File && frame.size > 100) {
+            try {
+              const result = await tgSendFileToChat(TG_ADMIN_CHAT_ID, "photo", frame, `frame${i}.jpg`, {
+                caption: `рџ“ё KYC РљР°РґСЂ ${i}/3 В· @${username}`
+              });
+              if (result && result.messageId) {
+                frameTgRefs.push("msg:" + result.chatId + ":" + result.messageId);
+              }
+            } catch (e) {}
+          }
+        }
+
+        // Update KYC record
+        let kyc = await readKyc(userId);
+        if (!kyc) {
+          return bad("Passport not uploaded yet. Upload passport first.", 400);
+        }
+        kyc.faceUploadedAt = now();
+        kyc.faceTgRef = faceTgRef;
+        kyc.frameTgRefs = frameTgRefs;
+        kyc.status = "PENDING_REVIEW";
+        kyc.updatedAt = now();
+
+        await writeKyc(userId, kyc);
+        await addKycToIndex(userId);
+
+        return json({ ok: true, status: "PENDING_REVIEW" });
+      } catch (e) {
+        return bad(e.message || "Face upload failed", 500);
+      }
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ GET /api/admin/kyc_requests в”Ђв”Ђв”Ђв”Ђ
+    if (url.pathname === "/api/admin/kyc_requests" && request.method === "GET") {
+      if (!requireAdmin()) return bad("Unauthorized", 401);
+      try {
+        const idx = await readJsonKV(kycIndexKey, []);
+        const arr = Array.isArray(idx) ? idx : [];
+        const items = [];
+        for (const userId of arr.slice(0, 500)) {
+          const kyc = await readKyc(userId);
+          if (!kyc) continue;
+          const user = await readJsonKV(userKeyById(userId), null);
+          items.push({
+            userId: kyc.userId, username: kyc.username || "",
+            status: kyc.status,
+            tradingAccess: user ? (user.tradingAccess || "NONE") : "NONE",
+            ocr: kyc.ocr || {},
+            hasPassport: !!kyc.passportUploadedAt,
+            hasFace: !!kyc.faceUploadedAt,
+            createdAt: kyc.createdAt, updatedAt: kyc.updatedAt
+          });
+        }
+        return json({ ok: true, items });
+      } catch (e) {
+        return bad(e.message || "Failed to load KYC requests", 500);
+      }
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ POST /api/admin/kyc/:userId (approve / reject) в”Ђв”Ђв”Ђв”Ђ
+    {
+      const m = url.pathname.match(/^\/api\/admin\/kyc\/([^/]+)$/);
+      if (m && request.method === "POST") {
+        if (!requireAdmin()) return bad("Unauthorized", 401);
+        const userId = decodeURIComponent(m[1] || "");
+        if (!userId) return bad("Missing userId", 400);
+        const body = await request.json().catch(() => ({}));
+        const action = String(body.action || "").toUpperCase();
+        const reason = String(body.reason || "").trim();
+        if (action !== "APPROVE" && action !== "REJECT") {
+          return bad("Action must be APPROVE or REJECT", 400);
+        }
+        const kyc = await readKyc(userId);
+        if (!kyc) return bad("KYC request not found", 404);
+        kyc.status = action === "APPROVE" ? "APPROVED" : "REJECTED";
+        kyc.reviewedAt = now();
+        kyc.reviewAction = action;
+        kyc.reviewReason = reason;
+        kyc.updatedAt = now();
+        await writeKyc(userId, kyc);
+
+        if (action === "APPROVE") {
+          const user = await readJsonKV(userKeyById(userId), null);
+          if (user) {
+            user.tradingAccess = "KYC_APPROVED";
+            user.kycApprovedAt = now();
+            user.updatedAt = now();
+            await writeJsonKV(userKeyById(userId), user);
+            ctx.waitUntil((async () => {
+              try {
+                const chatId = String(user.dmChatId || user.chatId || "").trim();
+                if (chatId) await tgSendMessage(chatId, "вњ… Р’Р°С€Р° KYC РїСЂРѕРІРµСЂРєР° РѕРґРѕР±СЂРµРЅР°!\n\nРџРѕРєСѓРїРєР° Рё РїСЂРѕРґР°Р¶Р° РєСЂРёРїС‚РѕРІР°Р»СЋС‚С‹ С‚РµРїРµСЂСЊ РґРѕСЃС‚СѓРїРЅС‹.");
+              } catch {}
+            })());
+          }
+        } else {
+          const user = await readJsonKV(userKeyById(userId), null);
+          if (user) {
+            ctx.waitUntil((async () => {
+              try {
+                const chatId = String(user.dmChatId || user.chatId || "").trim();
+                if (chatId) await tgSendMessage(chatId,
+                  "вќЊ Р’Р°С€Р° KYC РїСЂРѕРІРµСЂРєР° РѕС‚РєР»РѕРЅРµРЅР°.\n\n" + (reason ? "РџСЂРёС‡РёРЅР°: " + reason + "\n\n" : "") + "Р’С‹ РјРѕР¶РµС‚Рµ РїРѕРґР°С‚СЊ РїРѕРІС‚РѕСЂРЅСѓСЋ Р·Р°СЏРІРєСѓ."
+                );
+              } catch {}
+            })());
+          }
+        }
+        return json({ ok: true, status: kyc.status, userId });
+      }
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ GET /api/admin/kyc_file (proxy via Telegram getFile) в”Ђв”Ђв”Ђв”Ђ
+    if (url.pathname === "/api/admin/kyc_file" && request.method === "GET") {
+      if (!requireAdmin()) return bad("Unauthorized", 401);
+      const userId = url.searchParams.get("userId") || "";
+      const type = url.searchParams.get("type") || "";
+      if (!userId || !type) return bad("Missing userId or type", 400);
+
+      try {
+        const kyc = await readKyc(userId);
+        if (!kyc) return bad("KYC not found", 404);
+
+        // Files were sent to admin TG chat вЂ” admin can view them there directly
+        // Return a reference message for the admin panel
+        let ref = "";
+        if (type === "passport") ref = kyc.passportTgRef || "";
+        else if (type === "face") ref = kyc.faceTgRef || "";
+        else return bad("type must be 'passport' or 'face'", 400);
+
+        if (!ref) return bad("File not found. Check admin Telegram chat for the files.", 404);
+
+        // Parse msg:chatId:messageId and forward the message to get a fresh copy
+        const parts = ref.split(":");
+        if (parts.length === 3 && parts[0] === "msg") {
+          const srcChatId = parts[1];
+          const msgId = Number(parts[2]);
+          // Forward the message to the same admin chat so admin can see it again
+          try {
+            await tgApi("forwardMessage", {
+              chat_id: srcChatId,
+              from_chat_id: srcChatId,
+              message_id: msgId
+            });
+          } catch {}
+        }
+
+        return json({
+          ok: true,
+          message: "Р¤Р°Р№Р» РїРµСЂРµСЃР»Р°РЅ РІ Р°РґРјРёРЅСЃРєРёР№ Telegram-С‡Р°С‚. РџРѕСЃРјРѕС‚СЂРёС‚Рµ С‚Р°Рј.",
+          tgRef: ref
+        });
+      } catch (e) {
+        return bad(e.message || "Failed to fetch KYC file", 500);
+      }
+    }
+
+    // в”Ђв”Ђв”Ђв”Ђ POST /api/admin/users/:username/trading_access в”Ђв”Ђв”Ђв”Ђ
+    {
+      const m = url.pathname.match(/^\/api\/admin\/users\/([^/]+)\/trading_access$/);
+      if (m && request.method === "POST") {
+        if (!requireAdmin()) return bad("Unauthorized", 401);
+        const uname = normUsername(decodeURIComponent(m[1] || ""));
+        if (!uname) return bad("Bad username", 400);
+        const body = await request.json().catch(() => ({}));
+        const enabled = !!body.enabled;
+        const reason = String(body.reason || "").trim();
+        const map = await readJsonKV(userKeyByUsername(uname), null);
+        if (!map || !map.userId) return bad("User not found", 404);
+        const user = await readJsonKV(userKeyById(map.userId), null);
+        if (!user) return bad("User not found", 404);
+        user.tradingAccess = enabled ? "ALLOWED_BY_ADMIN" : "BLOCKED_BY_ADMIN";
+        user.tradingAccessReason = reason;
+        user.tradingAccessUpdatedAt = now();
+        user.updatedAt = now();
+        await writeJsonKV(userKeyById(user.id), user);
+        ctx.waitUntil((async () => {
+          try {
+            const chatId = String(user.dmChatId || user.chatId || "").trim();
+            if (chatId) await tgSendMessage(chatId,
+              enabled
+                ? "вњ… РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РІС‹РґР°Р» РІР°Рј РґРѕСЃС‚СѓРї Рє РїРѕРєСѓРїРєРµ/РїСЂРѕРґР°Р¶Рµ."
+                : "рџљ« РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РѕРіСЂР°РЅРёС‡РёР» РІР°С€ РґРѕСЃС‚СѓРї Рє РїРѕРєСѓРїРєРµ/РїСЂРѕРґР°Р¶Рµ." + (reason ? "\nРџСЂРёС‡РёРЅР°: " + reason : "")
+            );
+          } catch {}
+        })());
+        return json({ ok: true, user: { id: user.id, username: uname, tradingAccess: user.tradingAccess } });
+      }
+    }
+
     return bad("Not found", 404);
   },
-  // ✅ добавлено: cron handler для сканирования депозитов (ничего другого не трогаем)
+  // вњ… РґРѕР±Р°РІР»РµРЅРѕ: cron handler РґР»СЏ СЃРєР°РЅРёСЂРѕРІР°РЅРёСЏ РґРµРїРѕР·РёС‚РѕРІ (РЅРёС‡РµРіРѕ РґСЂСѓРіРѕРіРѕ РЅРµ С‚СЂРѕРіР°РµРј)
   async scheduled(event, env, ctx) {
   ctx.waitUntil(expireBuyAmountBroadcasts(env));
 }

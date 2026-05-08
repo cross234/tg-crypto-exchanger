@@ -4317,6 +4317,18 @@ async function scanRapiraDeposits(env) {
       return json({ ok: true, status: String(offer.status || "NEW").toUpperCase() });
     }
     if (url.pathname === "/api/public/sell_submit" && request.method === "POST") {
+      // ── KYC gate ──
+      try {
+        const au = await readUserToken(request);
+        if (au && au.ok && au.user) {
+          const _uid = String(au.user.id || "");
+          const _kyc = _uid ? await readJsonKV(`kyc:${_uid}`, null) : null;
+          const _can = (au.user.tradingAccess === "ALLOWED_BY_ADMIN")
+            || (au.user.tradingAccess === "KYC_APPROVED")
+            || (_kyc && _kyc.status === "APPROVED");
+          if (!_can) return json({ ok: false, error: "KYC_REQUIRED" }, 403);
+        }
+      } catch {}
       const body = await request.json().catch(() => ({}));
       const offerId = String(body.offerId || body.id || body.orderId || "").trim();
       const amountRub = Number(body.amountRub ?? body.rub ?? body.amount ?? 0);
@@ -6715,6 +6727,15 @@ if (url.pathname === "/api/public/deposit_status" && request.method === "GET") {
       const au = await readUserToken(request);
       if (!au) return bad("Unauthorized", 401);
       if (!au.ok) return bad(au.error || "Unauthorized", au.error === "Banned" ? 403 : 401);
+      // ── KYC gate ──
+      {
+        const _uid = String(au.user.id || "");
+        const _kyc = _uid ? await readJsonKV(`kyc:${_uid}`, null) : null;
+        const _can = (au.user.tradingAccess === "ALLOWED_BY_ADMIN")
+          || (au.user.tradingAccess === "KYC_APPROVED")
+          || (_kyc && _kyc.status === "APPROVED");
+        if (!_can) return json({ ok: false, error: "KYC_REQUIRED" }, 403);
+      }
       const cfg = await readJsonKV("config", {});
       if (cfg.buyAmountEnabled === false) {
         return bad("\u0417\u0430\u043F\u0440\u043E\u0441 \u0441\u0443\u043C\u043C\u044B \u0432\u0440\u0435\u043C\u0435\u043D\u043D\u043E \u043E\u0442\u043A\u043B\u044E\u0447\u0451\u043D", 403);

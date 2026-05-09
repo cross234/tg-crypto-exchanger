@@ -186,6 +186,16 @@
     }
     .btn:disabled{ opacity:.7; cursor:not-allowed; box-shadow:none; }
 
+    .kycOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+    .kycOverlay.show{display:flex}
+    .kycBox{width:100%;max-width:420px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(15,26,48,.92);box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px;text-align:center}
+    .kycBox .title{font-weight:1000;font-size:15px;margin:8px 0 6px}
+    .kycBox .hint{text-align:center}
+    .kycBtns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+    .kycBtns button{min-width:120px;border-radius:14px;padding:12px 14px;font-weight:1000;cursor:pointer;border:0}
+    .kycBtnGo{background:linear-gradient(180deg,var(--btn),var(--btn2));color:#fff}
+    .kycBtnNo{border:1px solid rgba(255,255,255,.14)!important;background:rgba(255,255,255,.06);color:#fff}
+
     @keyframes spin{ to{ transform:rotate(360deg); } }
     .loading{ pointer-events:none; opacity:.88; }
     .loading::after{
@@ -291,6 +301,18 @@
         </div>
 
         <div class="status" id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kycOverlay" id="kycOverlay">
+    <div class="kycBox">
+      <div style="font-size:38px">🛡️</div>
+      <div class="title">Требуется верификация</div>
+      <div class="hint">Для продажи криптовалюты необходимо пройти проверку личности (KYC).</div>
+      <div class="kycBtns">
+        <button class="kycBtnNo" id="kycNo">Отмена</button>
+        <button class="kycBtnGo" id="kycYes">Пройти KYC</button>
       </div>
     </div>
   </div>
@@ -473,7 +495,7 @@
 
       const j = await res.json().catch(()=> ({}));
       if(j && j.error === "KYC_REQUIRED"){
-        location.href = "./kyc.html?return=" + encodeURIComponent(location.pathname + location.search);
+        document.getElementById('kycOverlay').classList.add('show');
         return;
       }
       if(!res.ok || !j.ok) throw new Error(j.error || ("HTTP " + res.status));
@@ -493,6 +515,10 @@
       setLoading(paidBtn, false);
     }
   };
+  // KYC modal
+  document.getElementById('kycNo').onclick=()=>document.getElementById('kycOverlay').classList.remove('show');
+  document.getElementById('kycYes').onclick=()=>{location.href='./kyc.html?return='+encodeURIComponent(location.pathname+location.search)};
+  document.getElementById('kycOverlay').onclick=e=>{if(e.target.id==='kycOverlay')e.target.classList.remove('show')};
 </script>
 <script src="./resume-helper.js"></script>
 </body>

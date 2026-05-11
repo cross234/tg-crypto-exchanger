@@ -141,31 +141,90 @@ function preprocess(src){
   ctx.putImageData(d,0,0);return c;
 }
 
-async function runOcr(canvas){
-  try{
-    setStatus('Обработка фото...','warn');
-    const bw=preprocess(canvas);
-    let best=null,bestScore=-1;
-    for(const src of [canvas,bw]){
-      try{
-        const rec=await Tesseract.recognize(src,'rus+eng',{logger:m=>{if(m.progress>0)setStatus('Обработка... '+Math.round(m.progress*100)+'%','warn')}});
-        const p=parsePassport(rec.data.text||'');
-        let sc=0;if(p.passportSeries)sc+=2;if(p.passportNumber)sc+=2;if(p.departmentCode)sc+=2;if(p.issueDate)sc++;if(p.birthDate)sc++;if(p.lastName)sc++;
-        if(sc>bestScore){bestScore=sc;best=p;best.rawText=rec.data.text||''}
-        if(sc>=6)break;
-      }catch{}
+async function runOcr(canvas) {
+  try {
+    setStatus('Обработка паспорта на сервере...','warn');
+
+    if (!passportBlob) {
+      throw new Error('Нет фото паспорта');
     }
-    ocrResult=best||parsePassport('');
+
+    const fd = new FormData();
+    fd.set('passportPhoto', passportBlob, 'passport.jpg');
+
+    const serverOcr = await api('/api/public/kyc/ocr_passport', {
+      method: 'POST',
+      body: fd
+    });
+
+    ocrResult = serverOcr.ocr || parsePassport('');
+    ocrResult.rawText = serverOcr.ocrText || ocrResult.rawText || '';
+
     renderOcr();
     $('ocrBox').classList.remove('hidden');
     $('retry').classList.remove('hidden');
-    setStatus('Проверьте данные и нажмите «Отправить».','good');
-  }catch(e){
-    ocrResult=parsePassport('');
-    renderOcr();
-    $('ocrBox').classList.remove('hidden');
-    $('retry').classList.remove('hidden');
-    setStatus('Не удалось обработать. Можете отправить как есть или перефоткать.','warn');
+
+    const conf = Number(serverOcr.confidence || ocrResult.confidence || 0);
+    setStatus(
+      'OCR через Worker выполнен' + (conf ? ' · уверенность: ' + Math.round(conf) + '%' : '') + '. Проверьте данные и нажмите «Отправить».',
+      'good'
+    );
+  } catch (serverErr) {
+    console.warn('Worker OCR failed, fallback to browser OCR:', serverErr);
+
+    try {
+      setStatus('Worker OCR не сработал. Пробуем обработку в браузере...','warn');
+
+      const bw = preprocess(canvas);
+      let best = null;
+      let bestScore = -1;
+
+      for (const src of [canvas, bw]) {
+        try {
+          const rec = await Tesseract.recognize(src, 'rus+eng', {
+            logger: m => {
+              if (m.progress > 0) {
+                setStatus('Обработка в браузере... ' + Math.round(m.progress * 100) + '%', 'warn');
+              }
+            }
+          });
+
+          const p = parsePassport(rec.data.text || '');
+          let sc = 0;
+          if (p.passportSeries) sc += 2;
+          if (p.passportNumber) sc += 2;
+          if (p.departmentCode) sc += 2;
+          if (p.issueDate) sc++;
+          if (p.birthDate) sc++;
+          if (p.lastName) sc++;
+
+          if (sc > bestScore) {
+            bestScore = sc;
+            best = p;
+            best.rawText = rec.data.text || '';
+            best.confidence = Number(rec?.data?.confidence || 0) || 0;
+            best.engine = 'tesseract.js-browser';
+          }
+
+          if (sc >= 6) break;
+        } catch {}
+      }
+
+      ocrResult = best || parsePassport('');
+      renderOcr();
+      $('ocrBox').classList.remove('hidden');
+      $('retry').classList.remove('hidden');
+      setStatus('Проверьте данные и нажмите «Отправить».','good');
+    } catch (browserErr) {
+      console.warn('Browser OCR failed:', browserErr);
+
+      ocrResult = parsePassport('');
+      ocrResult.engine = 'none';
+      renderOcr();
+      $('ocrBox').classList.remove('hidden');
+      $('retry').classList.remove('hidden');
+      setStatus('Не удалось обработать. Можете отправить как есть или перефоткать.','warn');
+    }
   }
 }
 

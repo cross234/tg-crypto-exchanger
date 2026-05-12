@@ -6,70 +6,600 @@
   <title>Crossflag · KYC</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
-    :root{--bg:#070A12;--card:#111827;--muted:#9CA3AF;--text:#F9FAFB;--line:rgba(255,255,255,.10);--accent:#8B5CF6;--good:#22C55E;--bad:#EF4444;--warn:#F59E0B}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(139,92,246,.25),transparent 35%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;min-height:100vh}
-    .wrap{max-width:780px;margin:0 auto;padding:22px 16px 40px}
-    .top{display:flex;gap:12px;align-items:center;margin-bottom:18px}.logo{width:42px;height:42px;border-radius:16px;background:linear-gradient(135deg,#fff,#dbeafe);display:grid;place-items:center;color:#111;font-weight:900}.h1{font-size:24px;font-weight:900}.sub{color:var(--muted);font-size:14px;line-height:1.45}
-    .card{background:rgba(17,24,39,.82);border:1px solid var(--line);border-radius:24px;padding:18px;margin:14px 0;box-shadow:0 18px 60px rgba(0,0,0,.25);backdrop-filter:blur(12px)}
-    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.step{padding:10px;border:1px solid var(--line);border-radius:16px;color:var(--muted);font-size:13px;text-align:center}.step.on{color:#fff;border-color:rgba(139,92,246,.8);background:rgba(139,92,246,.18)}.step.ok{color:#bbf7d0;border-color:rgba(34,197,94,.7);background:rgba(34,197,94,.12)}
-    button{width:100%;border:0;border-radius:18px;padding:14px 16px;font-size:15px;font-weight:800;color:white;background:linear-gradient(135deg,#7C3AED,#EC4899);cursor:pointer;margin-top:10px}button.secondary{background:#1F2937;border:1px solid var(--line)}button:disabled{opacity:.5;cursor:not-allowed}
-    .row{display:flex;gap:10px}.row button{flex:1}
-    .status{padding:12px 14px;border-radius:16px;background:#0B1220;border:1px solid var(--line);color:#d1d5db;margin-top:12px;white-space:pre-wrap}.status.good{border-color:rgba(34,197,94,.5);color:#bbf7d0}.status.bad{border-color:rgba(239,68,68,.5);color:#fecaca}.status.warn{border-color:rgba(245,158,11,.5);color:#fde68a}
-    .hint{font-size:13px;color:var(--muted);line-height:1.5}
-    .check{display:flex;gap:10px;align-items:flex-start;color:#d1d5db;font-size:13px;line-height:1.45}.check input{margin-top:3px}
-    .data{display:grid;grid-template-columns:1fr 1fr;gap:8px}.data div{background:#0B1220;border:1px solid var(--line);border-radius:14px;padding:10px}.data b{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+    :root{
+      --bg:#050814;
+      --card:#0D1424;
+      --card2:#111A2D;
+      --muted:#97A3B6;
+      --text:#F8FAFC;
+      --line:rgba(255,255,255,.10);
+      --line2:rgba(255,255,255,.16);
+      --accent:#8B5CF6;
+      --accent2:#EC4899;
+      --good:#22C55E;
+      --bad:#EF4444;
+      --warn:#F59E0B;
+      --blue:#38BDF8;
+    }
+
+    *{box-sizing:border-box}
+    html,body{min-height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at 12% -10%,rgba(139,92,246,.30),transparent 36%),
+        radial-gradient(circle at 92% 12%,rgba(236,72,153,.16),transparent 30%),
+        linear-gradient(180deg,#070A16 0%,#050814 62%,#03050B 100%);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+
+    .wrap{
+      max-width:720px;
+      margin:0 auto;
+      padding:24px 16px 42px;
+    }
+
+    .top{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .logo{
+      width:46px;
+      height:46px;
+      border-radius:18px;
+      background:linear-gradient(145deg,#FFFFFF,#DCEBFF);
+      display:grid;
+      place-items:center;
+      color:#0B1020;
+      font-weight:950;
+      letter-spacing:-.04em;
+      box-shadow:0 12px 38px rgba(255,255,255,.10);
+      flex:0 0 auto;
+    }
+
+    .h1{
+      font-size:28px;
+      line-height:1.05;
+      font-weight:950;
+      letter-spacing:-.04em;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.42;
+      max-width:560px;
+    }
+
+    .steps{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin:16px 0;
+    }
+
+    .step{
+      padding:11px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      text-align:center;
+      background:rgba(255,255,255,.035);
+      transition:.25s ease;
+    }
+
+    .step.on{
+      color:#fff;
+      border-color:rgba(139,92,246,.85);
+      background:linear-gradient(135deg,rgba(139,92,246,.24),rgba(236,72,153,.10));
+      box-shadow:0 0 0 1px rgba(139,92,246,.14) inset;
+    }
+
+    .step.ok{
+      color:#BBF7D0;
+      border-color:rgba(34,197,94,.55);
+      background:rgba(34,197,94,.10);
+    }
+
+    .card{
+      background:linear-gradient(180deg,rgba(17,26,45,.88),rgba(13,20,36,.88));
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:20px;
+      margin:14px 0;
+      box-shadow:0 24px 70px rgba(0,0,0,.30);
+      backdrop-filter:blur(16px);
+    }
+
+    .sectionTitle{
+      font-size:19px;
+      font-weight:950;
+      letter-spacing:-.025em;
+      margin-bottom:6px;
+    }
+
+    .hint{
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.55;
+      margin:14px 0;
+    }
+
+    .check{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      color:#D6DCE8;
+      font-size:14px;
+      line-height:1.45;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(3,7,18,.32);
+    }
+
+    .check input{
+      width:19px;
+      height:19px;
+      margin-top:1px;
+      accent-color:var(--accent);
+      flex:0 0 auto;
+    }
+
+    button{
+      width:100%;
+      border:0;
+      border-radius:20px;
+      padding:15px 17px;
+      font-size:15px;
+      font-weight:950;
+      color:white;
+      background:linear-gradient(135deg,#7C3AED,#EC4899);
+      cursor:pointer;
+      margin-top:10px;
+      box-shadow:0 16px 36px rgba(139,92,246,.26);
+      transition:.18s ease;
+    }
+
+    button:active{transform:translateY(1px) scale(.99)}
+    button.secondary{
+      background:#1B2536;
+      border:1px solid var(--line2);
+      box-shadow:none;
+    }
+    button.ghost{
+      background:transparent;
+      border:1px solid var(--line2);
+      box-shadow:none;
+      color:#DDE5F3;
+    }
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+    }
+    .row button{flex:1}
+
+    .status{
+      padding:13px 15px;
+      border-radius:18px;
+      background:rgba(3,7,18,.48);
+      border:1px solid var(--line);
+      color:#D1D5DB;
+      margin-top:14px;
+      white-space:pre-wrap;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .status.good{border-color:rgba(34,197,94,.48);color:#BBF7D0;background:rgba(34,197,94,.07)}
+    .status.bad{border-color:rgba(239,68,68,.50);color:#FECACA;background:rgba(239,68,68,.07)}
+    .status.warn{border-color:rgba(245,158,11,.48);color:#FDE68A;background:rgba(245,158,11,.07)}
+
+    .data{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+      margin-top:14px;
+    }
+
+    .data div{
+      background:rgba(3,7,18,.42);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      min-height:62px;
+    }
+
+    .data b{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:800;
+    }
+
     .hidden{display:none!important}
-    /* Fullscreen camera overlay */
-    .cameraOverlay{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column}
+
+    .reviewCard{
+      min-height:430px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:34px 22px;
+    }
+
+    .reviewIcon{
+      width:76px;
+      height:76px;
+      border-radius:28px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(34,197,94,.24),rgba(56,189,248,.14));
+      border:1px solid rgba(34,197,94,.35);
+      color:#BBF7D0;
+      font-size:36px;
+      font-weight:950;
+      margin-bottom:22px;
+      box-shadow:0 22px 70px rgba(34,197,94,.12);
+    }
+
+    .reviewTitle{
+      font-size:27px;
+      line-height:1.1;
+      font-weight:950;
+      letter-spacing:-.04em;
+      margin-bottom:10px;
+    }
+
+    .reviewText{
+      margin:0;
+      color:#C6D0E1;
+      font-size:16px;
+      line-height:1.55;
+      max-width:430px;
+    }
+
+    .reviewMeta{
+      margin-top:20px;
+      padding:11px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .spinner{
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.20);
+      border-top-color:#BBF7D0;
+      animation:spin .9s linear infinite;
+      display:inline-block;
+      vertical-align:-3px;
+      margin-right:7px;
+    }
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .cameraOverlay{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      background:#000;
+      display:none;
+      flex-direction:column;
+    }
+
     .cameraOverlay.open{display:flex}
-    .cameraOverlay video{flex:1;width:100%;object-fit:cover}
+
+    .cameraOverlay video{
+      flex:1;
+      width:100%;
+      object-fit:cover;
+      background:#000;
+    }
+
     .cameraOverlay canvas{display:none}
-    .cameraBar{display:flex;gap:12px;padding:16px;background:rgba(0,0,0,.85)}
-    .cameraBar button{flex:1;margin:0;border-radius:16px;padding:14px}
-    .cameraBar .shotBtn{background:linear-gradient(135deg,#7C3AED,#EC4899)}
-    .cameraBar .closeBtn{background:#1F2937;border:1px solid rgba(255,255,255,.2)}
-    /* Face scan overlay */
-    .scanOverlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
-    .scanCircle{width:min(72vw,320px);height:min(72vw,320px);border-radius:50%;background:conic-gradient(var(--good) var(--p,0%),rgba(255,255,255,.12) 0);display:grid;place-items:center;box-shadow:0 0 60px rgba(34,197,94,.2)}.scanCircle::before{content:"";width:calc(100% - 14px);height:calc(100% - 14px);border-radius:50%;border:2px dashed rgba(255,255,255,.35);background:rgba(2,6,23,.18)}
-    .scanText{position:absolute;text-align:center;font-weight:900;text-shadow:0 2px 16px #000}
-    .scanLine{position:absolute;width:80%;height:2px;background:linear-gradient(90deg,transparent,#22c55e,transparent);animation:scan 1.4s linear infinite}
-    @keyframes scan{0%{transform:translateY(-130px)}100%{transform:translateY(130px)}}
-    .faceCamera{position:relative;border-radius:26px;overflow:hidden;background:#020617;border:1px solid var(--line);min-height:340px;display:grid;place-items:center;margin:14px 0}
-    .faceCamera video{width:100%;max-height:520px;object-fit:cover;display:block}
-    @media(max-width:560px){.data{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.row{flex-direction:column}.faceCamera{min-height:280px}}
+
+    .cameraGuide{
+      position:absolute;
+      left:18px;
+      right:18px;
+      top:calc(env(safe-area-inset-top) + 22px);
+      padding:13px 15px;
+      border-radius:18px;
+      background:rgba(0,0,0,.52);
+      border:1px solid rgba(255,255,255,.16);
+      color:#fff;
+      font-size:14px;
+      line-height:1.35;
+      backdrop-filter:blur(10px);
+    }
+
+    .cameraBar{
+      display:flex;
+      gap:12px;
+      padding:14px 16px calc(16px + env(safe-area-inset-bottom));
+      background:rgba(0,0,0,.82);
+      backdrop-filter:blur(12px);
+    }
+
+    .cameraBar button{
+      flex:1;
+      margin:0;
+      border-radius:18px;
+      padding:15px 12px;
+    }
+
+    .cameraBar .shotBtn{
+      background:linear-gradient(135deg,#7C3AED,#EC4899);
+    }
+
+    .cameraBar .closeBtn{
+      background:#1F2937;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:none;
+    }
+
+    .faceCamera{
+      position:relative;
+      border-radius:30px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 45%,rgba(56,189,248,.10),transparent 36%),
+        #020617;
+      border:1px solid var(--line);
+      min-height:430px;
+      display:grid;
+      place-items:center;
+      margin:16px 0 10px;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+    }
+
+    .faceCamera video{
+      width:100%;
+      height:100%;
+      min-height:430px;
+      object-fit:cover;
+      display:block;
+      filter:saturate(1.05) contrast(1.03);
+    }
+
+    .faceOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      place-items:center;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 50% 45%,transparent 0 34%,rgba(0,0,0,.20) 35%,rgba(0,0,0,.52) 100%);
+    }
+
+    .faceOverlay.open{display:grid}
+
+    .faceRing{
+      position:relative;
+      width:min(72vw,330px);
+      height:min(72vw,330px);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:
+        conic-gradient(from -90deg,var(--good) var(--p,0%),rgba(255,255,255,.16) 0);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.08),
+        0 24px 80px rgba(34,197,94,.16);
+    }
+
+    .faceRing::before{
+      content:"";
+      position:absolute;
+      inset:9px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.34);
+      background:rgba(2,6,23,.12);
+      backdrop-filter:blur(1px);
+    }
+
+    .faceRing::after{
+      content:"";
+      position:absolute;
+      width:76%;
+      height:76%;
+      border-radius:50%;
+      border:1px dashed rgba(255,255,255,.28);
+      animation:breathe 2.2s ease-in-out infinite;
+    }
+
+    @keyframes breathe{
+      0%,100%{transform:scale(.98);opacity:.58}
+      50%{transform:scale(1.025);opacity:.92}
+    }
+
+    .facePulse{
+      position:absolute;
+      width:50%;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg,transparent,rgba(34,197,94,.95),transparent);
+      box-shadow:0 0 20px rgba(34,197,94,.8);
+      animation:softScan 2.4s ease-in-out infinite;
+      opacity:.8;
+    }
+
+    @keyframes softScan{
+      0%,100%{transform:translateY(-92px);opacity:.25}
+      50%{transform:translateY(92px);opacity:.95}
+    }
+
+    .faceCenter{
+      position:absolute;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      text-align:center;
+      text-shadow:0 2px 16px #000;
+      z-index:2;
+      padding:0 20px;
+    }
+
+    .facePercent{
+      font-size:34px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:-.04em;
+    }
+
+    .faceInstruction{
+      font-size:14px;
+      font-weight:850;
+      color:#F8FAFC;
+      max-width:230px;
+      line-height:1.35;
+    }
+
+    .faceTips{
+      display:grid;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .faceTip{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      color:#C6D0E1;
+      font-size:13px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:10px 12px;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--good);
+      box-shadow:0 0 18px rgba(34,197,94,.75);
+      flex:0 0 auto;
+    }
+
+    @media(max-width:560px){
+      .wrap{padding:20px 14px 36px}
+      .h1{font-size:25px}
+      .sub{font-size:14px}
+      .steps{grid-template-columns:1fr;gap:8px}
+      .row{flex-direction:column}
+      .data{grid-template-columns:1fr}
+      .faceCamera{min-height:330px}
+      .faceCamera video{min-height:330px}
+      .reviewCard{min-height:390px}
+      .reviewTitle{font-size:25px}
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="logo">CF</div><div><div class="h1">Проверка личности</div><div class="sub">Необходимо для операций покупки и продажи криптовалюты.</div></div></div>
-  <div class="steps"><div id="s1" class="step on">1. Паспорт</div><div id="s2" class="step">2. Лицо</div><div id="s3" class="step">3. Проверка</div></div>
+  <div class="top">
+    <div class="logo">CF</div>
+    <div>
+      <div class="h1">Проверка личности</div>
+      <div class="sub">Необходимо для операций покупки и продажи криптовалюты.</div>
+    </div>
+  </div>
+
+  <div id="steps" class="steps">
+    <div id="s1" class="step on">1. Паспорт</div>
+    <div id="s2" class="step">2. Лицо</div>
+    <div id="s3" class="step">3. Проверка</div>
+  </div>
+
+  <div id="reviewBox" class="card reviewCard hidden">
+    <div class="reviewIcon">✓</div>
+    <div class="reviewTitle">Данные на проверке</div>
+    <p class="reviewText">
+      Мы получили ваши данные. Проверка выполняется вручную.
+      Результат придёт в Telegram.
+    </p>
+    <div class="reviewMeta"><span class="spinner"></span>Ожидаем решение администратора</div>
+  </div>
+
   <div id="main" class="card">
-    <label class="check"><input id="agree" type="checkbox"> <span>Я согласен на обработку и хранение данных для проверки личности.</span></label>
-    <p class="hint">Сделайте чёткое фото разворота паспорта РФ.</p>
-    <div class="row"><button id="startPassport">Сфотографировать паспорт</button><button id="retry" class="secondary hidden">Перефоткать</button></div>
+    <label class="check">
+      <input id="agree" type="checkbox">
+      <span>Я согласен на обработку и хранение данных для проверки личности.</span>
+    </label>
+
+    <p class="hint">Сделайте чёткое фото разворота паспорта РФ. Убедитесь, что документ полностью в кадре, без бликов и размытия.</p>
+
+    <div class="row">
+      <button id="startPassport">Сфотографировать паспорт</button>
+      <button id="retry" class="secondary hidden">Перефоткать</button>
+    </div>
+
     <div id="status" class="status">Ожидаем начало проверки.</div>
   </div>
+
   <div id="ocrBox" class="card hidden">
-    <div class="h1" style="font-size:18px">Распознанные данные</div>
-    <p class="hint">Проверьте данные. Если что-то не распозналось — не страшно, администратор проверит по фото.</p>
+    <div class="sectionTitle">Распознанные данные</div>
+    <p class="hint">Проверьте данные. Если что-то не распозналось — не страшно, администратор сверит информацию по фото.</p>
     <div id="ocrData" class="data"></div>
     <button id="sendPassport">Отправить и перейти к проверке лица</button>
   </div>
+
   <div id="faceBox" class="card hidden">
-    <div class="h1" style="font-size:18px">Проверка лица</div>
-    <p class="hint">Смотрите в камеру и плавно покрутите головой по кругу.</p>
-    <div class="faceCamera"><video id="faceVideo" autoplay playsinline muted></video><div id="scanOverlay" class="scanOverlay hidden"><div id="scanCircle" class="scanCircle" style="--p:0%"></div><div class="scanLine"></div><div id="scanText" class="scanText">0%</div></div></div>
+    <div class="sectionTitle">Проверка лица</div>
+    <p class="hint">Смотрите в камеру. Медленно поверните голову вправо, влево и вернитесь в центр.</p>
+
+    <div class="faceCamera">
+      <video id="faceVideo" autoplay playsinline muted></video>
+      <div id="faceOverlay" class="faceOverlay">
+        <div id="faceRing" class="faceRing" style="--p:0%">
+          <div class="facePulse"></div>
+          <div class="faceCenter">
+            <div id="facePercent" class="facePercent">0%</div>
+            <div id="faceInstruction" class="faceInstruction">Держите лицо в круге</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="faceTips">
+      <div class="faceTip"><span class="dot"></span><span>Хорошее освещение и лицо полностью в кадре</span></div>
+      <div class="faceTip"><span class="dot"></span><span>Не закрывайте лицо, двигайтесь плавно</span></div>
+    </div>
+
     <button id="startFace">Начать проверку лица</button>
   </div>
 </div>
 
-<!-- Fullscreen camera for passport -->
 <div class="cameraOverlay" id="cameraOverlay">
+  <div class="cameraGuide">Поместите разворот паспорта полностью в кадр. Текст должен быть читаемым.</div>
   <video id="passportVideo" autoplay playsinline muted></video>
   <canvas id="passportCanvas"></canvas>
   <div class="cameraBar">
     <button class="closeBtn" id="camClose">Закрыть</button>
-    <button class="shotBtn" id="camShot">📸 Сделать фото</button>
+    <button class="shotBtn" id="camShot">Сделать фото</button>
   </div>
 </div>
 
@@ -78,165 +608,425 @@ const WORKER_BASE=(localStorage.getItem('worker_base')||localStorage.getItem('WO
 function token(){return(localStorage.getItem('CF_USER_TOKEN')||localStorage.getItem('user_token')||localStorage.getItem('cf_user_token')||localStorage.getItem('X_AUTH_TOKEN')||localStorage.getItem('AUTH_TOKEN')||localStorage.getItem('userToken')||'').trim()}
 function headers(){const t=token();return t?{'X-User-Token':t,'Authorization':'Bearer '+t}:{}}
 const $=id=>document.getElementById(id);
-let passportStream=null,faceStream=null,passportBlob=null,ocrResult=null;
-function setStatus(t,cls=''){const el=$('status');el.className='status '+cls;el.textContent=t}
-function step(n){['s1','s2','s3'].forEach((id,i)=>{$(id).className='step '+(i+1<n?'ok':i+1===n?'on':'')})}
-async function api(path,opts={}){const res=await fetch(WORKER_BASE+path,{...opts,headers:{...(opts.headers||{}),...headers()}});const j=await res.json().catch(()=>({ok:false,error:'Bad JSON'}));if(!res.ok||j.ok===false)throw j;return j}
-function stopStream(st){try{st&&st.getTracks().forEach(t=>t.stop())}catch{}}
 
-async function checkMe(){try{const j=await api('/api/public/kyc/me');if(j.canTrade){step(3);setStatus(j.tradingAccess==='ALLOWED_BY_ADMIN'?'Доступ выдан администратором.':'KYC одобрен. Операции доступны.','good')}else if(j.kycStatus==='PENDING_REVIEW'){step(3);setStatus('Заявка отправлена и ожидает проверки.','warn')}else if(j.kycStatus==='FACE_CHECK_REQUIRED'){step(2);$('faceBox').classList.remove('hidden');setStatus('Паспорт принят. Осталось пройти проверку лица.','good')}}catch(e){setStatus('Войдите в аккаунт, затем вернитесь к KYC.','bad')}}
+let passportStream=null;
+let faceStream=null;
+let passportBlob=null;
+let ocrResult=null;
 
-// --- Fullscreen camera ---
-const overlay=$('cameraOverlay');
-$('startPassport').onclick=async()=>{
-  if(!$('agree').checked){setStatus('Поставьте согласие на обработку данных.','bad');return}
+function setStatus(t,cls=''){
+  const el=$('status');
+  if(!el) return;
+  el.className='status '+cls;
+  el.textContent=t;
+}
+
+function step(n){
+  ['s1','s2','s3'].forEach((id,i)=>{
+    $(id).className='step '+(i+1<n?'ok':i+1===n?'on':'');
+  });
+}
+
+function hideAllFlow(){
+  $('main').classList.add('hidden');
+  $('ocrBox').classList.add('hidden');
+  $('faceBox').classList.add('hidden');
+}
+
+function showReviewScreen(){
+  step(3);
+  hideAllFlow();
+  $('reviewBox').classList.remove('hidden');
+}
+
+async function api(path,opts={}){
+  const res=await fetch(WORKER_BASE+path,{...opts,headers:{...(opts.headers||{}),...headers()}});
+  const j=await res.json().catch(()=>({ok:false,error:'Bad JSON'}));
+  if(!res.ok||j.ok===false)throw j;
+  return j;
+}
+
+function stopStream(st){
+  try{st&&st.getTracks().forEach(t=>t.stop())}catch{}
+}
+
+async function checkMe(){
   try{
-    passportStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false});
+    const j=await api('/api/public/kyc/me');
+
+    if(j.canTrade){
+      showReviewScreen();
+      $('reviewBox').innerHTML = `
+        <div class="reviewIcon">✓</div>
+        <div class="reviewTitle">Проверка пройдена</div>
+        <p class="reviewText">Доступ к операциям покупки и продажи криптовалюты открыт.</p>
+        <div class="reviewMeta">KYC одобрен</div>
+      `;
+      return;
+    }
+
+    if(j.kycStatus==='PENDING_REVIEW'){
+      showReviewScreen();
+      return;
+    }
+
+    if(j.kycStatus==='FACE_CHECK_REQUIRED'){
+      step(2);
+      $('faceBox').classList.remove('hidden');
+      setStatus('Паспорт принят. Осталось пройти проверку лица.','good');
+      return;
+    }
+  }catch(e){
+    setStatus('Войдите в аккаунт, затем вернитесь к KYC.','bad');
+  }
+}
+
+const overlay=$('cameraOverlay');
+
+$('startPassport').onclick=async()=>{
+  if(!$('agree').checked){
+    setStatus('Поставьте согласие на обработку данных.','bad');
+    return;
+  }
+
+  try{
+    passportStream=await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920},
+        height:{ideal:1440}
+      },
+      audio:false
+    });
+
     $('passportVideo').srcObject=passportStream;
     overlay.classList.add('open');
     document.body.style.overflow='hidden';
-  }catch(e){setStatus('Не удалось открыть камеру.','bad')}
+  }catch(e){
+    setStatus('Не удалось открыть камеру. Проверьте разрешения Telegram/браузера.','bad');
+  }
 };
+
 function closeCamera(){
   stopStream(passportStream);
   overlay.classList.remove('open');
   document.body.style.overflow='';
 }
+
 $('camClose').onclick=closeCamera;
+
 $('camShot').onclick=async()=>{
-  const v=$('passportVideo'),c=$('passportCanvas');
-  c.width=v.videoWidth||1280;c.height=v.videoHeight||720;
+  const v=$('passportVideo');
+  const c=$('passportCanvas');
+
+  c.width=v.videoWidth||1280;
+  c.height=v.videoHeight||720;
   c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+
   closeCamera();
+
   passportBlob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.95));
   await runOcr(c);
 };
-$('retry').onclick=()=>{passportBlob=null;ocrResult=null;$('ocrBox').classList.add('hidden');$('retry').classList.add('hidden');$('startPassport').click()};
 
-// --- OCR ---
-function normDate(s){const m=String(s||'').match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/]((?:19|20)\d{2})/);if(!m)return'';return String(m[1]).padStart(2,'0')+'.'+String(m[2]).padStart(2,'0')+'.'+m[3]}
+$('retry').onclick=()=>{
+  passportBlob=null;
+  ocrResult=null;
+  $('ocrBox').classList.add('hidden');
+  $('retry').classList.add('hidden');
+  $('startPassport').click();
+};
+
+function normDate(s){
+  const m=String(s||'').match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/]((?:19|20)\d{2})/);
+  if(!m)return'';
+  return String(m[1]).padStart(2,'0')+'.'+String(m[2]).padStart(2,'0')+'.'+m[3];
+}
 
 function parsePassport(raw){
   const text=String(raw||'').replace(/[|_]+/g,' ').replace(/\s+/g,' ');
   let sn=text.match(/(\d{2})\s*(\d{2})\s+(\d{6})/)||text.match(/(\d{2})\s*(\d{2})\s*(\d{6})/);
+
   let dept='';
   const dm=text.match(/(\d{3})\s*[-—]\s*(\d{3})/);
   if(dm)dept=dm[1]+'-'+dm[2];
-  else{const d2=(text.match(/\b\d{3}[- ]?\d{3}\b/)||[''])[0].replace(' ','-');dept=d2}
+  else{
+    const d2=(text.match(/\b\d{3}[- ]?\d{3}\b/)||[''])[0].replace(' ','-');
+    dept=d2;
+  }
+
   const dates=[...text.matchAll(/\b\d{1,2}[.\-\/]\d{1,2}[.\-\/](?:19|20)\d{2}\b/g)].map(x=>normDate(x[0]));
   let lines=String(raw||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
-  let caps=lines.filter(x=>/^[А-ЯЁа-яё\s\-]{3,}$/.test(x)&&!/(?:РОССИЙСК|ФЕДЕРАЦ|ПАСПОРТ|ОТДЕЛ|УФМС|МВД|ВЫДАН|ГЛАВН|УПРАВ)/i.test(x)).slice(0,3);
-  if(caps.length<2){const w=[...text.matchAll(/\b([А-ЯЁ][а-яё]{2,})\b/g)].map(m=>m[1]).filter(w=>!/^(?:Российск|Федерац|Паспорт|Отдел|Выдан)/i.test(w));if(w.length>=2)caps=w.slice(0,3)}
-  return{success:true,passportSeries:sn?(sn[1]+sn[2]):'',passportNumber:sn?sn[3]:'',departmentCode:dept,issueDate:dates[0]||'',birthDate:dates[1]||dates[0]||'',lastName:caps[0]||'',firstName:caps[1]||'',middleName:caps[2]||'',rawText:raw};
+
+  let caps=lines
+    .filter(x=>/^[А-ЯЁа-яё\s\-]{3,}$/.test(x)&&!/(?:РОССИЙСК|ФЕДЕРАЦ|ПАСПОРТ|ОТДЕЛ|УФМС|МВД|ВЫДАН|ГЛАВН|УПРАВ)/i.test(x))
+    .slice(0,3);
+
+  if(caps.length<2){
+    const w=[...text.matchAll(/\b([А-ЯЁ][а-яё]{2,})\b/g)]
+      .map(m=>m[1])
+      .filter(w=>!/^(?:Российск|Федерац|Паспорт|Отдел|Выдан)/i.test(w));
+    if(w.length>=2)caps=w.slice(0,3);
+  }
+
+  return{
+    success:true,
+    passportSeries:sn?(sn[1]+sn[2]):'',
+    passportNumber:sn?sn[3]:'',
+    departmentCode:dept,
+    issueDate:dates[0]||'',
+    birthDate:dates[1]||dates[0]||'',
+    lastName:caps[0]||'',
+    firstName:caps[1]||'',
+    middleName:caps[2]||'',
+    rawText:raw
+  };
 }
 
 function preprocess(src){
-  const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
-  const ctx=c.getContext('2d');ctx.drawImage(src,0,0);
+  const c=document.createElement('canvas');
+  c.width=src.width;
+  c.height=src.height;
+
+  const ctx=c.getContext('2d');
+  ctx.drawImage(src,0,0);
+
   const d=ctx.getImageData(0,0,c.width,c.height);
   for(let i=0;i<d.data.length;i+=4){
     const g=0.299*d.data[i]+0.587*d.data[i+1]+0.114*d.data[i+2];
-    const v=g>130?255:0;d.data[i]=d.data[i+1]=d.data[i+2]=v;
+    const v=g>130?255:0;
+    d.data[i]=d.data[i+1]=d.data[i+2]=v;
   }
-  ctx.putImageData(d,0,0);return c;
+
+  ctx.putImageData(d,0,0);
+  return c;
 }
 
-async function runOcr(canvas) {
-  try {
-    setStatus('Обработка паспорта на сервере...','warn');
+async function runOcr(canvas){
+  try{
+    setStatus('Обрабатываем фото паспорта...','warn');
 
-    if (!passportBlob) {
-      throw new Error('Нет фото паспорта');
-    }
+    if(!passportBlob) throw new Error('Нет фото паспорта');
 
-    const fd = new FormData();
-    fd.set('passportPhoto', passportBlob, 'passport.jpg');
+    const fd=new FormData();
+    fd.set('passportPhoto',passportBlob,'passport.jpg');
 
-    const serverOcr = await api('/api/public/kyc/ocr_passport', {
-      method: 'POST',
-      body: fd
+    const serverOcr=await api('/api/public/kyc/ocr_passport',{
+      method:'POST',
+      body:fd
     });
 
-    ocrResult = serverOcr.ocr || parsePassport('');
-    ocrResult.rawText = serverOcr.ocrText || ocrResult.rawText || '';
+    ocrResult=serverOcr.ocr||parsePassport('');
+    ocrResult.rawText=serverOcr.ocrText||ocrResult.rawText||'';
 
     renderOcr();
     $('ocrBox').classList.remove('hidden');
     $('retry').classList.remove('hidden');
 
-    const conf = Number(serverOcr.confidence || ocrResult.confidence || 0);
+    const conf=Number(serverOcr.confidence||ocrResult.confidence||0);
     setStatus(
-      'OCR через Worker выполнен' + (conf ? ' · уверенность: ' + Math.round(conf) + '%' : '') + '. Проверьте данные и нажмите «Отправить».',
+      'Фото обработано' + (conf ? ' · уверенность: '+Math.round(conf)+'%' : '') + '. Проверьте данные и отправьте паспорт.',
       'good'
     );
-  } catch (serverErr) {
-    console.warn('Worker OCR failed, fallback to browser OCR:', serverErr);
+  }catch(serverErr){
+    console.warn('Worker OCR failed, fallback to browser OCR:',serverErr);
 
-    try {
-      setStatus('Worker OCR не сработал. Пробуем обработку в браузере...','warn');
+    try{
+      setStatus('Обработка на сервере недоступна. Пробуем распознать в браузере...','warn');
 
-      const bw = preprocess(canvas);
-      let best = null;
-      let bestScore = -1;
+      const bw=preprocess(canvas);
+      let best=null;
+      let bestScore=-1;
 
-      for (const src of [canvas, bw]) {
-        try {
-          const rec = await Tesseract.recognize(src, 'rus+eng', {
-            logger: m => {
-              if (m.progress > 0) {
-                setStatus('Обработка в браузере... ' + Math.round(m.progress * 100) + '%', 'warn');
+      for(const src of [canvas,bw]){
+        try{
+          const rec=await Tesseract.recognize(src,'rus+eng',{
+            logger:m=>{
+              if(m.progress>0){
+                setStatus('Обработка в браузере... '+Math.round(m.progress*100)+'%','warn');
               }
             }
           });
 
-          const p = parsePassport(rec.data.text || '');
-          let sc = 0;
-          if (p.passportSeries) sc += 2;
-          if (p.passportNumber) sc += 2;
-          if (p.departmentCode) sc += 2;
-          if (p.issueDate) sc++;
-          if (p.birthDate) sc++;
-          if (p.lastName) sc++;
+          const p=parsePassport(rec.data.text||'');
+          let sc=0;
+          if(p.passportSeries)sc+=2;
+          if(p.passportNumber)sc+=2;
+          if(p.departmentCode)sc+=2;
+          if(p.issueDate)sc++;
+          if(p.birthDate)sc++;
+          if(p.lastName)sc++;
 
-          if (sc > bestScore) {
-            bestScore = sc;
-            best = p;
-            best.rawText = rec.data.text || '';
-            best.confidence = Number(rec?.data?.confidence || 0) || 0;
-            best.engine = 'tesseract.js-browser';
+          if(sc>bestScore){
+            bestScore=sc;
+            best=p;
+            best.rawText=rec.data.text||'';
+            best.confidence=Number(rec?.data?.confidence||0)||0;
+            best.engine='tesseract.js-browser';
           }
 
-          if (sc >= 6) break;
-        } catch {}
+          if(sc>=6)break;
+        }catch{}
       }
 
-      ocrResult = best || parsePassport('');
+      ocrResult=best||parsePassport('');
       renderOcr();
       $('ocrBox').classList.remove('hidden');
       $('retry').classList.remove('hidden');
-      setStatus('Проверьте данные и нажмите «Отправить».','good');
-    } catch (browserErr) {
-      console.warn('Browser OCR failed:', browserErr);
+      setStatus('Проверьте данные и отправьте паспорт.','good');
+    }catch(browserErr){
+      console.warn('Browser OCR failed:',browserErr);
 
-      ocrResult = parsePassport('');
-      ocrResult.engine = 'none';
+      ocrResult=parsePassport('');
+      ocrResult.engine='none';
       renderOcr();
       $('ocrBox').classList.remove('hidden');
       $('retry').classList.remove('hidden');
-      setStatus('Не удалось обработать. Можете отправить как есть или перефоткать.','warn');
+      setStatus('Не удалось распознать текст. Можно отправить как есть или перефоткать.','warn');
     }
   }
 }
 
 function renderOcr(){
-  const d=[['Серия',ocrResult.passportSeries],['Номер',ocrResult.passportNumber],['Дата рождения',ocrResult.birthDate],['Дата выдачи',ocrResult.issueDate],['Код подразделения',ocrResult.departmentCode],['ФИО',[ocrResult.lastName,ocrResult.firstName,ocrResult.middleName].filter(Boolean).join(' ')||'—']];
+  const d=[
+    ['Серия',ocrResult.passportSeries],
+    ['Номер',ocrResult.passportNumber],
+    ['Дата рождения',ocrResult.birthDate],
+    ['Дата выдачи',ocrResult.issueDate],
+    ['Код подразделения',ocrResult.departmentCode],
+    ['ФИО',[ocrResult.lastName,ocrResult.firstName,ocrResult.middleName].filter(Boolean).join(' ')||'—']
+  ];
+
   $('ocrData').innerHTML=d.map(x=>`<div><b>${x[0]}</b>${x[1]||'—'}</div>`).join('');
 }
 
-$('sendPassport').onclick=async()=>{try{if(!passportBlob)return;setStatus('Отправка...','warn');const fd=new FormData();fd.set('passportPhoto',passportBlob,'passport.jpg');fd.set('ocr',JSON.stringify(ocrResult||{}));fd.set('ocrText',(ocrResult&&ocrResult.rawText)||'');const j=await api('/api/public/kyc/passport',{method:'POST',body:fd});step(2);$('ocrBox').classList.add('hidden');$('faceBox').classList.remove('hidden');setStatus('Паспорт отправлен. Пройдите проверку лица.','good')}catch(e){setStatus(e.message||e.error||'Ошибка отправки','bad')}};
+$('sendPassport').onclick=async()=>{
+  try{
+    if(!passportBlob)return;
 
-$('startFace').onclick=async()=>{try{faceStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:960}},audio:false});const v=$('faceVideo');v.srcObject=faceStream;await new Promise(r=>setTimeout(r,700));const rec=new MediaRecorder(faceStream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'});const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};const frames=[];const ov=$('scanOverlay'),circle=$('scanCircle'),txt=$('scanText');ov.classList.remove('hidden');$('startFace').disabled=true;rec.start();const total=6500,start=Date.now();const frameAt=new Set([25,55,85]);const timer=setInterval(async()=>{const p=Math.min(100,Math.round((Date.now()-start)/total*100));circle.style.setProperty('--p',p+'%');txt.textContent=p+'%\nПоверните голову';for(const mark of[...frameAt])if(p>=mark){frameAt.delete(mark);frames.push(await captureFrame(v))}if(p>=100){clearInterval(timer);rec.stop()}},120);rec.onstop=async()=>{stopStream(faceStream);setStatus('Отправка видео...','warn');const blob=new Blob(chunks,{type:'video/webm'});const fd=new FormData();fd.set('faceVideo',blob,'face.webm');frames.slice(0,3).forEach((b,i)=>fd.set('frame'+(i+1),b,'f'+(i+1)+'.jpg'));try{await api('/api/public/kyc/face',{method:'POST',body:fd});step(3);$('faceBox').classList.add('hidden');setStatus('Заявка отправлена на проверку. Мы уведомим вас в Telegram.','good')}catch(e){$('startFace').disabled=false;setStatus(e.message||e.error||'Ошибка','bad')}}}catch(e){$('startFace').disabled=false;setStatus('Не удалось открыть камеру.','bad')}};
-async function captureFrame(v){const c=document.createElement('canvas');c.width=v.videoWidth||640;c.height=v.videoHeight||640;c.getContext('2d').drawImage(v,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,'image/jpeg',0.85))}
+    setStatus('Отправляем паспорт...','warn');
+
+    const fd=new FormData();
+    fd.set('passportPhoto',passportBlob,'passport.jpg');
+    fd.set('ocr',JSON.stringify(ocrResult||{}));
+    fd.set('ocrText',(ocrResult&&ocrResult.rawText)||'');
+
+    await api('/api/public/kyc/passport',{method:'POST',body:fd});
+
+    step(2);
+    $('ocrBox').classList.add('hidden');
+    $('faceBox').classList.remove('hidden');
+    setStatus('Паспорт отправлен. Осталось пройти проверку лица.','good');
+  }catch(e){
+    setStatus(e.message||e.error||'Ошибка отправки','bad');
+  }
+};
+
+$('startFace').onclick=async()=>{
+  try{
+    faceStream=await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:'user',
+        width:{ideal:960},
+        height:{ideal:960}
+      },
+      audio:false
+    });
+
+    const v=$('faceVideo');
+    v.srcObject=faceStream;
+
+    await new Promise(r=>setTimeout(r,700));
+
+    const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ?'video/webm;codecs=vp9'
+      :'video/webm';
+
+    const rec=new MediaRecorder(faceStream,{mimeType:mime});
+    const chunks=[];
+    rec.ondataavailable=e=>{
+      if(e.data&&e.data.size)chunks.push(e.data);
+    };
+
+    const frames=[];
+    const ov=$('faceOverlay');
+    const ring=$('faceRing');
+    const pct=$('facePercent');
+    const inst=$('faceInstruction');
+
+    ov.classList.add('open');
+    $('startFace').disabled=true;
+
+    rec.start();
+
+    const total=6800;
+    const start=Date.now();
+    const frameAt=new Set([24,52,82]);
+
+    const phrases=[
+      [0,'Держите лицо в круге'],
+      [18,'Поверните голову вправо'],
+      [38,'Поверните голову влево'],
+      [62,'Вернитесь в центр'],
+      [82,'Почти готово']
+    ];
+
+    const timer=setInterval(async()=>{
+      const p=Math.min(100,Math.round((Date.now()-start)/total*100));
+      ring.style.setProperty('--p',p+'%');
+      pct.textContent=p+'%';
+
+      let phrase=phrases[0][1];
+      for(const item of phrases){
+        if(p>=item[0]) phrase=item[1];
+      }
+      inst.textContent=phrase;
+
+      for(const mark of[...frameAt]){
+        if(p>=mark){
+          frameAt.delete(mark);
+          frames.push(await captureFrame(v));
+        }
+      }
+
+      if(p>=100){
+        clearInterval(timer);
+        rec.stop();
+      }
+    },120);
+
+    rec.onstop=async()=>{
+      stopStream(faceStream);
+      ov.classList.remove('open');
+      setStatus('Отправляем проверку лица...','warn');
+
+      const blob=new Blob(chunks,{type:'video/webm'});
+      const fd=new FormData();
+      fd.set('faceVideo',blob,'face.webm');
+      frames.slice(0,3).forEach((b,i)=>fd.set('frame'+(i+1),b,'f'+(i+1)+'.jpg'));
+
+      try{
+        await api('/api/public/kyc/face',{method:'POST',body:fd});
+        showReviewScreen();
+      }catch(e){
+        $('startFace').disabled=false;
+        setStatus(e.message||e.error||'Ошибка отправки','bad');
+      }
+    };
+  }catch(e){
+    $('startFace').disabled=false;
+    setStatus('Не удалось открыть камеру. Проверьте разрешения Telegram/браузера.','bad');
+  }
+};
+
+async function captureFrame(v){
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth||640;
+  c.height=v.videoHeight||640;
+  c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+  return await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));
+}
+
 checkMe();
 </script>
 </body>
